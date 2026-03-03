@@ -10,11 +10,10 @@ import {
   Award,
   CalendarClock,
   CheckCircle,
-  Cloud,
+  ExternalLink,
   Mail,
   MessageSquareText,
   Quote,
-  Shield,
   Star,
   TrendingUp,
   Users,
@@ -118,6 +117,54 @@ const testimonials = [
     review:
       "Website delivery was fast and clean. Great support throughout the project. The team understood our requirements and delivered beyond expectations.",
     rating: 5,
+  },
+];
+
+const projects = [
+  {
+    id: 1,
+    title: "Indu Home Estate Services",
+    description:
+      "Real estate service platform with property listings and client management.",
+    tag: "Real Estate",
+    image:
+      "https://i.postimg.cc/qqF9H4JW/Screenshot_4_3_2026_31339_indu_home_estate_services_v3p_caffeine_xyz.jpg",
+  },
+  {
+    id: 2,
+    title: "TrustFix",
+    description:
+      "Home repair and maintenance booking platform connecting customers with trusted technicians.",
+    tag: "Service Marketplace",
+    image:
+      "https://i.postimg.cc/SRPwbkS5/Screenshot_4_3_2026_31458_trustfix_7n5_caffeine_xyz.jpg",
+  },
+  {
+    id: 3,
+    title: "Nishanth HC Advocate",
+    description:
+      "Professional legal services website for an advocate with case inquiry and contact features.",
+    tag: "Legal / Professional",
+    image:
+      "https://i.postimg.cc/6qPDxtW1/Screenshot_4_3_2026_31523_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
+  },
+  {
+    id: 4,
+    title: "Nishanth HC – Practice Areas",
+    description:
+      "Dedicated practice areas and case types page for a professional advocate website.",
+    tag: "Legal / Professional",
+    image:
+      "https://i.postimg.cc/kGGkHBmC/Screenshot_4_3_2026_3172_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
+  },
+  {
+    id: 5,
+    title: "Nishanth HC – Client Portal",
+    description:
+      "Client-facing portal for legal consultation booking and document submission.",
+    tag: "Legal / Professional",
+    image:
+      "https://i.postimg.cc/90kvHCmq/Screenshot_4_3_2026_31722_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
   },
 ];
 
@@ -247,137 +294,75 @@ export function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden hero-grid bg-background">
-        {/* Subtle background accents */}
+      {/* Hero — Full-Width Banner */}
+      <section
+        className="relative flex items-center overflow-hidden"
+        style={{
+          backgroundImage:
+            "url('https://i.postimg.cc/NjXwY9rC/Whats-App-Image-2026-03-04-at-3-12-23-AM.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          minHeight: "560px",
+        }}
+      >
+        {/* Soft dark overlay for text readability */}
         <div
-          className="absolute top-[-80px] right-[-100px] w-[700px] h-[700px] rounded-full pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+        />
+
+        {/* Subtle top-to-bottom gradient for extra polish */}
+        <div
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, oklch(0.42 0.20 255 / 0.07) 0%, transparent 65%)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-[-60px] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle, oklch(0.58 0.16 240 / 0.05) 0%, transparent 65%)",
+              "linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.20) 100%)",
           }}
         />
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: text content */}
-            <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent border border-border text-xs font-semibold text-accent-foreground mb-5 uppercase tracking-widest">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Structured · Professional · Digital
-              </div>
+        <div className="container mx-auto px-4 relative z-10 py-36 md:py-48">
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65 }}
+            className="max-w-2xl"
+          >
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/30 text-xs font-semibold text-white mb-6 uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+              Structured · Professional · Digital
+            </div>
 
-              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.05] tracking-tight mb-5">
-                My Web <span className="gradient-text">Solutions</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl">
-                Combining 11+ years of corporate discipline with digital
-                innovation — web, SaaS, and security services for small
-                businesses and individuals.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  asChild
-                  size="lg"
-                  data-ocid="home.primary_button"
-                  className="font-semibold text-base h-12 px-8 shadow-md"
-                >
-                  <Link to="/contact">
-                    Get Started <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  data-ocid="home.secondary_button"
-                  className="font-semibold text-base h-12 px-8 border-border hover:bg-accent"
-                >
-                  <Link to="/services">View Services</Link>
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Right: featured service visual card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.93, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.18 }}
-              className="hidden lg:flex items-center justify-center"
-            >
-              <div className="relative w-full max-w-md">
-                {/* Main image card */}
-                <div className="rounded-2xl overflow-hidden shadow-xl border border-border/60">
-                  <div className="relative">
-                    <img
-                      src="/assets/generated/service-banner-web-saas.dim_800x400.jpg"
-                      alt="Web & SaaS Solutions"
-                      className="w-full h-56 object-cover"
-                    />
-                    {/* Gradient overlay on image */}
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
-                      }}
-                    />
-                    {/* Core Product badge overlaid */}
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 shadow-md">
-                        Core Product
-                      </Badge>
-                    </div>
-                    {/* Title inside image */}
-                    <div className="absolute bottom-3 left-4">
-                      <p className="text-white font-display text-base font-bold drop-shadow-sm">
-                        Web & SaaS Solutions
-                      </p>
-                      <p className="text-white/80 text-xs mt-0.5">
-                        4 services available
-                      </p>
-                    </div>
-                  </div>
-                  {/* Card footer */}
-                  <div className="bg-white px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-foreground">
-                      Starting ₹3,999
-                    </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      Available Now
-                    </span>
-                  </div>
-                </div>
-
-                {/* Floating chips */}
-                <div className="absolute -top-4 left-6 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
-                  <Cloud className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold text-foreground">
-                    SaaS Platform
-                  </span>
-                </div>
-                <div className="absolute -bottom-4 right-6 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold text-foreground">
-                    Security Certified
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight mb-5 drop-shadow-lg">
+              My Web <span className="gradient-text">Solutions</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/85 leading-relaxed mb-8 max-w-xl drop-shadow">
+              Combining 11+ years of corporate discipline with digital
+              innovation — web, SaaS, and security services for small businesses
+              and individuals.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                asChild
+                size="lg"
+                data-ocid="home.primary_button"
+                className="font-semibold text-base h-12 px-8 shadow-lg"
+              >
+                <Link to="/contact">
+                  Get Started <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                data-ocid="home.secondary_button"
+                className="font-semibold text-base h-12 px-8 bg-white/15 backdrop-blur-sm border border-white/40 text-white hover:bg-white/25 hover:text-white"
+                variant="outline"
+              >
+                <Link to="/services">View Services</Link>
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -463,6 +448,101 @@ export function Home() {
             >
               <Link to="/services">
                 View All 12 Services <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Our Projects */}
+      <section
+        data-ocid="projects.section"
+        className="py-20 bg-slate-50 border-y border-border"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-xs font-semibold text-primary uppercase tracking-widest mb-4">
+              Portfolio
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Our Projects
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Real work delivered for real clients — from property platforms to
+              legal portals, each built with precision.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7"
+          >
+            {projects.map((project, index) => (
+              <motion.div
+                key={project.id}
+                variants={itemVariants}
+                data-ocid={`projects.item.${index + 1}`}
+                className="group"
+              >
+                <Card className="h-full overflow-hidden border border-border/70 bg-white shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col">
+                  {/* Screenshot image */}
+                  <div
+                    className="relative overflow-hidden"
+                    style={{ paddingTop: "56.25%" }}
+                  >
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <CardContent className="p-5 flex flex-col flex-1">
+                    {/* Tag badge */}
+                    <span className="inline-block self-start text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-3">
+                      {project.tag}
+                    </span>
+
+                    {/* Title */}
+                    <h3 className="font-display text-base font-bold text-foreground mb-2 leading-snug">
+                      {project.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-muted-foreground text-sm leading-relaxed flex-1">
+                      {project.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-10"
+          >
+            <Button
+              asChild
+              variant="outline"
+              data-ocid="projects.primary_button"
+              className="font-semibold border-primary/30 text-primary hover:bg-primary/5"
+            >
+              <Link to="/contact">
+                Start Your Project <ExternalLink className="ml-2 w-4 h-4" />
               </Link>
             </Button>
           </motion.div>
