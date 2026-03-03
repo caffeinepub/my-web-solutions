@@ -246,10 +246,10 @@ export function Contact() {
                         Phone
                       </p>
                       <a
-                        href="tel:+919876543210"
+                        href="tel:+919901563799"
                         className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        +91 98765 43210
+                        +91 99015 63799
                       </a>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export function Contact() {
                       Chat with us directly for a faster response.
                     </p>
                     <a
-                      href="https://wa.me/919876543210"
+                      href="https://wa.me/919901563799"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"

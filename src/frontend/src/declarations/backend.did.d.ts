@@ -10,6 +10,16 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BlogPost {
+  'id' : bigint,
+  'title' : string,
+  'content' : string,
+  'isPublished' : boolean,
+  'createdAt' : bigint,
+  'authorName' : string,
+  'updatedAt' : bigint,
+  'excerpt' : string,
+}
 export interface Lead {
   'id' : bigint,
   'service' : string,
@@ -25,6 +35,19 @@ export type LeadStatus = { 'new' : null } |
 export type Role = { 'client' : null } |
   { 'admin' : null } |
   { 'staff' : null };
+export interface ServiceRequest {
+  'id' : bigint,
+  'status' : ServiceRequestStatus,
+  'serviceType' : string,
+  'clientName' : string,
+  'createdAt' : bigint,
+  'description' : string,
+  'updatedAt' : bigint,
+  'clientUserId' : bigint,
+}
+export type ServiceRequestStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'inProgress' : null };
 export interface User {
   'id' : bigint,
   'username' : string,
@@ -44,12 +67,24 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createBlogPost' : ActorMethod<[string, string, string, string], bigint>,
+  'createServiceRequest' : ActorMethod<
+    [bigint, string, string, string],
+    bigint
+  >,
   'createUser' : ActorMethod<[string, string, Role], bigint>,
+  'deleteBlogPost' : ActorMethod<[bigint], boolean>,
+  'deleteServiceRequest' : ActorMethod<[bigint], boolean>,
+  'getBlogPost' : ActorMethod<[bigint], [] | [BlogPost]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getClientServiceRequests' : ActorMethod<[bigint], Array<ServiceRequest>>,
   'getLeads' : ActorMethod<[], Array<Lead>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'listAllBlogPosts' : ActorMethod<[], Array<BlogPost>>,
+  'listAllServiceRequests' : ActorMethod<[], Array<ServiceRequest>>,
+  'listBlogPosts' : ActorMethod<[], Array<BlogPost>>,
   'listUsers' : ActorMethod<[], Array<User>>,
   'login' : ActorMethod<
     [string, string],
@@ -59,7 +94,15 @@ export interface _SERVICE {
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'submitLead' : ActorMethod<[string, string, string, string], bigint>,
   'toggleUserActive' : ActorMethod<[bigint], boolean>,
+  'updateBlogPost' : ActorMethod<
+    [bigint, string, string, string, boolean],
+    boolean
+  >,
   'updateLeadStatus' : ActorMethod<[bigint, LeadStatus], boolean>,
+  'updateServiceRequestStatus' : ActorMethod<
+    [bigint, ServiceRequestStatus],
+    boolean
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

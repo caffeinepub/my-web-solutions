@@ -6,7 +6,8 @@ import { useState } from "react";
 const navLinks = [
   { label: "Home", href: "/", ocid: "nav.home_link" },
   { label: "Services", href: "/services", ocid: "nav.services_link" },
-  { label: "SaaS", href: "/saas", ocid: "nav.saas_link" },
+  { label: "Pricing", href: "/pricing", ocid: "nav.pricing_link" },
+  { label: "Blog", href: "/blog", ocid: "nav.blog_link" },
   { label: "About", href: "/about", ocid: "nav.about_link" },
   { label: "Contact", href: "/contact", ocid: "nav.contact_link" },
 ];

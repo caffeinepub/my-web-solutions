@@ -10,11 +10,14 @@ import {
 import { About } from "@/pages/About";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AdminLogin } from "@/pages/AdminLogin";
+import { Blog } from "@/pages/Blog";
+import { BlogPostPage } from "@/pages/BlogPost";
 import { ClientDashboard } from "@/pages/ClientDashboard";
 import { ClientLogin } from "@/pages/ClientLogin";
 import { Contact } from "@/pages/Contact";
 // Pages
 import { Home } from "@/pages/Home";
+import { Pricing } from "@/pages/Pricing";
 import { SaaS } from "@/pages/SaaS";
 import { Services } from "@/pages/Services";
 import { StaffDashboard } from "@/pages/StaffDashboard";
@@ -59,6 +62,24 @@ const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/about",
   component: About,
+});
+
+const pricingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/pricing",
+  component: Pricing,
+});
+
+const blogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog",
+  component: Blog,
+});
+
+const blogPostRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog/$id",
+  component: BlogPostPage,
 });
 
 // Auth routes
@@ -106,6 +127,9 @@ const routeTree = rootRoute.addChildren([
   saasRoute,
   contactRoute,
   aboutRoute,
+  pricingRoute,
+  blogRoute,
+  blogPostRoute,
   adminLoginRoute,
   staffLoginRoute,
   clientLoginRoute,

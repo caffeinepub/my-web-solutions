@@ -1,6 +1,7 @@
 export interface Session {
   userId: string;
   role: "admin" | "staff" | "client";
+  username?: string;
 }
 
 const SESSION_KEY = "mws_session";

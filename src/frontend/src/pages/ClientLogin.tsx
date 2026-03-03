@@ -35,6 +35,7 @@ export function ClientLogin() {
         setSession({
           userId: result.ok.userId.toString(),
           role: "client",
+          username,
         });
         navigate({ to: "/client-dashboard" });
       } else {

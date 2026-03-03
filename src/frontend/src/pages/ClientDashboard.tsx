@@ -1,11 +1,99 @@
+import { ServiceRequestStatus } from "@/backend.d";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useCreateServiceRequest,
+  useGetClientServiceRequests,
+} from "@/hooks/useQueries";
 import { clearSession, getSession } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
-import { Globe, LayoutDashboard, LogOut, UserCircle2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ClipboardList,
+  Clock,
+  FileText,
+  Globe,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  MessageCircle,
+  Plus,
+  UserCircle2,
+} from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+const WA_LINK = "https://wa.me/919901563799";
+
+const SERVICE_TYPES = [
+  "SaaS Service Management System",
+  "Small Business Website Development",
+  "WhatsApp Business Integration",
+  "Google Business Profile Setup",
+  "Security Certification Advisory",
+  "Corporate Security SOP Documentation",
+  "Risk Assessment Consultation",
+  "Event Security Planning",
+  "Police Verification Assistance",
+  "UMANG App Government Services",
+  "Resume Writing & Interview Prep",
+  "AI Movie & Digital Content Creation",
+  "Other",
+];
+
+function StatusBadge({ status }: { status: ServiceRequestStatus }) {
+  if (status === ServiceRequestStatus.pending) {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 gap-1.5">
+        <Clock className="w-3 h-3" />
+        Pending
+      </Badge>
+    );
+  }
+  if (status === ServiceRequestStatus.inProgress) {
+    return (
+      <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 gap-1.5">
+        <Loader2 className="w-3 h-3" />
+        In Progress
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 gap-1.5">
+      <CheckCircle2 className="w-3 h-3" />
+      Completed
+    </Badge>
+  );
+}
+
+function formatDate(ts: bigint) {
+  return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+type SideTab = "overview" | "requests" | "invoices";
 
 export function ClientDashboard() {
   const navigate = useNavigate();
@@ -18,11 +106,82 @@ export function ClientDashboard() {
     }
   }, [navigate]);
 
+  const [activeTab, setActiveTab] = useState<SideTab>("overview");
+  const [newRequestOpen, setNewRequestOpen] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    serviceType: "",
+    description: "",
+  });
+
+  const clientUserId = session?.userId ? BigInt(session.userId) : null;
+  const clientName = session?.username ?? "Client";
+
+  const { data: requests = [], isLoading: requestsLoading } =
+    useGetClientServiceRequests(clientUserId);
+  const { mutateAsync: createRequest, isPending: creating } =
+    useCreateServiceRequest();
+
   const handleLogout = () => {
     clearSession();
     navigate({ to: "/" });
     toast.success("Logged out successfully");
   };
+
+  const handleNewRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestForm.serviceType || !requestForm.description) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if (!clientUserId) {
+      toast.error("Session error. Please log in again.");
+      return;
+    }
+    try {
+      await createRequest({
+        clientUserId,
+        clientName,
+        serviceType: requestForm.serviceType,
+        description: requestForm.description,
+      });
+      toast.success("Service request submitted!");
+      setNewRequestOpen(false);
+      setRequestForm({ serviceType: "", description: "" });
+    } catch {
+      toast.error("Failed to submit request. Please try again.");
+    }
+  };
+
+  const pending = requests.filter(
+    (r) => r.status === ServiceRequestStatus.pending,
+  ).length;
+  const inProgress = requests.filter(
+    (r) => r.status === ServiceRequestStatus.inProgress,
+  ).length;
+  const completed = requests.filter(
+    (r) => r.status === ServiceRequestStatus.completed,
+  ).length;
+
+  const navItems = [
+    {
+      id: "overview" as SideTab,
+      label: "Overview",
+      icon: LayoutDashboard,
+      ocid: "client_dashboard.overview_tab",
+    },
+    {
+      id: "requests" as SideTab,
+      label: "My Requests",
+      icon: ClipboardList,
+      ocid: "client_dashboard.requests_tab",
+    },
+    {
+      id: "invoices" as SideTab,
+      label: "Invoices",
+      icon: FileText,
+      ocid: "client_dashboard.invoices_tab",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -45,24 +204,48 @@ export function ClientDashboard() {
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
-          <button
-            type="button"
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-sidebar-primary text-sidebar-primary-foreground text-left"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </button>
+          {navItems.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              data-ocid={item.ocid}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
+                activeTab === item.id
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              }`}
+            >
+              <item.icon className="w-4 h-4" />
+              {item.label}
+            </button>
+          ))}
         </nav>
+
+        {/* WhatsApp Support Button */}
+        <div className="p-3">
+          <a
+            href={`${WA_LINK}?text=Hi, I need support with my service.`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="client_dashboard.whatsapp_button"
+            className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+            style={{ backgroundColor: "#25D366" }}
+          >
+            <MessageCircle className="w-4 h-4 shrink-0" />
+            WhatsApp Support
+          </a>
+        </div>
 
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-2 px-3 py-2 mb-2">
             <UserCircle2 className="w-4 h-4 text-teal" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-sidebar-foreground truncate">
-                Client
+                {clientName}
               </p>
               <p className="text-xs text-sidebar-foreground/50 truncate">
-                ID: {session?.userId?.slice(0, 12)}...
+                Client Account
               </p>
             </div>
           </div>
@@ -80,40 +263,395 @@ export function ClientDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="space-y-6"
-        >
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">
-              Overview
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Client Dashboard
-            </p>
-          </div>
+      <main className="flex-1 p-6 overflow-auto">
+        {/* ── Overview ── */}
+        {activeTab === "overview" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Welcome, {clientName}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Here's an overview of your services
+              </p>
+            </div>
 
-          <Card className="shadow-card">
-            <CardContent className="p-8">
-              <div className="text-center max-w-md mx-auto">
-                <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
-                  <UserCircle2 className="w-8 h-8 text-primary" />
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-bold text-foreground">
+                        {requestsLoading ? "—" : pending}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Pending</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-bold text-foreground">
+                        {requestsLoading ? "—" : inProgress}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        In Progress
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-bold text-foreground">
+                        {requestsLoading ? "—" : completed}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Completed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Requests */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Recent Requests</CardTitle>
+                  <Button
+                    size="sm"
+                    onClick={() => setNewRequestOpen(true)}
+                    data-ocid="client_dashboard.new_request_button"
+                    className="font-medium"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    New Request
+                  </Button>
                 </div>
-                <h2 className="font-display text-xl font-bold text-foreground mb-2">
-                  Welcome!
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Your services and account details will appear here once your
-                  projects are activated.
+              </CardHeader>
+              <CardContent>
+                {requestsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map((i) => (
+                      <Skeleton key={i} className="h-14 w-full" />
+                    ))}
+                  </div>
+                ) : requests.length === 0 ? (
+                  <div
+                    data-ocid="client_dashboard.requests.empty_state"
+                    className="text-center py-8"
+                  >
+                    <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      No requests yet. Submit your first service request.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {requests.slice(0, 3).map((req) => (
+                      <div
+                        key={req.id.toString()}
+                        className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
+                      >
+                        <div>
+                          <p className="font-medium text-sm text-foreground">
+                            {req.serviceType}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(req.createdAt)}
+                          </p>
+                        </div>
+                        <StatusBadge status={req.status} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card
+                className="cursor-pointer hover:shadow-card transition-all"
+                onClick={() => setNewRequestOpen(true)}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">
+                        New Service Request
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Submit a new request
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <a
+                href={`${WA_LINK}?text=Hi, I need support with my service.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-ocid="client_dashboard.whatsapp_support_link"
+              >
+                <Card className="cursor-pointer hover:shadow-card transition-all h-full">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: "#dcfce7" }}
+                      >
+                        <MessageCircle
+                          className="w-5 h-5"
+                          style={{ color: "#16a34a" }}
+                        />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">
+                          WhatsApp Support
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Chat with us directly
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── My Requests ── */}
+        {activeTab === "requests" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  My Service Requests
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Track all your submitted requests
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <Button
+                size="sm"
+                onClick={() => setNewRequestOpen(true)}
+                data-ocid="client_dashboard.requests.new_button"
+                className="font-medium"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                New Request
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {requestsLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : requests.length === 0 ? (
+                  <div
+                    data-ocid="client_dashboard.requests.empty_state"
+                    className="py-16 text-center"
+                  >
+                    <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No service requests yet.
+                    </p>
+                    <Button
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => setNewRequestOpen(true)}
+                      data-ocid="client_dashboard.requests.empty_new_button"
+                    >
+                      Submit Your First Request
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {requests.map((req, index) => (
+                      <div
+                        key={req.id.toString()}
+                        data-ocid={`client_dashboard.requests.item.${index + 1}`}
+                        className="p-5 flex items-start justify-between gap-4"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-foreground mb-1">
+                            {req.serviceType}
+                          </p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {req.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1.5">
+                            Submitted on {formatDate(req.createdAt)}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
+                          <StatusBadge status={req.status} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* ── Invoices ── */}
+        {activeTab === "invoices" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Invoices
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                View your billing history
+              </p>
+            </div>
+
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-7 h-7 text-primary" />
+                </div>
+                <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                  No Invoices Yet
+                </h2>
+                <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
+                  Your invoices will appear here once your services are
+                  completed. For billing queries, contact us directly on
+                  WhatsApp.
+                </p>
+                <Button
+                  asChild
+                  size="sm"
+                  className="font-semibold"
+                  data-ocid="client_dashboard.invoices.whatsapp_button"
+                >
+                  <a
+                    href={`${WA_LINK}?text=Hi, I have a billing query regarding my invoice.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contact on WhatsApp
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </main>
+
+      {/* New Request Dialog */}
+      <Dialog open={newRequestOpen} onOpenChange={setNewRequestOpen}>
+        <DialogContent data-ocid="client_dashboard.new_request.dialog">
+          <DialogHeader>
+            <DialogTitle>Submit New Service Request</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleNewRequest} className="space-y-4 pt-2">
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Service Type *
+              </Label>
+              <Select
+                value={requestForm.serviceType}
+                onValueChange={(v) =>
+                  setRequestForm((p) => ({ ...p, serviceType: v }))
+                }
+              >
+                <SelectTrigger data-ocid="client_dashboard.new_request.service_select">
+                  <SelectValue placeholder="Select a service..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICE_TYPES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Description *
+              </Label>
+              <Textarea
+                data-ocid="client_dashboard.new_request.description_textarea"
+                placeholder="Describe what you need..."
+                rows={4}
+                value={requestForm.description}
+                onChange={(e) =>
+                  setRequestForm((p) => ({ ...p, description: e.target.value }))
+                }
+                required
+                className="resize-none"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                data-ocid="client_dashboard.new_request.cancel_button"
+                onClick={() => setNewRequestOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                data-ocid="client_dashboard.new_request.submit_button"
+                disabled={creating}
+              >
+                {creating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Request"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

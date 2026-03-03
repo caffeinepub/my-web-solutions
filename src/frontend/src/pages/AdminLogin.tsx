@@ -35,6 +35,7 @@ export function AdminLogin() {
         setSession({
           userId: result.ok.userId.toString(),
           role: "admin",
+          username,
         });
         navigate({ to: "/admin-dashboard" });
       } else {

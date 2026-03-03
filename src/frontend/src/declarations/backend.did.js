@@ -18,11 +18,36 @@ export const Role = IDL.Variant({
   'admin' : IDL.Null,
   'staff' : IDL.Null,
 });
+export const BlogPost = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'content' : IDL.Text,
+  'isPublished' : IDL.Bool,
+  'createdAt' : IDL.Int,
+  'authorName' : IDL.Text,
+  'updatedAt' : IDL.Int,
+  'excerpt' : IDL.Text,
+});
 export const UserProfile = IDL.Record({
   'username' : IDL.Text,
   'userId' : IDL.Nat,
   'name' : IDL.Text,
   'role' : Role,
+});
+export const ServiceRequestStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+  'inProgress' : IDL.Null,
+});
+export const ServiceRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ServiceRequestStatus,
+  'serviceType' : IDL.Text,
+  'clientName' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'description' : IDL.Text,
+  'updatedAt' : IDL.Int,
+  'clientUserId' : IDL.Nat,
 });
 export const LeadStatus = IDL.Variant({
   'new' : IDL.Null,
@@ -49,9 +74,27 @@ export const User = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'createBlogPost' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'createServiceRequest' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'createUser' : IDL.Func([IDL.Text, IDL.Text, Role], [IDL.Nat], []),
+  'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getClientServiceRequests' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ServiceRequest)],
+      ['query'],
+    ),
   'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -59,6 +102,9 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'listAllServiceRequests' : IDL.Func([], [IDL.Vec(ServiceRequest)], ['query']),
+  'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'login' : IDL.Func(
       [IDL.Text, IDL.Text],
@@ -77,7 +123,17 @@ export const idlService = IDL.Service({
       [],
     ),
   'toggleUserActive' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'updateBlogPost' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Bool],
+      [],
+    ),
   'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
+  'updateServiceRequestStatus' : IDL.Func(
+      [IDL.Nat, ServiceRequestStatus],
+      [IDL.Bool],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -93,11 +149,36 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'staff' : IDL.Null,
   });
+  const BlogPost = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'content' : IDL.Text,
+    'isPublished' : IDL.Bool,
+    'createdAt' : IDL.Int,
+    'authorName' : IDL.Text,
+    'updatedAt' : IDL.Int,
+    'excerpt' : IDL.Text,
+  });
   const UserProfile = IDL.Record({
     'username' : IDL.Text,
     'userId' : IDL.Nat,
     'name' : IDL.Text,
     'role' : Role,
+  });
+  const ServiceRequestStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+    'inProgress' : IDL.Null,
+  });
+  const ServiceRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ServiceRequestStatus,
+    'serviceType' : IDL.Text,
+    'clientName' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'description' : IDL.Text,
+    'updatedAt' : IDL.Int,
+    'clientUserId' : IDL.Nat,
   });
   const LeadStatus = IDL.Variant({
     'new' : IDL.Null,
@@ -124,9 +205,27 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'createBlogPost' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'createServiceRequest' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'createUser' : IDL.Func([IDL.Text, IDL.Text, Role], [IDL.Nat], []),
+    'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getClientServiceRequests' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ServiceRequest)],
+        ['query'],
+      ),
     'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -134,6 +233,13 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'listAllServiceRequests' : IDL.Func(
+        [],
+        [IDL.Vec(ServiceRequest)],
+        ['query'],
+      ),
+    'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
     'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'login' : IDL.Func(
         [IDL.Text, IDL.Text],
@@ -152,7 +258,17 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'toggleUserActive' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'updateBlogPost' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Bool],
+        [],
+      ),
     'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
+    'updateServiceRequestStatus' : IDL.Func(
+        [IDL.Nat, ServiceRequestStatus],
+        [IDL.Bool],
+        [],
+      ),
   });
 };
 

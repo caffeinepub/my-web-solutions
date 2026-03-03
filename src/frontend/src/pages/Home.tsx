@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Cloud,
   Code2,
+  Quote,
   Shield,
   Star,
   TrendingUp,
@@ -67,6 +68,30 @@ const trustPoints = [
     title: "Founder-Led Personalized Service",
     description:
       "You work directly with Mounith — no middlemen, no outsourcing. Every client gets dedicated, personal attention.",
+  },
+];
+
+const testimonials = [
+  {
+    name: "Rajesh Kumar",
+    designation: "Business Owner, Bengaluru",
+    review:
+      "Professional and structured approach. My business automation is running smoothly now. Highly recommend for any business looking to upgrade their systems.",
+    rating: 5,
+  },
+  {
+    name: "Anitha Sharma",
+    designation: "HR Manager, Mysuru",
+    review:
+      "Very helpful in certification and documentation support. The entire process was smooth, transparent, and professionally handled. Made everything easy.",
+    rating: 5,
+  },
+  {
+    name: "Suresh Nair",
+    designation: "Startup Founder, Bengaluru",
+    review:
+      "Website delivery was fast and clean. Great support throughout the project. The team understood our requirements and delivered beyond expectations.",
+    rating: 5,
   },
 ];
 
@@ -359,6 +384,86 @@ export function Home() {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {point.description}
                 </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              Client Reviews
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              What Our Clients Say
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Real feedback from real clients — we let our work speak for
+              itself.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {testimonials.map((t) => (
+              <motion.div key={t.name} variants={itemVariants}>
+                <Card className="h-full shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border-border">
+                  <CardContent className="p-6 flex flex-col h-full">
+                    {/* Quote icon */}
+                    <div className="mb-4">
+                      <Quote className="w-8 h-8 text-primary/30" />
+                    </div>
+
+                    {/* Stars */}
+                    <div className="flex gap-1 mb-4">
+                      {Array.from(
+                        { length: t.rating },
+                        (__, si) => `${t.name}-star-${si}`,
+                      ).map((key) => (
+                        <Star
+                          key={key}
+                          className="w-4 h-4 fill-amber-400 text-amber-400"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Review text */}
+                    <p className="text-muted-foreground text-sm leading-relaxed flex-1 italic mb-5">
+                      "{t.review}"
+                    </p>
+
+                    {/* Author */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-border">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-bold text-sm">
+                          {t.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">
+                          {t.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.designation}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </motion.div>

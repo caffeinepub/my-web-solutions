@@ -12,7 +12,7 @@ export function WhatsAppButton() {
       <Tooltip>
         <TooltipTrigger asChild>
           <a
-            href="https://wa.me/919876543210"
+            href="https://wa.me/919901563799"
             target="_blank"
             rel="noopener noreferrer"
             data-ocid="whatsapp.button"

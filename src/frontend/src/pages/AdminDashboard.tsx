@@ -1,4 +1,9 @@
-import { LeadStatus, Role } from "@/backend.d";
+import {
+  type BlogPost,
+  LeadStatus,
+  Role,
+  ServiceRequestStatus,
+} from "@/backend.d";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -28,23 +34,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
+  useCreateBlogPost,
   useCreateUser,
+  useDeleteBlogPost,
   useGetLeads,
+  useListAllBlogPosts,
+  useListAllServiceRequests,
   useListUsers,
   useToggleUserActive,
+  useUpdateBlogPost,
   useUpdateLeadStatus,
+  useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
 import { clearSession, getSession } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  BookOpen,
+  ClipboardList,
   Globe,
   LayoutDashboard,
   Loader2,
   LogOut,
   MessageSquare,
+  Pencil,
   Plus,
   ShieldCheck,
+  Trash2,
   UserCheck,
   UserCircle2,
   Users,
@@ -52,7 +69,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-type Tab = "overview" | "leads" | "users";
+type Tab = "overview" | "leads" | "users" | "blog" | "service-requests";
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
   if (status === LeadStatus.new_) {
@@ -76,6 +93,30 @@ function LeadStatusBadge({ status }: { status: LeadStatus }) {
   );
 }
 
+function ServiceRequestStatusBadge({
+  status,
+}: { status: ServiceRequestStatus }) {
+  if (status === ServiceRequestStatus.pending) {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100">
+        Pending
+      </Badge>
+    );
+  }
+  if (status === ServiceRequestStatus.inProgress) {
+    return (
+      <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+        In Progress
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+      Completed
+    </Badge>
+  );
+}
+
 function formatDate(ts: bigint) {
   return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -83,6 +124,14 @@ function formatDate(ts: bigint) {
     year: "numeric",
   });
 }
+
+const emptyBlogForm = {
+  title: "",
+  excerpt: "",
+  content: "",
+  authorName: "",
+  isPublished: false,
+};
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -92,6 +141,13 @@ export function AdminDashboard() {
     password: "",
     role: Role.client as Role,
   });
+
+  // Blog state
+  const [blogModalOpen, setBlogModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [deletePostId, setDeletePostId] = useState<bigint | null>(null);
+  const [deletePostOpen, setDeletePostOpen] = useState(false);
+  const [blogForm, setBlogForm] = useState(emptyBlogForm);
 
   const navigate = useNavigate();
   const session = getSession();
@@ -105,9 +161,21 @@ export function AdminDashboard() {
 
   const { data: leads = [], isLoading: leadsLoading } = useGetLeads();
   const { data: users = [], isLoading: usersLoading } = useListUsers();
+  const { data: blogPosts = [], isLoading: blogLoading } =
+    useListAllBlogPosts();
+  const { data: serviceRequests = [], isLoading: srLoading } =
+    useListAllServiceRequests();
+
   const { mutate: updateStatus } = useUpdateLeadStatus();
   const { mutate: toggleActive } = useToggleUserActive();
   const { mutateAsync: createUser, isPending: creatingUser } = useCreateUser();
+  const { mutateAsync: createBlogPost, isPending: creatingBlog } =
+    useCreateBlogPost();
+  const { mutateAsync: updateBlogPost, isPending: updatingBlog } =
+    useUpdateBlogPost();
+  const { mutateAsync: deleteBlogPost, isPending: deletingBlog } =
+    useDeleteBlogPost();
+  const { mutate: updateSRStatus } = useUpdateServiceRequestStatus();
 
   const handleLogout = () => {
     clearSession();
@@ -137,7 +205,85 @@ export function AdminDashboard() {
     }
   };
 
+  const openAddBlogModal = () => {
+    setEditingPost(null);
+    setBlogForm(emptyBlogForm);
+    setBlogModalOpen(true);
+  };
+
+  const openEditBlogModal = (post: BlogPost) => {
+    setEditingPost(post);
+    setBlogForm({
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      authorName: post.authorName,
+      isPublished: post.isPublished,
+    });
+    setBlogModalOpen(true);
+  };
+
+  const handleBlogSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blogForm.title || !blogForm.content || !blogForm.authorName) {
+      toast.error("Please fill title, content, and author name");
+      return;
+    }
+    try {
+      if (editingPost) {
+        await updateBlogPost({
+          id: editingPost.id,
+          title: blogForm.title,
+          content: blogForm.content,
+          excerpt: blogForm.excerpt,
+          isPublished: blogForm.isPublished,
+        });
+        toast.success("Post updated");
+      } else {
+        await createBlogPost({
+          title: blogForm.title,
+          content: blogForm.content,
+          excerpt: blogForm.excerpt,
+          authorName: blogForm.authorName,
+        });
+        toast.success("Post created");
+      }
+      setBlogModalOpen(false);
+      setBlogForm(emptyBlogForm);
+      setEditingPost(null);
+    } catch {
+      toast.error("Failed to save post");
+    }
+  };
+
+  const confirmDeletePost = (id: bigint) => {
+    setDeletePostId(id);
+    setDeletePostOpen(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!deletePostId) return;
+    try {
+      await deleteBlogPost(deletePostId);
+      toast.success("Post deleted");
+    } catch {
+      toast.error("Failed to delete post");
+    } finally {
+      setDeletePostOpen(false);
+      setDeletePostId(null);
+    }
+  };
+
   const activeUsers = users.filter((u) => u.isActive).length;
+  const pendingSR = serviceRequests.filter(
+    (r) => r.status === ServiceRequestStatus.pending,
+  ).length;
+  const inProgressSR = serviceRequests.filter(
+    (r) => r.status === ServiceRequestStatus.inProgress,
+  ).length;
+  const completedSR = serviceRequests.filter(
+    (r) => r.status === ServiceRequestStatus.completed,
+  ).length;
 
   const navItems = [
     {
@@ -151,6 +297,18 @@ export function AdminDashboard() {
       label: "Leads",
       icon: MessageSquare,
       ocid: "admin_dashboard.leads_tab",
+    },
+    {
+      id: "service-requests" as Tab,
+      label: "Service Requests",
+      icon: ClipboardList,
+      ocid: "admin_dashboard.service_requests_tab",
+    },
+    {
+      id: "blog" as Tab,
+      label: "Blog",
+      icon: BookOpen,
+      ocid: "admin_dashboard.blog_tab",
     },
     {
       id: "users" as Tab,
@@ -191,7 +349,7 @@ export function AdminDashboard() {
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
-              <item.icon className="w-4 h-4" />
+              <item.icon className="w-4 h-4 shrink-0" />
               {item.label}
             </button>
           ))}
@@ -224,7 +382,7 @@ export function AdminDashboard() {
 
       {/* Main */}
       <main className="flex-1 p-6 overflow-auto">
-        {/* Overview Tab */}
+        {/* ── Overview ── */}
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div>
@@ -236,7 +394,7 @@ export function AdminDashboard() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -249,6 +407,23 @@ export function AdminDashboard() {
                   ) : (
                     <p className="font-display text-3xl font-bold text-foreground">
                       {leads.length}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Service Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {srLoading ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      {serviceRequests.length}
                     </p>
                   )}
                 </CardContent>
@@ -329,7 +504,7 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {/* Leads Tab */}
+        {/* ── Leads ── */}
         {activeTab === "leads" && (
           <div className="space-y-6">
             <div>
@@ -438,7 +613,261 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {/* Users Tab */}
+        {/* ── Service Requests ── */}
+        {activeTab === "service-requests" && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Service Requests
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                All client service requests
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-2xl font-bold text-yellow-600">
+                    {pendingSR}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Pending</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-2xl font-bold text-blue-600">
+                    {inProgressSR}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    In Progress
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-2xl font-bold text-green-600">
+                    {completedSR}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Completed
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {srLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : serviceRequests.length === 0 ? (
+                  <div
+                    data-ocid="service_requests.empty_state"
+                    className="py-16 text-center"
+                  >
+                    <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No service requests yet.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table data-ocid="service_requests.table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Service Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Update</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {serviceRequests.map((req, index) => (
+                          <TableRow
+                            key={req.id.toString()}
+                            data-ocid={`service_requests.row.${index + 1}`}
+                          >
+                            <TableCell className="font-medium text-sm">
+                              {req.clientName}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {req.serviceType}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {req.description}
+                            </TableCell>
+                            <TableCell>
+                              <ServiceRequestStatusBadge status={req.status} />
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDate(req.createdAt)}
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={req.status}
+                                onValueChange={(v) =>
+                                  updateSRStatus({
+                                    id: req.id,
+                                    status: v as ServiceRequestStatus,
+                                  })
+                                }
+                              >
+                                <SelectTrigger
+                                  className="w-36 h-8 text-xs"
+                                  data-ocid={`service_requests.status_select.${index + 1}`}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem
+                                    value={ServiceRequestStatus.pending}
+                                  >
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem
+                                    value={ServiceRequestStatus.inProgress}
+                                  >
+                                    In Progress
+                                  </SelectItem>
+                                  <SelectItem
+                                    value={ServiceRequestStatus.completed}
+                                  >
+                                    Completed
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ── Blog ── */}
+        {activeTab === "blog" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Blog Posts
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Manage all blog content
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={openAddBlogModal}
+                data-ocid="blog.add_post_button"
+                className="font-medium"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Add Post
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {blogLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : blogPosts.length === 0 ? (
+                  <div
+                    data-ocid="blog.empty_state"
+                    className="py-16 text-center"
+                  >
+                    <BookOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No blog posts yet. Create your first post!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table data-ocid="blog.table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Author</TableHead>
+                          <TableHead>Published</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {blogPosts.map((post, index) => (
+                          <TableRow
+                            key={post.id.toString()}
+                            data-ocid={`blog.row.${index + 1}`}
+                          >
+                            <TableCell className="font-medium text-sm max-w-[240px] truncate">
+                              {post.title}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {post.authorName}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  post.isPublished
+                                    ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                    : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                }
+                              >
+                                {post.isPublished ? "Published" : "Draft"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDate(post.createdAt)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  data-ocid={`blog.edit_button.${index + 1}`}
+                                  onClick={() => openEditBlogModal(post)}
+                                  className="h-7 px-2"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  data-ocid={`blog.delete_button.${index + 1}`}
+                                  onClick={() => confirmDeletePost(post.id)}
+                                  className="h-7 px-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ── Users ── */}
         {activeTab === "users" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -473,6 +902,7 @@ export function AdminDashboard() {
                       </Label>
                       <Input
                         placeholder="username"
+                        data-ocid="users.create_user.input"
                         value={newUser.username}
                         onChange={(e) =>
                           setNewUser((p) => ({
@@ -510,7 +940,7 @@ export function AdminDashboard() {
                           setNewUser((p) => ({ ...p, role: v as Role }))
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger data-ocid="users.create_user.select">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -634,6 +1064,154 @@ export function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Blog Add/Edit Modal */}
+      <Dialog open={blogModalOpen} onOpenChange={setBlogModalOpen}>
+        <DialogContent className="max-w-2xl" data-ocid="blog.post_form.dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPost ? "Edit Blog Post" : "Add New Blog Post"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleBlogSubmit} className="space-y-4 pt-2">
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Title *
+              </Label>
+              <Input
+                data-ocid="blog.post_form.title_input"
+                placeholder="Post title..."
+                value={blogForm.title}
+                onChange={(e) =>
+                  setBlogForm((p) => ({ ...p, title: e.target.value }))
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Excerpt (short description)
+              </Label>
+              <Input
+                data-ocid="blog.post_form.excerpt_input"
+                placeholder="Brief description shown in listing..."
+                value={blogForm.excerpt}
+                onChange={(e) =>
+                  setBlogForm((p) => ({ ...p, excerpt: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Author Name *
+              </Label>
+              <Input
+                data-ocid="blog.post_form.author_input"
+                placeholder="Mounith H C"
+                value={blogForm.authorName}
+                onChange={(e) =>
+                  setBlogForm((p) => ({ ...p, authorName: e.target.value }))
+                }
+                required
+                disabled={!!editingPost}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Content *
+              </Label>
+              <Textarea
+                data-ocid="blog.post_form.content_textarea"
+                placeholder="Write your blog post content here..."
+                rows={8}
+                value={blogForm.content}
+                onChange={(e) =>
+                  setBlogForm((p) => ({ ...p, content: e.target.value }))
+                }
+                required
+                className="resize-none"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                data-ocid="blog.post_form.published_switch"
+                checked={blogForm.isPublished}
+                onCheckedChange={(v) =>
+                  setBlogForm((p) => ({ ...p, isPublished: v }))
+                }
+              />
+              <Label className="text-sm font-medium cursor-pointer">
+                {blogForm.isPublished
+                  ? "Published"
+                  : "Draft — not visible to public"}
+              </Label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                data-ocid="blog.post_form.cancel_button"
+                onClick={() => setBlogModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                data-ocid="blog.post_form.save_button"
+                disabled={creatingBlog || updatingBlog}
+              >
+                {creatingBlog || updatingBlog ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : editingPost ? (
+                  "Update Post"
+                ) : (
+                  "Create Post"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog open={deletePostOpen} onOpenChange={setDeletePostOpen}>
+        <DialogContent data-ocid="blog.delete_post.dialog">
+          <DialogHeader>
+            <DialogTitle>Delete Blog Post</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-2">
+            Are you sure you want to delete this post? This action cannot be
+            undone.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              data-ocid="blog.delete_post.cancel_button"
+              onClick={() => setDeletePostOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              data-ocid="blog.delete_post.confirm_button"
+              disabled={deletingBlog}
+              onClick={handleDeletePost}
+            >
+              {deletingBlog ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Post"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

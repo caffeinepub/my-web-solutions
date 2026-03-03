@@ -26,11 +26,11 @@ export function Footer() {
             </p>
             <div className="mt-4 flex flex-col gap-2 text-sm text-sidebar-foreground/70">
               <a
-                href="tel:+919876543210"
+                href="tel:+919901563799"
                 className="flex items-center gap-2 hover:text-teal transition-colors"
               >
                 <Phone className="w-4 h-4 text-teal" />
-                +91 98765 43210
+                +91 99015 63799
               </a>
               <a
                 href="mailto:mywebsoloutions97@gmail.com"
@@ -55,7 +55,8 @@ export function Footer() {
               {[
                 { label: "Home", to: "/" },
                 { label: "Services", to: "/services" },
-                { label: "SaaS Solutions", to: "/saas" },
+                { label: "Pricing", to: "/pricing" },
+                { label: "Blog", to: "/blog" },
                 { label: "About", to: "/about" },
                 { label: "Contact", to: "/contact" },
               ].map((link) => (
