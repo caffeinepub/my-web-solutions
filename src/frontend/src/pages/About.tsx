@@ -97,7 +97,7 @@ export function About() {
                 >
                   <div className="w-full h-full rounded-full overflow-hidden bg-accent">
                     <img
-                      src="/assets/generated/founder-mounith.dim_400x400.jpg"
+                      src="/assets/generated/founder-real.dim_400x400.jpg"
                       alt="Mounith H C — Founder & CEO, My Web Solutions"
                       className="w-full h-full object-cover"
                     />

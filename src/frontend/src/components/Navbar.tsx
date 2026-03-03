@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Globe, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
@@ -21,9 +21,11 @@ export function Navbar() {
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Globe className="w-4 h-4 text-primary-foreground" />
-          </div>
+          <img
+            src="/assets/generated/logo-mws.dim_200x200.jpg"
+            alt="My Web Solutions Logo"
+            className="w-9 h-9 rounded-lg object-cover shadow-sm border border-border"
+          />
           <span className="font-display font-bold text-lg text-foreground tracking-tight">
             My Web Solutions
           </span>

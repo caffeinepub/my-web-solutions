@@ -16,11 +16,16 @@ import {
   Code2,
   FileText,
   Globe,
+  Mail,
   MessageSquare,
+  MessageSquareText,
   Shield,
   UserCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
+
+const WHATSAPP_NUMBER = "919901563799";
+const MAIL_ADDRESS = "mywebsoloutions97@gmail.com";
 
 const categories = [
   {
@@ -30,10 +35,12 @@ const categories = [
     primary: true,
     description:
       "Our flagship digital products — the primary focus of My Web Solutions.",
+    bannerImage: "/assets/generated/service-banner-web-saas.dim_800x400.jpg",
     services: [
       {
         icon: Cloud,
         title: "SaaS Service Management System",
+        image: "/assets/generated/service-saas-management.dim_600x360.jpg",
         description:
           "Our core product. A complete cloud-based service management platform designed for small businesses. Manage clients, services, and operations in one place.",
         tags: ["Core Product", "Cloud", "Small Business"],
@@ -41,6 +48,7 @@ const categories = [
       {
         icon: Code2,
         title: "Small Business Website Development",
+        image: "/assets/generated/service-website-dev.dim_600x360.jpg",
         description:
           "Professional websites built for small businesses. Fast, mobile-ready, and built to generate leads.",
         tags: ["Website", "Mobile-Ready", "Lead Gen"],
@@ -48,6 +56,7 @@ const categories = [
       {
         icon: MessageSquare,
         title: "WhatsApp Business Integration",
+        image: "/assets/generated/service-whatsapp-integration.dim_600x360.jpg",
         description:
           "Set up and integrate WhatsApp Business API into your operations. Automate responses, manage customer chats professionally.",
         tags: ["WhatsApp", "Automation", "Customer Service"],
@@ -55,6 +64,7 @@ const categories = [
       {
         icon: Globe,
         title: "Google Business Profile Setup",
+        image: "/assets/generated/service-google-business.dim_600x360.jpg",
         description:
           "Get your business found on Google Maps and Search. Complete Google Business Profile setup and optimization.",
         tags: ["Google", "Local SEO", "Visibility"],
@@ -68,10 +78,13 @@ const categories = [
     primary: false,
     description:
       "Corporate-grade security services backed by 11+ years of field experience.",
+    bannerImage: "/assets/generated/service-banner-security.dim_800x400.jpg",
     services: [
       {
         icon: Shield,
         title: "Security Certification Advisory",
+        image:
+          "/assets/generated/service-security-certification.dim_600x360.jpg",
         description:
           "Individual security certifications: CSA, CSS, CSI, CSM, CSD through Corp International. Guidance from an accredited advisor.",
         tags: ["CSA", "CSS", "Corp International"],
@@ -79,6 +92,7 @@ const categories = [
       {
         icon: FileText,
         title: "Corporate Security SOP Documentation",
+        image: "/assets/generated/service-sop-documentation.dim_600x360.jpg",
         description:
           "Professional standard operating procedures for corporate security teams. Structured, compliant, and audit-ready documentation.",
         tags: ["SOP", "Compliance", "Documentation"],
@@ -86,6 +100,7 @@ const categories = [
       {
         icon: Building,
         title: "Risk Assessment Consultation",
+        image: "/assets/generated/service-risk-assessment.dim_600x360.jpg",
         description:
           "Structured risk assessment for businesses and events. Identify vulnerabilities and build mitigation strategies.",
         tags: ["Risk", "Assessment", "Strategy"],
@@ -93,6 +108,7 @@ const categories = [
       {
         icon: CalendarClock,
         title: "Event Security Planning",
+        image: "/assets/generated/service-event-security.dim_600x360.jpg",
         description:
           "End-to-end security planning for corporate events, conferences, and gatherings. From threat assessment to on-ground coordination.",
         tags: ["Events", "Security", "Planning"],
@@ -106,10 +122,12 @@ const categories = [
     primary: false,
     description:
       "Helping individuals and businesses navigate government processes with ease.",
+    bannerImage: "/assets/generated/service-banner-government.dim_800x400.jpg",
     services: [
       {
         icon: UserCheck,
         title: "Police Verification Assistance",
+        image: "/assets/generated/service-police-verification.dim_600x360.jpg",
         description:
           "Assistance with Character, Address, and Tenant police verification processes. Guidance on documentation and submission.",
         tags: ["Character", "Address", "Tenant"],
@@ -117,6 +135,7 @@ const categories = [
       {
         icon: Briefcase,
         title: "UMANG App Government Services",
+        image: "/assets/generated/service-umang-app.dim_600x360.jpg",
         description:
           "Step-by-step guidance for using the UMANG government app. PF withdrawal, Aadhaar linking, DigiLocker, Pension, and more.",
         tags: ["PF", "Aadhaar", "DigiLocker"],
@@ -130,10 +149,12 @@ const categories = [
     primary: false,
     description:
       "Professional development and creative services for individuals and brands.",
+    bannerImage: "/assets/generated/service-banner-career.dim_800x400.jpg",
     services: [
       {
         icon: BookOpen,
         title: "Resume Writing & Job Interview Prep",
+        image: "/assets/generated/service-resume-interview.dim_600x360.jpg",
         description:
           "Professional resume writing and mock interview preparation. Tailored for corporate security and IT sector roles.",
         tags: ["Resume", "Interview", "Career"],
@@ -141,6 +162,7 @@ const categories = [
       {
         icon: Clapperboard,
         title: "AI Movie & Digital Content Creation",
+        image: "/assets/generated/service-ai-content.dim_600x360.jpg",
         description:
           "AI-assisted movie scripts, digital content, and creative media production for brands and individuals.",
         tags: ["AI", "Content", "Creative"],
@@ -161,6 +183,49 @@ const itemVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
+
+function ServiceActionButtons({ serviceTitle }: { serviceTitle: string }) {
+  const waMessage = encodeURIComponent(
+    `Hi! I'm interested in your service: "${serviceTitle}". Please let me know more details.`,
+  );
+  const mailSubject = encodeURIComponent(`Inquiry: ${serviceTitle}`);
+  const mailBody = encodeURIComponent(
+    `Hello,\n\nI'm interested in your service: "${serviceTitle}".\n\nPlease share more details.\n\nThank you.`,
+  );
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-ocid="services.whatsapp_button"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366] text-white text-xs font-semibold hover:bg-[#1ebe5d] transition-colors shadow-sm"
+      >
+        <MessageSquareText className="w-3.5 h-3.5" />
+        WhatsApp
+      </a>
+      <a
+        href={`mailto:${MAIL_ADDRESS}?subject=${mailSubject}&body=${mailBody}`}
+        data-ocid="services.mail_button"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent border border-border text-foreground text-xs font-semibold hover:bg-secondary transition-colors"
+      >
+        <Mail className="w-3.5 h-3.5 text-primary" />
+        Email
+      </a>
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi! I'd like to book your service: "${serviceTitle}". Please share available slots.`)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-ocid="services.book_now_button"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+      >
+        <CalendarClock className="w-3.5 h-3.5" />
+        Book Now
+      </a>
+    </div>
+  );
+}
 
 export function Services() {
   return (
@@ -191,7 +256,7 @@ export function Services() {
 
       {/* Service Categories */}
       <section className="py-16 bg-background flex-1">
-        <div className="container mx-auto px-4 space-y-16">
+        <div className="container mx-auto px-4 space-y-20">
           {categories.map((cat, catIndex) => (
             <motion.div
               key={cat.id}
@@ -200,27 +265,31 @@ export function Services() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: catIndex * 0.05 }}
             >
-              {/* Category Header */}
-              <div
-                className={`rounded-xl p-5 mb-6 border ${
-                  cat.primary
-                    ? "bg-primary/5 border-primary/20"
-                    : "bg-secondary/50 border-border"
-                }`}
-              >
-                <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
-                    {cat.label}
-                  </h2>
-                  {cat.badge && (
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary text-primary-foreground uppercase tracking-wide">
-                      {cat.badge}
-                    </span>
-                  )}
+              {/* Category Banner Image */}
+              <div className="rounded-2xl overflow-hidden mb-6 shadow-sm border border-border">
+                <div className="relative h-48 md:h-56">
+                  <img
+                    src={cat.bannerImage}
+                    alt={cat.label}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlay with category info */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex flex-col justify-end p-6">
+                    <div className="flex flex-wrap items-center gap-3 mb-1">
+                      <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
+                        {cat.label}
+                      </h2>
+                      {cat.badge && (
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary text-primary-foreground uppercase tracking-wide">
+                          {cat.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-lg">
+                      {cat.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {cat.description}
-                </p>
               </div>
 
               {/* Service Cards */}
@@ -238,23 +307,34 @@ export function Services() {
                 {cat.services.map((service) => (
                   <motion.div key={service.title} variants={itemVariants}>
                     <Card
-                      className={`h-full transition-all duration-300 hover:-translate-y-1 border-border ${
+                      className={`h-full transition-all duration-300 hover:-translate-y-1 border-border flex flex-col overflow-hidden ${
                         cat.primary
                           ? "hover:shadow-card hover:border-primary/20"
                           : "hover:shadow-xs"
                       }`}
                     >
-                      <CardContent className="p-6">
-                        <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center mb-4">
-                          <service.icon className="w-5 h-5 text-primary" />
+                      {/* Service Image */}
+                      <div className="relative h-40 overflow-hidden">
+                        <img
+                          src={service.image}
+                          alt={service.title}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/20" />
+                        <div className="absolute top-3 left-3">
+                          <div className="w-9 h-9 rounded-lg bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                            <service.icon className="w-4 h-4 text-primary" />
+                          </div>
                         </div>
-                        <h3 className="font-display text-base font-bold text-foreground mb-2 leading-snug">
+                      </div>
+                      <CardContent className="p-5 flex flex-col flex-1">
+                        <h3 className="font-display text-sm font-bold text-foreground mb-2 leading-snug">
                           {service.title}
                         </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                        <p className="text-muted-foreground text-xs leading-relaxed mb-3 flex-1">
                           {service.description}
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1.5 mb-1">
                           {service.tags.map((tag) => (
                             <span
                               key={tag}
@@ -264,6 +344,8 @@ export function Services() {
                             </span>
                           ))}
                         </div>
+                        {/* Action Buttons */}
+                        <ServiceActionButtons serviceTitle={service.title} />
                       </CardContent>
                     </Card>
                   </motion.div>
