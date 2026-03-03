@@ -1,15 +1,18 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Award,
+  CalendarClock,
   CheckCircle,
   Cloud,
-  Code2,
+  Mail,
+  MessageSquareText,
   Quote,
   Shield,
   Star,
@@ -19,27 +22,50 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-const features = [
+const serviceCategories = [
   {
-    icon: Cloud,
-    title: "SaaS Solutions",
+    id: 1,
+    title: "Web & SaaS Solutions",
+    badge: "Core Offering",
+    badgeVariant: "default" as const,
     description:
-      "End-to-end SaaS Service Management Systems built for small businesses. Scalable, cloud-native, and ready to grow with you.",
-    badge: "Core Product",
+      "Custom websites, SaaS Service Management Systems, Google Business Profile setup, and WhatsApp Business integration — your complete digital infrastructure.",
+    image: "/assets/generated/service-banner-web-saas.dim_800x400.jpg",
+    serviceCount: 4,
+    accent: "#1d4ed8",
   },
   {
-    icon: Code2,
-    title: "Web Development",
-    description:
-      "Custom business websites and web applications. From landing pages to complete digital platforms.",
-    badge: null,
-  },
-  {
-    icon: Shield,
+    id: 2,
     title: "Security & Compliance",
-    description:
-      "Corporate security documentation, risk assessment, and individual security certifications through Corp International.",
     badge: null,
+    badgeVariant: "secondary" as const,
+    description:
+      "Corporate security SOP documentation, risk assessment, event security planning, and individual security certification advisory through Corp International.",
+    image: "/assets/generated/service-banner-security.dim_800x400.jpg",
+    serviceCount: 4,
+    accent: "#0f172a",
+  },
+  {
+    id: 3,
+    title: "Government & Document Services",
+    badge: null,
+    badgeVariant: "secondary" as const,
+    description:
+      "Police verification assistance (character, address, tenant) and UMANG app government services guidance for PF, Aadhaar, DigiLocker, and pension.",
+    image: "/assets/generated/service-banner-government.dim_800x400.jpg",
+    serviceCount: 2,
+    accent: "#065f46",
+  },
+  {
+    id: 4,
+    title: "Career & Creative",
+    badge: null,
+    badgeVariant: "secondary" as const,
+    description:
+      "Resume writing, job interview preparation, and AI movie & digital content creation — helping you stand out professionally and creatively.",
+    image: "/assets/generated/service-banner-career.dim_800x400.jpg",
+    serviceCount: 2,
+    accent: "#7c3aed",
   },
 ];
 
@@ -99,14 +125,122 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.13 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.52 } },
 };
+
+function ServiceCategoryCard({
+  category,
+  index,
+}: {
+  category: (typeof serviceCategories)[0];
+  index: number;
+}) {
+  const bookUrl = `https://wa.me/919901563799?text=${encodeURIComponent(`Hi! I'd like to book a service in ${category.title}. Please share available slots.`)}`;
+  const whatsappUrl = `https://wa.me/919901563799?text=${encodeURIComponent(`Hi! I'm interested in ${category.title} services. Please share more details.`)}`;
+  const mailUrl = `mailto:mywebsoloutions97@gmail.com?subject=${encodeURIComponent(`Inquiry: ${category.title}`)}&body=${encodeURIComponent(`Hello, I'm interested in your ${category.title} services. Please share more details.`)}`;
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      data-ocid={`home.services_preview.item.${index + 1}`}
+      className="group"
+    >
+      <Card className="h-full overflow-hidden border-border shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 flex flex-col">
+        {/* Banner image with overlay */}
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={category.image}
+            alt={category.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.08) 100%)",
+            }}
+          />
+          {/* Category title + badge over image */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="flex items-end justify-between gap-2">
+              <h3 className="font-display text-white text-lg font-bold leading-tight drop-shadow-sm">
+                {category.title}
+              </h3>
+              {category.badge && (
+                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary text-primary-foreground shadow-sm">
+                  {category.badge}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <CardContent className="p-5 flex flex-col flex-1">
+          {/* Service count pill */}
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+              {category.serviceCount} Services
+            </span>
+          </div>
+
+          {/* Description */}
+          <p className="text-muted-foreground text-sm leading-relaxed flex-1 mb-5">
+            {category.description}
+          </p>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+            <Button
+              asChild
+              size="sm"
+              data-ocid={`home.services_preview.book_button.${index + 1}`}
+              className="flex-1 font-semibold text-xs h-9 gap-1.5"
+            >
+              <a href={bookUrl} target="_blank" rel="noopener noreferrer">
+                <CalendarClock className="w-3.5 h-3.5" />
+                Book Now
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              size="sm"
+              data-ocid={`home.services_preview.whatsapp_button.${index + 1}`}
+              className="flex-1 font-semibold text-xs h-9 gap-1.5 text-white border-0"
+              style={{ backgroundColor: "#25D366" }}
+            >
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <MessageSquareText className="w-3.5 h-3.5" />
+                WhatsApp
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              data-ocid={`home.services_preview.mail_button.${index + 1}`}
+              className="flex-1 font-semibold text-xs h-9 gap-1.5 border-border hover:bg-accent"
+            >
+              <a href={mailUrl}>
+                <Mail className="w-3.5 h-3.5" />
+                Email
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export function Home() {
   return (
@@ -115,24 +249,25 @@ export function Home() {
 
       {/* Hero */}
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden hero-grid bg-background">
-        {/* Decorative blue gradient blob */}
+        {/* Subtle background accents */}
         <div
           className="absolute top-[-80px] right-[-100px] w-[700px] h-[700px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, oklch(0.42 0.20 255 / 0.08) 0%, transparent 65%)",
+              "radial-gradient(circle, oklch(0.42 0.20 255 / 0.07) 0%, transparent 65%)",
           }}
         />
         <div
           className="absolute bottom-0 left-[-60px] w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, oklch(0.58 0.16 240 / 0.06) 0%, transparent 65%)",
+              "radial-gradient(circle, oklch(0.58 0.16 240 / 0.05) 0%, transparent 65%)",
           }}
         />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: text content */}
             <motion.div
               initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
@@ -175,50 +310,66 @@ export function Home() {
               </div>
             </motion.div>
 
-            {/* Decorative right side — blue geometric blob */}
+            {/* Right: featured service visual card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
+              initial={{ opacity: 0, scale: 0.93, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.18 }}
               className="hidden lg:flex items-center justify-center"
             >
-              <div className="relative w-96 h-96">
-                {/* Outer ring */}
-                <div
-                  className="absolute inset-0 rounded-[40%_60%_70%_30%/40%_50%_60%_50%]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.42 0.20 255 / 0.12), oklch(0.58 0.16 240 / 0.18))",
-                    border: "1px solid oklch(0.42 0.20 255 / 0.15)",
-                  }}
-                />
-                {/* Inner core */}
-                <div
-                  className="absolute inset-8 rounded-[60%_40%_30%_70%/60%_30%_70%_40%]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.42 0.20 255 / 0.18), oklch(0.65 0.15 255 / 0.22))",
-                  }}
-                />
-                {/* Center badge */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-white rounded-2xl shadow-card p-5 text-center border border-border">
-                    <div className="font-display text-4xl font-black gradient-text mb-1">
-                      11+
+              <div className="relative w-full max-w-md">
+                {/* Main image card */}
+                <div className="rounded-2xl overflow-hidden shadow-xl border border-border/60">
+                  <div className="relative">
+                    <img
+                      src="/assets/generated/service-banner-web-saas.dim_800x400.jpg"
+                      alt="Web & SaaS Solutions"
+                      className="w-full h-56 object-cover"
+                    />
+                    {/* Gradient overlay on image */}
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
+                      }}
+                    />
+                    {/* Core Product badge overlaid */}
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 shadow-md">
+                        Core Product
+                      </Badge>
                     </div>
-                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Years of Excellence
+                    {/* Title inside image */}
+                    <div className="absolute bottom-3 left-4">
+                      <p className="text-white font-display text-base font-bold drop-shadow-sm">
+                        Web & SaaS Solutions
+                      </p>
+                      <p className="text-white/80 text-xs mt-0.5">
+                        4 services available
+                      </p>
                     </div>
                   </div>
+                  {/* Card footer */}
+                  <div className="bg-white px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">
+                      Starting ₹3,999
+                    </span>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      Available Now
+                    </span>
+                  </div>
                 </div>
+
                 {/* Floating chips */}
-                <div className="absolute -top-4 left-8 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
+                <div className="absolute -top-4 left-6 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
                   <Cloud className="w-4 h-4 text-primary" />
                   <span className="text-xs font-semibold text-foreground">
                     SaaS Platform
                   </span>
                 </div>
-                <div className="absolute -bottom-4 right-8 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
+                <div className="absolute -bottom-4 right-6 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
                   <Shield className="w-4 h-4 text-primary" />
                   <span className="text-xs font-semibold text-foreground">
                     Security Certified
@@ -259,7 +410,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* What We Do */}
+      {/* Services Preview */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <motion.div
@@ -286,37 +437,14 @@ export function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 gap-7"
           >
-            {features.map((feature, index) => (
-              <motion.div key={feature.title} variants={itemVariants}>
-                <Card
-                  className={`h-full transition-all duration-300 hover:-translate-y-1 border-border ${
-                    index === 0
-                      ? "shadow-card ring-1 ring-primary/20"
-                      : "shadow-xs hover:shadow-card"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
-                        <feature.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      {feature.badge && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary text-primary-foreground">
-                          {feature.badge}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed text-sm">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            {serviceCategories.map((category, index) => (
+              <ServiceCategoryCard
+                key={category.id}
+                category={category}
+                index={index}
+              />
             ))}
           </motion.div>
 
@@ -324,7 +452,7 @@ export function Home() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.35 }}
             className="text-center mt-10"
           >
             <Button

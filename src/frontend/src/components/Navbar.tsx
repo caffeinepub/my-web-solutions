@@ -24,11 +24,8 @@ export function Navbar() {
           <img
             src="/assets/generated/logo-mws.dim_200x200.jpg"
             alt="My Web Solutions Logo"
-            className="w-9 h-9 rounded-lg object-cover shadow-sm border border-border"
+            className="w-10 h-10 rounded-xl object-cover shadow-sm border border-border"
           />
-          <span className="font-display font-bold text-lg text-foreground tracking-tight">
-            My Web Solutions
-          </span>
         </Link>
 
         {/* Desktop Nav */}
