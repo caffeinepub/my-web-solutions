@@ -1,8 +1,9 @@
+import Migration "migration";
 import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
-import Nat "mo:core/Nat";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
@@ -10,8 +11,7 @@ import AccessControl "authorization/access-control";
 import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
 
-
-
+(with migration = Migration.run)
 actor {
   // Authorization
   let accessControlState = AccessControl.initState();
@@ -471,16 +471,4 @@ actor {
       };
     };
   };
-
-  // Seed Admin User
-  let adminUser : User = {
-    id = nextUserId;
-    username = "admin";
-    passwordHash = "admin123";
-    role = #admin;
-    isActive = true;
-  };
-
-  users.add(nextUserId, adminUser);
-  nextUserId += 1;
 };

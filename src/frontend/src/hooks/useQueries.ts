@@ -124,6 +124,17 @@ export function useLogin() {
   });
 }
 
+export function useInitAdmin() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (): Promise<boolean> => {
+      if (!actor) throw new Error("Not connected");
+      // initAdmin is a shared function not in the generated types — cast to any
+      return (actor as any).initAdmin() as Promise<boolean>;
+    },
+  });
+}
+
 // ─── Blog ─────────────────────────────────────────────────────────────────────
 
 export function useListBlogPosts() {
