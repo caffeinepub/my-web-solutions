@@ -1,0 +1,410 @@
+import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Award,
+  CheckCircle,
+  Cloud,
+  Code2,
+  Shield,
+  Star,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
+import { motion } from "motion/react";
+
+const features = [
+  {
+    icon: Cloud,
+    title: "SaaS Solutions",
+    description:
+      "End-to-end SaaS Service Management Systems built for small businesses. Scalable, cloud-native, and ready to grow with you.",
+    badge: "Core Product",
+  },
+  {
+    icon: Code2,
+    title: "Web Development",
+    description:
+      "Custom business websites and web applications. From landing pages to complete digital platforms.",
+    badge: null,
+  },
+  {
+    icon: Shield,
+    title: "Security & Compliance",
+    description:
+      "Corporate security documentation, risk assessment, and individual security certifications through Corp International.",
+    badge: null,
+  },
+];
+
+const stats = [
+  { value: "11+", label: "Years Experience", icon: TrendingUp },
+  { value: "150+", label: "Projects Delivered", icon: CheckCircle },
+  { value: "80+", label: "Happy Clients", icon: Users },
+  { value: "24/7", label: "Support Available", icon: Zap },
+];
+
+const trustPoints = [
+  {
+    icon: Award,
+    title: "11+ Years Corporate Experience",
+    description:
+      "Backed by senior roles at Wells Fargo and Samsung Semiconductor — bringing Fortune 500 discipline to every engagement.",
+  },
+  {
+    icon: CheckCircle,
+    title: "Structured, Process-Driven Delivery",
+    description:
+      "Every project follows a documented process with clear milestones, timelines, and accountability built in from day one.",
+  },
+  {
+    icon: Star,
+    title: "Founder-Led Personalized Service",
+    description:
+      "You work directly with Mounith — no middlemen, no outsourcing. Every client gets dedicated, personal attention.",
+  },
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+export function Home() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+
+      {/* Hero */}
+      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden hero-grid bg-background">
+        {/* Decorative blue gradient blob */}
+        <div
+          className="absolute top-[-80px] right-[-100px] w-[700px] h-[700px] rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, oklch(0.42 0.20 255 / 0.08) 0%, transparent 65%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-[-60px] w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, oklch(0.58 0.16 240 / 0.06) 0%, transparent 65%)",
+          }}
+        />
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent border border-border text-xs font-semibold text-accent-foreground mb-5 uppercase tracking-widest">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Structured · Professional · Digital
+              </div>
+
+              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.05] tracking-tight mb-5">
+                My Web <span className="gradient-text">Solutions</span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl">
+                Combining 11+ years of corporate discipline with digital
+                innovation — web, SaaS, and security services for small
+                businesses and individuals.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  data-ocid="home.primary_button"
+                  className="font-semibold text-base h-12 px-8 shadow-md"
+                >
+                  <Link to="/contact">
+                    Get Started <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  data-ocid="home.secondary_button"
+                  className="font-semibold text-base h-12 px-8 border-border hover:bg-accent"
+                >
+                  <Link to="/services">View Services</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Decorative right side — blue geometric blob */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="hidden lg:flex items-center justify-center"
+            >
+              <div className="relative w-96 h-96">
+                {/* Outer ring */}
+                <div
+                  className="absolute inset-0 rounded-[40%_60%_70%_30%/40%_50%_60%_50%]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.42 0.20 255 / 0.12), oklch(0.58 0.16 240 / 0.18))",
+                    border: "1px solid oklch(0.42 0.20 255 / 0.15)",
+                  }}
+                />
+                {/* Inner core */}
+                <div
+                  className="absolute inset-8 rounded-[60%_40%_30%_70%/60%_30%_70%_40%]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.42 0.20 255 / 0.18), oklch(0.65 0.15 255 / 0.22))",
+                  }}
+                />
+                {/* Center badge */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl shadow-card p-5 text-center border border-border">
+                    <div className="font-display text-4xl font-black gradient-text mb-1">
+                      11+
+                    </div>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Years of Excellence
+                    </div>
+                  </div>
+                </div>
+                {/* Floating chips */}
+                <div className="absolute -top-4 left-8 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
+                  <Cloud className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-foreground">
+                    SaaS Platform
+                  </span>
+                </div>
+                <div className="absolute -bottom-4 right-8 bg-white rounded-xl shadow-card px-3 py-2 border border-border flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-foreground">
+                    Security Certified
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats — light blue accent bg */}
+      <section className="py-12 bg-accent border-y border-border">
+        <div className="container mx-auto px-4">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+          >
+            {stats.map((stat) => (
+              <motion.div
+                key={stat.label}
+                variants={itemVariants}
+                className="text-center"
+              >
+                <stat.icon className="w-5 h-5 text-primary mx-auto mb-2" />
+                <div className="font-display text-3xl font-black text-foreground">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* What We Do */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              Our Services
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              What We Do
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              From SaaS platforms to security certifications — structured,
+              professional solutions delivered with corporate discipline.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {features.map((feature, index) => (
+              <motion.div key={feature.title} variants={itemVariants}>
+                <Card
+                  className={`h-full transition-all duration-300 hover:-translate-y-1 border-border ${
+                    index === 0
+                      ? "shadow-card ring-1 ring-primary/20"
+                      : "shadow-xs hover:shadow-card"
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
+                        <feature.icon className="w-6 h-6 text-primary" />
+                      </div>
+                      {feature.badge && (
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary text-primary-foreground">
+                          {feature.badge}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-center mt-10"
+          >
+            <Button
+              asChild
+              variant="outline"
+              data-ocid="home.services_link"
+              className="font-semibold border-primary/30 text-primary hover:bg-accent"
+            >
+              <Link to="/services">
+                View All 12 Services <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-20 bg-secondary/40 border-y border-border">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              Why Us
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose My Web Solutions
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Corporate precision, personal service — a combination you rarely
+              find in the market.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {trustPoints.map((point) => (
+              <motion.div
+                key={point.title}
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <point.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">
+                  {point.title}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {point.description}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Banner — light blue gradient */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div
+              className="rounded-2xl p-10 md:p-14 text-center border border-primary/15"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.93 0.04 255 / 1), oklch(0.97 0.02 255 / 1))",
+              }}
+            >
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Ready to Grow Your Business?
+              </h2>
+              <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
+                Let's discuss how structured, professional digital solutions can
+                take your business to the next level.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                data-ocid="home.cta_button"
+                className="font-semibold text-base h-12 px-8 shadow-md"
+              >
+                <Link to="/contact">
+                  Get in Touch <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <Footer />
+      <WhatsAppButton />
+    </div>
+  );
+}
