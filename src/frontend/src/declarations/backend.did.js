@@ -101,6 +101,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'initAdmin' : IDL.Func([], [IDL.Bool], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'listAllServiceRequests' : IDL.Func([], [IDL.Vec(ServiceRequest)], ['query']),
@@ -232,6 +233,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'initAdmin' : IDL.Func([], [IDL.Bool], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
     'listAllServiceRequests' : IDL.Func(

@@ -81,6 +81,7 @@ export interface _SERVICE {
   'getClientServiceRequests' : ActorMethod<[bigint], Array<ServiceRequest>>,
   'getLeads' : ActorMethod<[], Array<Lead>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'initAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listAllBlogPosts' : ActorMethod<[], Array<BlogPost>>,
   'listAllServiceRequests' : ActorMethod<[], Array<ServiceRequest>>,

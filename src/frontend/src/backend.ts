@@ -165,6 +165,7 @@ export interface backendInterface {
     getClientServiceRequests(clientUserId: bigint): Promise<Array<ServiceRequest>>;
     getLeads(): Promise<Array<Lead>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    initAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     listAllBlogPosts(): Promise<Array<BlogPost>>;
     listAllServiceRequests(): Promise<Array<ServiceRequest>>;
@@ -370,6 +371,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUserProfile(arg0);
             return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async initAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.initAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.initAdmin();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {

@@ -82,6 +82,7 @@ export interface backendInterface {
     getClientServiceRequests(clientUserId: bigint): Promise<Array<ServiceRequest>>;
     getLeads(): Promise<Array<Lead>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    initAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     listAllBlogPosts(): Promise<Array<BlogPost>>;
     listAllServiceRequests(): Promise<Array<ServiceRequest>>;
