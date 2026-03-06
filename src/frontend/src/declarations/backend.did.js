@@ -43,7 +43,9 @@ export const ServiceRequest = IDL.Record({
   'id' : IDL.Nat,
   'status' : ServiceRequestStatus,
   'serviceType' : IDL.Text,
+  'staffNote' : IDL.Text,
   'clientName' : IDL.Text,
+  'assignedStaffId' : IDL.Opt(IDL.Nat),
   'createdAt' : IDL.Int,
   'description' : IDL.Text,
   'updatedAt' : IDL.Int,
@@ -73,7 +75,15 @@ export const User = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addStaffNote' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+  'adminResetPassword' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+  'changePassword' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'createBlogPost' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -96,6 +106,26 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+  'getRevenueStats' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'resolvedLeads' : IDL.Nat,
+          'completedRequests' : IDL.Nat,
+          'totalLeads' : IDL.Nat,
+          'pendingRequests' : IDL.Nat,
+          'newLeads' : IDL.Nat,
+          'inProgressRequests' : IDL.Nat,
+          'totalRequests' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
+  'getStaffAssignedRequests' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ServiceRequest)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -175,7 +205,9 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'status' : ServiceRequestStatus,
     'serviceType' : IDL.Text,
+    'staffNote' : IDL.Text,
     'clientName' : IDL.Text,
+    'assignedStaffId' : IDL.Opt(IDL.Nat),
     'createdAt' : IDL.Int,
     'description' : IDL.Text,
     'updatedAt' : IDL.Int,
@@ -205,7 +237,15 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addStaffNote' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
+    'adminResetPassword' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+    'changePassword' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'createBlogPost' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -228,6 +268,26 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
+    'getRevenueStats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'resolvedLeads' : IDL.Nat,
+            'completedRequests' : IDL.Nat,
+            'totalLeads' : IDL.Nat,
+            'pendingRequests' : IDL.Nat,
+            'newLeads' : IDL.Nat,
+            'inProgressRequests' : IDL.Nat,
+            'totalRequests' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
+    'getStaffAssignedRequests' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ServiceRequest)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

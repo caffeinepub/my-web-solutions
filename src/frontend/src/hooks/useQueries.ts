@@ -330,3 +330,114 @@ export function useDeleteServiceRequest() {
     },
   });
 }
+
+// ─── Analytics / Revenue Stats ───────────────────────────────────────────────
+
+export function useGetRevenueStats() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["revenue-stats"],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getRevenueStats();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Staff Assigned Requests ──────────────────────────────────────────────────
+
+export function useGetStaffAssignedRequests(staffUserId: bigint | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<ServiceRequest[]>({
+    queryKey: ["staff-assigned-requests", staffUserId?.toString()],
+    queryFn: async () => {
+      if (!actor || staffUserId === null) return [];
+      return actor.getStaffAssignedRequests(staffUserId);
+    },
+    enabled: !!actor && !isFetching && staffUserId !== null,
+  });
+}
+
+// ─── Assign Staff to Request ──────────────────────────────────────────────────
+
+export function useAssignStaffToRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      staffUserId,
+    }: {
+      requestId: bigint;
+      staffUserId: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.assignStaffToRequest(requestId, staffUserId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-requests-all"] });
+      queryClient.invalidateQueries({ queryKey: ["staff-assigned-requests"] });
+    },
+  });
+}
+
+// ─── Add Staff Note ───────────────────────────────────────────────────────────
+
+export function useAddStaffNote() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      note,
+    }: {
+      requestId: bigint;
+      note: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.addStaffNote(requestId, note);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-requests-all"] });
+      queryClient.invalidateQueries({ queryKey: ["staff-assigned-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["service-requests-client"] });
+    },
+  });
+}
+
+// ─── Admin Reset Password ─────────────────────────────────────────────────────
+
+export function useAdminResetPassword() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      newPasswordHash,
+    }: {
+      userId: bigint;
+      newPasswordHash: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.adminResetPassword(userId, newPasswordHash);
+    },
+  });
+}
+
+// ─── Change Password ──────────────────────────────────────────────────────────
+
+export function useChangePassword() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      oldPasswordHash,
+      newPasswordHash,
+    }: {
+      oldPasswordHash: string;
+      newPasswordHash: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.changePassword(oldPasswordHash, newPasswordHash);
+    },
+  });
+}

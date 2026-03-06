@@ -3,6 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,20 +27,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  useListAllServiceRequests,
+  useAddStaffNote,
+  useChangePassword,
+  useGetStaffAssignedRequests,
   useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
-import { clearSession, getSession } from "@/utils/auth";
+import { clearSession, getSession, hashPassword } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
   ClipboardList,
   Clock,
   Globe,
+  KeyRound,
   LayoutDashboard,
   Loader2,
   LogOut,
+  Pencil,
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -68,7 +82,208 @@ function formatDate(ts: bigint) {
   });
 }
 
-type SideTab = "overview" | "requests";
+type SideTab = "overview" | "requests" | "clients";
+
+// ─── Change Password Dialog ────────────────────────────────────────────────────
+
+function ChangePasswordDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [form, setForm] = useState({ current: "", next: "", confirm: "" });
+  const { mutateAsync: changePassword, isPending } = useChangePassword();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.current || !form.next || !form.confirm) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if (form.next !== form.confirm) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (form.next.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    try {
+      const [oldHash, newHash] = await Promise.all([
+        hashPassword(form.current),
+        hashPassword(form.next),
+      ]);
+      const result = await changePassword({
+        oldPasswordHash: oldHash,
+        newPasswordHash: newHash,
+      });
+      if (result.__kind__ === "ok") {
+        toast.success("Password changed successfully");
+        onOpenChange(false);
+        setForm({ current: "", next: "", confirm: "" });
+      } else {
+        toast.error(result.err || "Failed to change password");
+      }
+    } catch {
+      toast.error("Failed to change password");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent data-ocid="staff_dashboard.change_password.dialog">
+        <DialogHeader>
+          <DialogTitle>Change Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              Current Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="staff_dashboard.change_password.current_input"
+              value={form.current}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, current: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              New Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="staff_dashboard.change_password.new_input"
+              value={form.next}
+              onChange={(e) => setForm((p) => ({ ...p, next: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              Confirm New Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="staff_dashboard.change_password.confirm_input"
+              value={form.confirm}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, confirm: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              data-ocid="staff_dashboard.change_password.cancel_button"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              data-ocid="staff_dashboard.change_password.save_button"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Change Password"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Staff Note Inline Dialog ──────────────────────────────────────────────────
+
+function StaffNoteDialog({
+  open,
+  onOpenChange,
+  requestId,
+  currentNote,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  requestId: bigint;
+  currentNote: string;
+}) {
+  const [note, setNote] = useState(currentNote);
+  const { mutateAsync: addNote, isPending } = useAddStaffNote();
+
+  useEffect(() => {
+    setNote(currentNote);
+  }, [currentNote]);
+
+  const handleSave = async () => {
+    try {
+      await addNote({ requestId, note });
+      toast.success("Note saved");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to save note");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent data-ocid="staff_dashboard.note.dialog">
+        <DialogHeader>
+          <DialogTitle>Staff Note</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          <Textarea
+            data-ocid="staff_dashboard.note.textarea"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note for this request..."
+            rows={4}
+            className="resize-none"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            data-ocid="staff_dashboard.note.cancel_button"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            data-ocid="staff_dashboard.note.save_button"
+            onClick={handleSave}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Note"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function StaffDashboard() {
   const navigate = useNavigate();
@@ -82,15 +297,27 @@ export function StaffDashboard() {
   }, [navigate]);
 
   const [activeTab, setActiveTab] = useState<SideTab>("overview");
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [noteRequestId, setNoteRequestId] = useState<bigint | null>(null);
+  const [noteCurrentValue, setNoteCurrentValue] = useState("");
+
+  const staffUserId = session?.userId ? BigInt(session.userId) : null;
 
   const { data: serviceRequests = [], isLoading: srLoading } =
-    useListAllServiceRequests();
+    useGetStaffAssignedRequests(staffUserId);
   const { mutate: updateStatus } = useUpdateServiceRequestStatus();
 
   const handleLogout = () => {
     clearSession();
     navigate({ to: "/" });
     toast.success("Logged out successfully");
+  };
+
+  const openNoteDialog = (requestId: bigint, currentNote: string) => {
+    setNoteRequestId(requestId);
+    setNoteCurrentValue(currentNote);
+    setNoteDialogOpen(true);
   };
 
   const total = serviceRequests.length;
@@ -104,18 +331,42 @@ export function StaffDashboard() {
     (r) => r.status === ServiceRequestStatus.completed,
   ).length;
 
+  // Derive unique clients from assigned requests
+  const clientMap = new Map<
+    string,
+    { clientName: string; requests: typeof serviceRequests }
+  >();
+  for (const req of serviceRequests) {
+    const existing = clientMap.get(req.clientName);
+    if (existing) {
+      existing.requests.push(req);
+    } else {
+      clientMap.set(req.clientName, {
+        clientName: req.clientName,
+        requests: [req],
+      });
+    }
+  }
+  const uniqueClients = Array.from(clientMap.values());
+
   const navItems = [
     {
       id: "overview" as SideTab,
       label: "Overview",
       icon: LayoutDashboard,
-      ocid: "staff_dashboard.overview_tab",
+      ocid: "staff_dashboard.overview.tab",
     },
     {
       id: "requests" as SideTab,
       label: "Service Requests",
       icon: ClipboardList,
-      ocid: "staff_dashboard.requests_tab",
+      ocid: "staff_dashboard.requests.tab",
+    },
+    {
+      id: "clients" as SideTab,
+      label: "My Clients",
+      icon: Users,
+      ocid: "staff_dashboard.clients.tab",
     },
   ];
 
@@ -168,6 +419,16 @@ export function StaffDashboard() {
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            data-ocid="staff_dashboard.change_password.open_modal_button"
+            onClick={() => setChangePasswordOpen(true)}
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent mb-1"
+          >
+            <KeyRound className="w-4 h-4 mr-2" />
+            Change Password
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -260,7 +521,7 @@ export function StaffDashboard() {
                   >
                     <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      No service requests yet.
+                      No service requests assigned yet.
                     </p>
                   </div>
                 ) : (
@@ -301,7 +562,7 @@ export function StaffDashboard() {
                 Service Requests
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Manage and update request statuses
+                Manage and update assigned request statuses
               </p>
             </div>
 
@@ -320,7 +581,7 @@ export function StaffDashboard() {
                   >
                     <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm">
-                      No service requests yet.
+                      No service requests assigned to you yet.
                     </p>
                   </div>
                 ) : (
@@ -331,6 +592,7 @@ export function StaffDashboard() {
                           <TableHead>Client</TableHead>
                           <TableHead>Service</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Note</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Date</TableHead>
                           <TableHead>Update</TableHead>
@@ -350,6 +612,28 @@ export function StaffDashboard() {
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
                               {req.description}
+                            </TableCell>
+                            {/* Note Column */}
+                            <TableCell className="max-w-[120px]">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {req.staffNote
+                                    ? req.staffNote.slice(0, 20) +
+                                      (req.staffNote.length > 20 ? "…" : "")
+                                    : "—"}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 shrink-0"
+                                  data-ocid={`staff_dashboard.requests.note_edit.${index + 1}`}
+                                  onClick={() =>
+                                    openNoteDialog(req.id, req.staffNote)
+                                  }
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </TableCell>
                             <TableCell>
                               <StatusBadge status={req.status} />
@@ -411,7 +695,132 @@ export function StaffDashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* ── My Clients ── */}
+        {activeTab === "clients" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                My Clients
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Clients with requests assigned to you
+              </p>
+            </div>
+
+            {srLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-36 w-full" />
+                ))}
+              </div>
+            ) : uniqueClients.length === 0 ? (
+              <Card>
+                <CardContent
+                  className="py-16 text-center"
+                  data-ocid="staff_dashboard.clients.empty_state"
+                >
+                  <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No clients assigned yet.
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Clients appear here when the admin assigns requests to you.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {uniqueClients.map((client, index) => {
+                  const uniqueServices = [
+                    ...new Set(client.requests.map((r) => r.serviceType)),
+                  ];
+                  return (
+                    <Card
+                      key={client.clientName}
+                      data-ocid={`staff_dashboard.clients.item.${index + 1}`}
+                      className="hover:shadow-md transition-shadow"
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-semibold">
+                            {client.clientName}
+                          </CardTitle>
+                          <Badge variant="outline" className="text-xs">
+                            {client.requests.length} request
+                            {client.requests.length !== 1 ? "s" : ""}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                            Services
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {uniqueServices.map((svc) => (
+                              <span
+                                key={svc}
+                                className="inline-block text-xs bg-accent text-accent-foreground rounded-md px-2 py-0.5"
+                              >
+                                {svc}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            {[
+                              ServiceRequestStatus.pending,
+                              ServiceRequestStatus.inProgress,
+                              ServiceRequestStatus.completed,
+                            ].map((status) => {
+                              const count = client.requests.filter(
+                                (r) => r.status === status,
+                              ).length;
+                              if (count === 0) return null;
+                              return (
+                                <div
+                                  key={status}
+                                  className="flex items-center gap-1"
+                                >
+                                  <StatusBadge status={status} />
+                                  <span className="text-xs text-muted-foreground">
+                                    {count}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
       </main>
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
+
+      {/* Staff Note Dialog */}
+      {noteRequestId !== null && (
+        <StaffNoteDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          requestId={noteRequestId}
+          currentNote={noteCurrentValue}
+        />
+      )}
     </div>
   );
 }

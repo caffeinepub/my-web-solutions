@@ -18,6 +18,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,10 +41,14 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  useAddStaffNote,
+  useAssignStaffToRequest,
+  useChangePassword,
   useCreateBlogPost,
   useCreateUser,
   useDeleteBlogPost,
   useGetLeads,
+  useGetRevenueStats,
   useListAllBlogPosts,
   useListAllServiceRequests,
   useListUsers,
@@ -48,12 +57,14 @@ import {
   useUpdateLeadStatus,
   useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
-import { clearSession, getSession } from "@/utils/auth";
+import { clearSession, getSession, hashPassword } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  BarChart2,
   BookOpen,
   ClipboardList,
   Globe,
+  KeyRound,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -67,9 +78,25 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 
-type Tab = "overview" | "leads" | "users" | "blog" | "service-requests";
+type Tab =
+  | "overview"
+  | "leads"
+  | "users"
+  | "blog"
+  | "service-requests"
+  | "analytics";
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
   if (status === LeadStatus.new_) {
@@ -133,6 +160,206 @@ const emptyBlogForm = {
   isPublished: false,
 };
 
+const CHART_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#6366f1", "#10b981"];
+
+// ─── Change Password Dialog ────────────────────────────────────────────────────
+
+function ChangePasswordDialog({
+  open,
+  onOpenChange,
+}: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [form, setForm] = useState({ current: "", next: "", confirm: "" });
+  const { mutateAsync: changePassword, isPending } = useChangePassword();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.current || !form.next || !form.confirm) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if (form.next !== form.confirm) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (form.next.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    try {
+      const [oldHash, newHash] = await Promise.all([
+        hashPassword(form.current),
+        hashPassword(form.next),
+      ]);
+      const result = await changePassword({
+        oldPasswordHash: oldHash,
+        newPasswordHash: newHash,
+      });
+      if (result.__kind__ === "ok") {
+        toast.success("Password changed successfully");
+        onOpenChange(false);
+        setForm({ current: "", next: "", confirm: "" });
+      } else {
+        toast.error(result.err || "Failed to change password");
+      }
+    } catch {
+      toast.error("Failed to change password");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent data-ocid="admin_dashboard.change_password.dialog">
+        <DialogHeader>
+          <DialogTitle>Change Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              Current Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="admin_dashboard.change_password.current_input"
+              value={form.current}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, current: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              New Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="admin_dashboard.change_password.new_input"
+              value={form.next}
+              onChange={(e) => setForm((p) => ({ ...p, next: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-1.5 block">
+              Confirm New Password
+            </Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              data-ocid="admin_dashboard.change_password.confirm_input"
+              value={form.confirm}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, confirm: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              data-ocid="admin_dashboard.change_password.cancel_button"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              data-ocid="admin_dashboard.change_password.save_button"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Change Password"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Staff Note Dialog ─────────────────────────────────────────────────────────
+
+function StaffNoteDialog({
+  open,
+  onOpenChange,
+  requestId,
+  currentNote,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  requestId: bigint;
+  currentNote: string;
+}) {
+  const [note, setNote] = useState(currentNote);
+  const { mutateAsync: addNote, isPending } = useAddStaffNote();
+
+  useEffect(() => {
+    setNote(currentNote);
+  }, [currentNote]);
+
+  const handleSave = async () => {
+    try {
+      await addNote({ requestId, note });
+      toast.success("Note saved");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to save note");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent data-ocid="service_requests.note.dialog">
+        <DialogHeader>
+          <DialogTitle>Staff Note</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          <Textarea
+            data-ocid="service_requests.note.textarea"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a staff note for this request..."
+            rows={4}
+            className="resize-none"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            data-ocid="service_requests.note.cancel_button"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            data-ocid="service_requests.note.save_button"
+            onClick={handleSave}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Note"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [createOpen, setCreateOpen] = useState(false);
@@ -148,6 +375,14 @@ export function AdminDashboard() {
   const [deletePostId, setDeletePostId] = useState<bigint | null>(null);
   const [deletePostOpen, setDeletePostOpen] = useState(false);
   const [blogForm, setBlogForm] = useState(emptyBlogForm);
+
+  // Change password
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
+  // Note dialog
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [noteRequestId, setNoteRequestId] = useState<bigint | null>(null);
+  const [noteCurrentValue, setNoteCurrentValue] = useState("");
 
   const navigate = useNavigate();
   const session = getSession();
@@ -165,6 +400,7 @@ export function AdminDashboard() {
     useListAllBlogPosts();
   const { data: serviceRequests = [], isLoading: srLoading } =
     useListAllServiceRequests();
+  const { data: revenueStats, isLoading: statsLoading } = useGetRevenueStats();
 
   const { mutate: updateStatus } = useUpdateLeadStatus();
   const { mutate: toggleActive } = useToggleUserActive();
@@ -176,6 +412,9 @@ export function AdminDashboard() {
   const { mutateAsync: deleteBlogPost, isPending: deletingBlog } =
     useDeleteBlogPost();
   const { mutate: updateSRStatus } = useUpdateServiceRequestStatus();
+  const { mutateAsync: assignStaff } = useAssignStaffToRequest();
+
+  const staffUsers = users.filter((u) => u.role === Role.staff);
 
   const handleLogout = () => {
     clearSession();
@@ -190,7 +429,6 @@ export function AdminDashboard() {
       return;
     }
     try {
-      const { hashPassword } = await import("@/utils/auth");
       const hash = await hashPassword(newUser.password);
       await createUser({
         username: newUser.username,
@@ -274,6 +512,21 @@ export function AdminDashboard() {
     }
   };
 
+  const handleAssignStaff = async (requestId: bigint, staffUserId: bigint) => {
+    try {
+      await assignStaff({ requestId, staffUserId });
+      toast.success("Staff assigned");
+    } catch {
+      toast.error("Failed to assign staff");
+    }
+  };
+
+  const openNoteDialog = (requestId: bigint, currentNote: string) => {
+    setNoteRequestId(requestId);
+    setNoteCurrentValue(currentNote);
+    setNoteDialogOpen(true);
+  };
+
   const activeUsers = users.filter((u) => u.isActive).length;
   const pendingSR = serviceRequests.filter(
     (r) => r.status === ServiceRequestStatus.pending,
@@ -285,36 +538,56 @@ export function AdminDashboard() {
     (r) => r.status === ServiceRequestStatus.completed,
   ).length;
 
+  // Chart data from revenueStats
+  const chartData = revenueStats
+    ? [
+        { name: "New Leads", value: Number(revenueStats.newLeads) },
+        { name: "Resolved Leads", value: Number(revenueStats.resolvedLeads) },
+        {
+          name: "Pending Requests",
+          value: Number(revenueStats.pendingRequests),
+        },
+        { name: "In Progress", value: Number(revenueStats.inProgressRequests) },
+        { name: "Completed", value: Number(revenueStats.completedRequests) },
+      ]
+    : [];
+
   const navItems = [
     {
       id: "overview" as Tab,
       label: "Overview",
       icon: LayoutDashboard,
-      ocid: "admin_dashboard.overview_tab",
+      ocid: "admin_dashboard.overview.tab",
+    },
+    {
+      id: "analytics" as Tab,
+      label: "Analytics",
+      icon: BarChart2,
+      ocid: "admin_dashboard.analytics.tab",
     },
     {
       id: "leads" as Tab,
       label: "Leads",
       icon: MessageSquare,
-      ocid: "admin_dashboard.leads_tab",
+      ocid: "admin_dashboard.leads.tab",
     },
     {
       id: "service-requests" as Tab,
       label: "Service Requests",
       icon: ClipboardList,
-      ocid: "admin_dashboard.service_requests_tab",
+      ocid: "admin_dashboard.service_requests.tab",
     },
     {
       id: "blog" as Tab,
       label: "Blog",
       icon: BookOpen,
-      ocid: "admin_dashboard.blog_tab",
+      ocid: "admin_dashboard.blog.tab",
     },
     {
       id: "users" as Tab,
       label: "Users",
       icon: Users,
-      ocid: "admin_dashboard.users_tab",
+      ocid: "admin_dashboard.users.tab",
     },
   ];
 
@@ -367,6 +640,16 @@ export function AdminDashboard() {
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            data-ocid="admin_dashboard.change_password.open_modal_button"
+            onClick={() => setChangePasswordOpen(true)}
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent mb-1"
+          >
+            <KeyRound className="w-4 h-4 mr-2" />
+            Change Password
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -501,6 +784,151 @@ export function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* ── Analytics ── */}
+        {activeTab === "analytics" && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Analytics
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Business performance overview
+              </p>
+            </div>
+
+            {/* Stat Cards */}
+            {statsLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
+              </div>
+            ) : !revenueStats ? (
+              <div
+                data-ocid="analytics.error_state"
+                className="py-12 text-center"
+              >
+                <p className="text-muted-foreground text-sm">
+                  Unable to load stats.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    {
+                      label: "Total Leads",
+                      value: Number(revenueStats.totalLeads),
+                      color: "text-foreground",
+                    },
+                    {
+                      label: "New Leads",
+                      value: Number(revenueStats.newLeads),
+                      color: "text-blue-600",
+                    },
+                    {
+                      label: "Resolved Leads",
+                      value: Number(revenueStats.resolvedLeads),
+                      color: "text-green-600",
+                    },
+                    {
+                      label: "Total Requests",
+                      value: Number(revenueStats.totalRequests),
+                      color: "text-foreground",
+                    },
+                    {
+                      label: "Pending",
+                      value: Number(revenueStats.pendingRequests),
+                      color: "text-yellow-600",
+                    },
+                    {
+                      label: "In Progress",
+                      value: Number(revenueStats.inProgressRequests),
+                      color: "text-blue-600",
+                    },
+                    {
+                      label: "Completed",
+                      value: Number(revenueStats.completedRequests),
+                      color: "text-green-600",
+                    },
+                  ].map((stat) => (
+                    <Card key={stat.label}>
+                      <CardContent className="pt-4 pb-4 text-center">
+                        <p
+                          className={`font-display text-3xl font-bold ${stat.color}`}
+                        >
+                          {stat.value}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {stat.label}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Bar Chart */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      Leads & Requests Breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={chartData}
+                          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="hsl(var(--border))"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{
+                              fontSize: 11,
+                              fill: "hsl(var(--muted-foreground))",
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{
+                              fontSize: 11,
+                              fill: "hsl(var(--muted-foreground))",
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                            allowDecimals={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                              fontSize: "12px",
+                            }}
+                          />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                            {chartData.map((entry, index) => (
+                              <Cell
+                                key={entry.name}
+                                fill={CHART_COLORS[index % CHART_COLORS.length]}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         )}
 
@@ -683,69 +1111,153 @@ export function AdminDashboard() {
                           <TableHead>Client</TableHead>
                           <TableHead>Service Type</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Assigned Staff</TableHead>
+                          <TableHead>Note</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Date</TableHead>
                           <TableHead>Update</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {serviceRequests.map((req, index) => (
-                          <TableRow
-                            key={req.id.toString()}
-                            data-ocid={`service_requests.row.${index + 1}`}
-                          >
-                            <TableCell className="font-medium text-sm">
-                              {req.clientName}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {req.serviceType}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {req.description}
-                            </TableCell>
-                            <TableCell>
-                              <ServiceRequestStatusBadge status={req.status} />
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(req.createdAt)}
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={req.status}
-                                onValueChange={(v) =>
-                                  updateSRStatus({
-                                    id: req.id,
-                                    status: v as ServiceRequestStatus,
-                                  })
-                                }
-                              >
-                                <SelectTrigger
-                                  className="w-36 h-8 text-xs"
-                                  data-ocid={`service_requests.status_select.${index + 1}`}
+                        {serviceRequests.map((req, index) => {
+                          const assignedStaff = req.assignedStaffId
+                            ? users.find((u) => u.id === req.assignedStaffId)
+                            : null;
+
+                          return (
+                            <TableRow
+                              key={req.id.toString()}
+                              data-ocid={`service_requests.row.${index + 1}`}
+                            >
+                              <TableCell className="font-medium text-sm">
+                                {req.clientName}
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {req.serviceType}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                                {req.description}
+                              </TableCell>
+                              {/* Assign Staff Column */}
+                              <TableCell>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 text-xs max-w-[120px] truncate"
+                                      data-ocid={`service_requests.assign_staff.${index + 1}`}
+                                    >
+                                      {assignedStaff
+                                        ? assignedStaff.username
+                                        : "Unassigned"}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-48 p-2"
+                                    data-ocid={`service_requests.assign_staff_popover.${index + 1}`}
+                                  >
+                                    <p className="text-xs text-muted-foreground mb-2 px-1">
+                                      Assign to staff
+                                    </p>
+                                    {staffUsers.length === 0 ? (
+                                      <p className="text-xs text-muted-foreground px-1">
+                                        No staff accounts yet.
+                                      </p>
+                                    ) : (
+                                      <div className="space-y-1">
+                                        {staffUsers.map((staff) => (
+                                          <button
+                                            key={staff.id.toString()}
+                                            type="button"
+                                            onClick={() =>
+                                              handleAssignStaff(
+                                                req.id,
+                                                staff.id,
+                                              )
+                                            }
+                                            className={`w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent transition-colors ${
+                                              req.assignedStaffId === staff.id
+                                                ? "bg-accent font-medium"
+                                                : ""
+                                            }`}
+                                          >
+                                            {staff.username}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </PopoverContent>
+                                </Popover>
+                              </TableCell>
+                              {/* Note Column */}
+                              <TableCell className="max-w-[120px]">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    {req.staffNote
+                                      ? req.staffNote.slice(0, 20) +
+                                        (req.staffNote.length > 20 ? "…" : "")
+                                      : "—"}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 shrink-0"
+                                    data-ocid={`service_requests.note_edit.${index + 1}`}
+                                    onClick={() =>
+                                      openNoteDialog(req.id, req.staffNote)
+                                    }
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <ServiceRequestStatusBadge
+                                  status={req.status}
+                                />
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {formatDate(req.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={req.status}
+                                  onValueChange={(v) =>
+                                    updateSRStatus({
+                                      id: req.id,
+                                      status: v as ServiceRequestStatus,
+                                    })
+                                  }
                                 >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.pending}
+                                  <SelectTrigger
+                                    className="w-36 h-8 text-xs"
+                                    data-ocid={`service_requests.status_select.${index + 1}`}
                                   >
-                                    Pending
-                                  </SelectItem>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.inProgress}
-                                  >
-                                    In Progress
-                                  </SelectItem>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.completed}
-                                  >
-                                    Completed
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.pending}
+                                    >
+                                      Pending
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.inProgress}
+                                    >
+                                      In Progress
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.completed}
+                                    >
+                                      Completed
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -1212,6 +1724,22 @@ export function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
+
+      {/* Staff Note Dialog */}
+      {noteRequestId !== null && (
+        <StaffNoteDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          requestId={noteRequestId}
+          currentNote={noteCurrentValue}
+        />
+      )}
     </div>
   );
 }

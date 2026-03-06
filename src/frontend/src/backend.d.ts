@@ -11,7 +11,9 @@ export interface ServiceRequest {
     id: bigint;
     status: ServiceRequestStatus;
     serviceType: string;
+    staffNote: string;
     clientName: string;
+    assignedStaffId?: bigint;
     createdAt: bigint;
     description: string;
     updatedAt: bigint;
@@ -70,7 +72,17 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    addStaffNote(requestId: bigint, note: string): Promise<boolean>;
+    adminResetPassword(userId: bigint, newPasswordHash: string): Promise<boolean>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    assignStaffToRequest(requestId: bigint, staffUserId: bigint): Promise<boolean>;
+    changePassword(oldPasswordHash: string, newPasswordHash: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     createBlogPost(title: string, content: string, excerpt: string, authorName: string): Promise<bigint>;
     createServiceRequest(clientUserId: bigint, clientName: string, serviceType: string, description: string): Promise<bigint>;
     createUser(username: string, passwordHash: string, role: Role): Promise<bigint>;
@@ -81,6 +93,16 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getClientServiceRequests(clientUserId: bigint): Promise<Array<ServiceRequest>>;
     getLeads(): Promise<Array<Lead>>;
+    getRevenueStats(): Promise<{
+        resolvedLeads: bigint;
+        completedRequests: bigint;
+        totalLeads: bigint;
+        pendingRequests: bigint;
+        newLeads: bigint;
+        inProgressRequests: bigint;
+        totalRequests: bigint;
+    }>;
+    getStaffAssignedRequests(staffUserId: bigint): Promise<Array<ServiceRequest>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     initAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;

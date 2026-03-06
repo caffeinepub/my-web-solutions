@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -20,10 +21,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  useChangePassword,
   useCreateServiceRequest,
   useGetClientServiceRequests,
 } from "@/hooks/useQueries";
-import { clearSession, getSession } from "@/utils/auth";
+import { clearSession, getSession, hashPassword } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
@@ -85,6 +87,12 @@ function StatusBadge({ status }: { status: ServiceRequestStatus }) {
   );
 }
 
+function timelineColor(status: ServiceRequestStatus): string {
+  if (status === ServiceRequestStatus.pending) return "border-l-yellow-400";
+  if (status === ServiceRequestStatus.inProgress) return "border-l-blue-500";
+  return "border-l-green-500";
+}
+
 function formatDate(ts: bigint) {
   return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -93,7 +101,7 @@ function formatDate(ts: bigint) {
   });
 }
 
-type SideTab = "overview" | "requests" | "invoices";
+type SideTab = "overview" | "requests" | "invoices" | "profile";
 
 export function ClientDashboard() {
   const navigate = useNavigate();
@@ -112,6 +120,11 @@ export function ClientDashboard() {
     serviceType: "",
     description: "",
   });
+
+  // Change password form
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const { mutateAsync: changePassword, isPending: changingPw } =
+    useChangePassword();
 
   const clientUserId = session?.userId ? BigInt(session.userId) : null;
   const clientName = session?.username ?? "Client";
@@ -152,6 +165,45 @@ export function ClientDashboard() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pwForm.current || !pwForm.next || !pwForm.confirm) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if (pwForm.next !== pwForm.confirm) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (pwForm.next.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    try {
+      const [oldHash, newHash] = await Promise.all([
+        hashPassword(pwForm.current),
+        hashPassword(pwForm.next),
+      ]);
+      const result = await changePassword({
+        oldPasswordHash: oldHash,
+        newPasswordHash: newHash,
+      });
+      if (result.__kind__ === "ok") {
+        toast.success("Password changed successfully");
+        setPwForm({ current: "", next: "", confirm: "" });
+      } else {
+        toast.error(result.err || "Failed to change password");
+      }
+    } catch {
+      toast.error("Failed to change password");
+    }
+  };
+
+  // Sort requests by createdAt descending (most recent first)
+  const sortedRequests = [...requests].sort(
+    (a, b) => Number(b.createdAt) - Number(a.createdAt),
+  );
+
   const pending = requests.filter(
     (r) => r.status === ServiceRequestStatus.pending,
   ).length;
@@ -167,19 +219,25 @@ export function ClientDashboard() {
       id: "overview" as SideTab,
       label: "Overview",
       icon: LayoutDashboard,
-      ocid: "client_dashboard.overview_tab",
+      ocid: "client_dashboard.overview.tab",
     },
     {
       id: "requests" as SideTab,
       label: "My Requests",
       icon: ClipboardList,
-      ocid: "client_dashboard.requests_tab",
+      ocid: "client_dashboard.requests.tab",
     },
     {
       id: "invoices" as SideTab,
       label: "Invoices",
       icon: FileText,
-      ocid: "client_dashboard.invoices_tab",
+      ocid: "client_dashboard.invoices.tab",
+    },
+    {
+      id: "profile" as SideTab,
+      label: "Profile",
+      icon: UserCircle2,
+      ocid: "client_dashboard.profile.tab",
     },
   ];
 
@@ -367,10 +425,10 @@ export function ClientDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {requests.slice(0, 3).map((req) => (
+                    {sortedRequests.slice(0, 3).map((req) => (
                       <div
                         key={req.id.toString()}
-                        className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
+                        className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
                       >
                         <div>
                           <p className="font-medium text-sm text-foreground">
@@ -480,7 +538,7 @@ export function ClientDashboard() {
                       <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
-                ) : requests.length === 0 ? (
+                ) : sortedRequests.length === 0 ? (
                   <div
                     data-ocid="client_dashboard.requests.empty_state"
                     className="py-16 text-center"
@@ -500,25 +558,39 @@ export function ClientDashboard() {
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {requests.map((req, index) => (
+                    {sortedRequests.map((req, index) => (
                       <div
                         key={req.id.toString()}
                         data-ocid={`client_dashboard.requests.item.${index + 1}`}
-                        className="p-5 flex items-start justify-between gap-4"
+                        className={`p-5 flex items-start gap-4 border-l-4 ${timelineColor(req.status)}`}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground mb-1">
-                            {req.serviceType}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {req.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1.5">
-                            Submitted on {formatDate(req.createdAt)}
-                          </p>
-                        </div>
-                        <div className="shrink-0">
-                          <StatusBadge status={req.status} />
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm text-foreground mb-1">
+                                {req.serviceType}
+                              </p>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {req.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1.5">
+                                Submitted on {formatDate(req.createdAt)}
+                              </p>
+                            </div>
+                            <div className="shrink-0">
+                              <StatusBadge status={req.status} />
+                            </div>
+                          </div>
+                          {req.staffNote && (
+                            <div className="mt-2 bg-muted/50 rounded-md p-2.5">
+                              <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                                Staff Note
+                              </p>
+                              <p className="text-sm text-foreground">
+                                {req.staffNote}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -578,6 +650,123 @@ export function ClientDashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* ── Profile ── */}
+        {activeTab === "profile" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Profile
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Manage your account settings
+              </p>
+            </div>
+
+            {/* Account Info */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Account Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCircle2 className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {clientName}
+                    </p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {session?.role} Account
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      ID: {session?.userId}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Change Password */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Change Password</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={handleChangePassword}
+                  className="space-y-4 max-w-md"
+                >
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      Current Password
+                    </Label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      data-ocid="client_dashboard.profile.current_password_input"
+                      value={pwForm.current}
+                      onChange={(e) =>
+                        setPwForm((p) => ({ ...p, current: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      New Password
+                    </Label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      data-ocid="client_dashboard.profile.new_password_input"
+                      value={pwForm.next}
+                      onChange={(e) =>
+                        setPwForm((p) => ({ ...p, next: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      Confirm New Password
+                    </Label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      data-ocid="client_dashboard.profile.confirm_password_input"
+                      value={pwForm.confirm}
+                      onChange={(e) =>
+                        setPwForm((p) => ({ ...p, confirm: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    data-ocid="client_dashboard.profile.change_password_button"
+                    disabled={changingPw}
+                  >
+                    {changingPw ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Change Password"
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </main>
 
       {/* New Request Dialog */}
@@ -619,7 +808,10 @@ export function ClientDashboard() {
                 rows={4}
                 value={requestForm.description}
                 onChange={(e) =>
-                  setRequestForm((p) => ({ ...p, description: e.target.value }))
+                  setRequestForm((p) => ({
+                    ...p,
+                    description: e.target.value,
+                  }))
                 }
                 required
                 className="resize-none"

@@ -9,7 +9,9 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   // Authorization
   let accessControlState = AccessControl.initState();
@@ -113,6 +115,8 @@ actor {
     status : ServiceRequestStatus;
     createdAt : Int;
     updatedAt : Int;
+    assignedStaffId : ?Nat;
+    staffNote : Text;
   };
 
   // Storage
@@ -384,6 +388,8 @@ actor {
       status = #pending;
       createdAt = Time.now();
       updatedAt = Time.now();
+      assignedStaffId = null;
+      staffNote = "";
     };
 
     serviceRequests.add(nextServiceRequestId, serviceRequest);
@@ -495,5 +501,200 @@ actor {
         true;
       };
     };
+  };
+
+  // New Functionality
+
+  // Change Password
+  public shared ({ caller }) func changePassword(oldPasswordHash : Text, newPasswordHash : Text) : async {
+    #ok;
+    #err : Text;
+  } {
+    // Authenticated user check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Only authenticated users can change password");
+    };
+
+    // Get the caller's profile to find their userId
+    let callerProfile = userProfiles.get(caller);
+
+    switch (callerProfile) {
+      case (null) { return #err("User profile not found") };
+      case (?profile) {
+        switch (users.get(profile.userId)) {
+          case (null) { #err("User not found") };
+          case (?user) {
+            if (user.passwordHash == oldPasswordHash) {
+              let updatedUser = { user with passwordHash = newPasswordHash };
+              users.add(profile.userId, updatedUser);
+              #ok;
+            } else {
+              #err("Incorrect old password");
+            };
+          };
+        };
+      };
+    };
+  };
+
+  // Admin Reset Password
+  public shared ({ caller }) func adminResetPassword(userId : Nat, newPasswordHash : Text) : async Bool {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reset passwords");
+    };
+
+    switch (users.get(userId)) {
+      case (null) { false };
+      case (?user) {
+        let updatedUser = { user with passwordHash = newPasswordHash };
+        users.add(userId, updatedUser);
+        true;
+      };
+    };
+  };
+
+  // Assign Staff to Request
+  public shared ({ caller }) func assignStaffToRequest(requestId : Nat, staffUserId : Nat) : async Bool {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can assign staff");
+    };
+
+    switch (serviceRequests.get(requestId)) {
+      case (null) { false };
+      case (?serviceRequest) {
+        // Check if staffUserId is actually a staff member
+        switch (users.get(staffUserId)) {
+          case (null) { false };
+          case (?staffUser) {
+            if (staffUser.role != #staff) { return false };
+
+            let updatedRequest = {
+              serviceRequest with
+              assignedStaffId = ?staffUserId;
+              updatedAt = Time.now();
+            };
+            serviceRequests.add(requestId, updatedRequest);
+            true;
+          };
+        };
+      };
+    };
+  };
+
+  // Add Staff Note
+  public shared ({ caller }) func addStaffNote(requestId : Nat, note : Text) : async Bool {
+    // Must be authenticated user
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can add staff notes");
+    };
+
+    // Admin or Staff only check
+    if (not isAdminOrStaff(caller)) {
+      Runtime.trap("Unauthorized: Only admins or staff can add staff notes");
+    };
+
+    switch (serviceRequests.get(requestId)) {
+      case (null) { false };
+      case (?serviceRequest) {
+        // If caller is staff (not admin), verify they are assigned to this request
+        if (not AccessControl.isAdmin(accessControlState, caller)) {
+          let callerProfile = userProfiles.get(caller);
+          switch (callerProfile) {
+            case (null) { return false };
+            case (?profile) {
+              switch (serviceRequest.assignedStaffId) {
+                case (null) {
+                  Runtime.trap("Unauthorized: This request is not assigned to any staff");
+                };
+                case (?assignedStaffId) {
+                  if (profile.userId != assignedStaffId) {
+                    Runtime.trap("Unauthorized: You can only add notes to requests assigned to you");
+                  };
+                };
+              };
+            };
+          };
+        };
+
+        let updatedRequest = {
+          serviceRequest with
+          staffNote = note;
+          updatedAt = Time.now();
+        };
+        serviceRequests.add(requestId, updatedRequest);
+        true;
+      };
+    };
+  };
+
+  // Get Revenue Stats
+  public query ({ caller }) func getRevenueStats() : async {
+    totalLeads : Nat;
+    totalRequests : Nat;
+    pendingRequests : Nat;
+    inProgressRequests : Nat;
+    completedRequests : Nat;
+    newLeads : Nat;
+    resolvedLeads : Nat;
+  } {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can access revenue stats");
+    };
+
+    let allLeads = leads.values().toArray();
+    let allRequests = serviceRequests.values().toArray();
+
+    let newLeads = allLeads.filter(func(lead) { lead.status == #new }).size();
+    let resolvedLeads = allLeads.filter(func(lead) { lead.status == #resolved }).size();
+
+    let pendingRequests = allRequests.filter(func(request) { request.status == #pending }).size();
+    let inProgressRequests = allRequests.filter(func(request) { request.status == #inProgress }).size();
+    let completedRequests = allRequests.filter(func(request) { request.status == #completed }).size();
+
+    {
+      totalLeads = allLeads.size();
+      totalRequests = allRequests.size();
+      pendingRequests;
+      inProgressRequests;
+      completedRequests;
+      newLeads;
+      resolvedLeads;
+    };
+  };
+
+  // Get Staff Assigned Requests
+  public query ({ caller }) func getStaffAssignedRequests(staffUserId : Nat) : async [ServiceRequest] {
+    // Must be authenticated user
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access assigned requests");
+    };
+
+    // Admin or Staff only check
+    if (not isAdminOrStaff(caller)) {
+      Runtime.trap("Unauthorized: Only admins or staff can access assigned requests");
+    };
+
+    // If caller is staff (not admin), verify they can only see their own assigned requests
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      let callerProfile = userProfiles.get(caller);
+      switch (callerProfile) {
+        case (null) {
+          Runtime.trap("Unauthorized: User profile not found");
+        };
+        case (?profile) {
+          if (profile.userId != staffUserId) {
+            Runtime.trap("Unauthorized: You can only view your own assigned requests");
+          };
+        };
+      };
+    };
+
+    let assignedRequests = serviceRequests.values().toArray().filter(
+      func(request) { switch (request.assignedStaffId) { case (null) { false }; case (?staffId) { staffId == staffUserId } } }
+    );
+    assignedRequests;
   };
 };

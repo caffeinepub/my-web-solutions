@@ -39,7 +39,9 @@ export interface ServiceRequest {
   'id' : bigint,
   'status' : ServiceRequestStatus,
   'serviceType' : string,
+  'staffNote' : string,
   'clientName' : string,
+  'assignedStaffId' : [] | [bigint],
   'createdAt' : bigint,
   'description' : string,
   'updatedAt' : bigint,
@@ -66,7 +68,15 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addStaffNote' : ActorMethod<[bigint, string], boolean>,
+  'adminResetPassword' : ActorMethod<[bigint, string], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'assignStaffToRequest' : ActorMethod<[bigint, bigint], boolean>,
+  'changePassword' : ActorMethod<
+    [string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'createBlogPost' : ActorMethod<[string, string, string, string], bigint>,
   'createServiceRequest' : ActorMethod<
     [bigint, string, string, string],
@@ -80,6 +90,19 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getClientServiceRequests' : ActorMethod<[bigint], Array<ServiceRequest>>,
   'getLeads' : ActorMethod<[], Array<Lead>>,
+  'getRevenueStats' : ActorMethod<
+    [],
+    {
+      'resolvedLeads' : bigint,
+      'completedRequests' : bigint,
+      'totalLeads' : bigint,
+      'pendingRequests' : bigint,
+      'newLeads' : bigint,
+      'inProgressRequests' : bigint,
+      'totalRequests' : bigint,
+    }
+  >,
+  'getStaffAssignedRequests' : ActorMethod<[bigint], Array<ServiceRequest>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'initAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
