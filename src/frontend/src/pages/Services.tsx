@@ -87,7 +87,7 @@ const categories = [
         image:
           "/assets/generated/service-security-certification.dim_600x360.jpg",
         description:
-          "Individual security certifications: CSA, CSS, CSI, CSM, CSD through Corp International. Guidance from an accredited advisor.",
+          "Individual security certifications: CSA, CSS (Specialist), CSI (Investigator), CSM, CSD through Corp International. Guidance from an accredited advisor.",
         tags: ["CSA", "CSS", "Corp International"],
       },
       {

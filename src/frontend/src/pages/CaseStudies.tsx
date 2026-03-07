@@ -12,11 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Clock,
   Code2,
   ExternalLink,
   FolderOpen,
+  Mail,
   MessageSquareText,
   Scale,
+  Tag,
   X,
   Zap,
 } from "lucide-react";
@@ -32,6 +35,7 @@ type Project = {
   detail: string;
   image: string;
   tech: string[];
+  timeline: string;
 };
 
 const projects: Project[] = [
@@ -47,6 +51,7 @@ const projects: Project[] = [
     image:
       "https://i.postimg.cc/qqF9H4JW/Screenshot_4_3_2026_31339_indu_home_estate_services_v3p_caffeine_xyz.jpg",
     tech: ["React", "TypeScript", "Responsive Design", "Contact Management"],
+    timeline: "3 weeks",
   },
   {
     id: 2,
@@ -65,6 +70,7 @@ const projects: Project[] = [
       "Service Tracking",
       "Admin Dashboard",
     ],
+    timeline: "4 weeks",
   },
   {
     id: 3,
@@ -78,6 +84,7 @@ const projects: Project[] = [
     image:
       "https://i.postimg.cc/6qPDxtW1/Screenshot_4_3_2026_31523_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
     tech: ["Professional Website", "Practice Areas", "Contact System", "SEO"],
+    timeline: "2 weeks",
   },
   {
     id: 4,
@@ -91,6 +98,7 @@ const projects: Project[] = [
     image:
       "https://i.postimg.cc/kGGkHBmC/Screenshot_4_3_2026_3172_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
     tech: ["Content Architecture", "Service Listings", "Structured Layout"],
+    timeline: "1 week",
   },
   {
     id: 5,
@@ -104,6 +112,7 @@ const projects: Project[] = [
     image:
       "https://i.postimg.cc/90kvHCmq/Screenshot_4_3_2026_31722_nishanth_hc_advocate_website_4qh_caffeine_xyz.jpg",
     tech: ["Information Architecture", "UX Design", "Service Overview"],
+    timeline: "1 week",
   },
 ];
 
@@ -124,14 +133,21 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.48 } },
 };
 
+function getCategoryCount(categoryId: string) {
+  if (categoryId === "all") return projects.length;
+  return projects.filter((p) => p.categoryId === categoryId).length;
+}
+
 function ProjectCard({
   project,
   index,
   onOpen,
+  onImageClick,
 }: {
   project: Project;
   index: number;
   onOpen: (p: Project) => void;
+  onImageClick: (p: Project) => void;
 }) {
   const requestUrl = `https://wa.me/919901563799?text=Hi%2C%20I%20want%20a%20similar%20project%20to%20${encodeURIComponent(project.title)}.%20Please%20share%20details.`;
 
@@ -141,26 +157,30 @@ function ProjectCard({
       data-ocid={`casestudies.item.${index + 1}`}
       className="group"
     >
-      <Card className="h-full overflow-hidden border border-border/70 bg-white shadow-sm hover:shadow-card-hover transition-all duration-300 hover:-translate-y-2 flex flex-col">
+      <Card
+        className="h-full overflow-hidden border border-border/70 bg-white shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-3 flex flex-col group-hover:border-primary/40 group-hover:ring-2 group-hover:ring-primary/15"
+        style={{ borderTop: "3px solid hsl(var(--primary))" }}
+      >
         {/* Image */}
         <div className="relative overflow-hidden" style={{ paddingTop: "58%" }}>
           <button
             type="button"
-            aria-label={`View details for ${project.title}`}
-            className="absolute inset-0 w-full h-full cursor-pointer bg-transparent border-0 p-0"
-            onClick={() => onOpen(project)}
+            aria-label={`View full image for ${project.title}`}
+            data-ocid={`casestudies.image_button.${index + 1}`}
+            className="absolute inset-0 w-full h-full cursor-zoom-in bg-transparent border-0 p-0"
+            onClick={() => onImageClick(project)}
           >
             <img
               src={project.image}
               alt={project.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
             />
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-300 flex items-center justify-center">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-primary text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/95 text-primary text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
                 <ExternalLink className="w-3.5 h-3.5" />
-                View Details
+                Click to Enlarge
               </div>
             </div>
           </button>
@@ -203,6 +223,7 @@ function ProjectCard({
               variant="outline"
               size="sm"
               onClick={() => onOpen(project)}
+              data-ocid={`casestudies.view_button.${index + 1}`}
               className="flex-1 text-xs font-semibold border-primary/25 text-primary hover:bg-accent h-8 gap-1"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -243,6 +264,7 @@ export function CaseStudies() {
   }, []);
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [lightboxProject, setLightboxProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState("all");
 
   const filteredProjects =
@@ -253,6 +275,17 @@ export function CaseStudies() {
   const requestUrl = selectedProject
     ? `https://wa.me/919901563799?text=Hi%2C%20I%20want%20a%20similar%20project%20to%20${encodeURIComponent(selectedProject.title)}.%20Please%20share%20details.`
     : "";
+
+  // ESC key closes lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxProject(null);
+    };
+    if (lightboxProject) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxProject]);
 
   return (
     <div
@@ -332,6 +365,9 @@ export function CaseStudies() {
                   >
                     <tab.icon className="w-3.5 h-3.5" />
                     {tab.label}
+                    <span className="ml-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+                      {getCategoryCount(tab.id)}
+                    </span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -354,6 +390,7 @@ export function CaseStudies() {
                         project={project}
                         index={index}
                         onOpen={setSelectedProject}
+                        onImageClick={setLightboxProject}
                       />
                     ))}
                   </motion.div>
@@ -364,7 +401,65 @@ export function CaseStudies() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Mid-page CTA Strip */}
+      <section
+        className="py-14 border-y border-border"
+        style={{
+          background:
+            "linear-gradient(135deg, hsl(var(--primary) / 0.07) 0%, hsl(var(--accent)) 100%)",
+        }}
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center justify-between gap-6 max-w-4xl mx-auto"
+          >
+            <div className="text-center md:text-left">
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
+                Have a project in mind?
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We build websites, SaaS systems, and digital solutions. Let's
+                talk.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+              <Button
+                asChild
+                size="lg"
+                data-ocid="casestudies.midpage_cta.button"
+                className="font-semibold gap-2 h-12 px-7 text-white border-0 shadow-lg hover:shadow-xl transition-shadow"
+                style={{ backgroundColor: "#25D366" }}
+              >
+                <a
+                  href="https://wa.me/919901563799?text=Hi%2C%20I%20have%20a%20project%20in%20mind.%20Can%20we%20discuss%3F"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                  WhatsApp Us
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                data-ocid="casestudies.midpage_email.button"
+                className="font-semibold gap-2 h-12 px-7 border-primary/40 text-primary hover:bg-primary/5"
+              >
+                <a href="mailto:mywebsoloutions97@gmail.com?subject=Project%20Inquiry&body=Hi%2C%20I'd%20like%20to%20discuss%20a%20project.">
+                  <Mail className="w-5 h-5" />
+                  Send Email
+                </a>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
       <section className="py-16 bg-accent/30 border-t border-border">
         <div className="container mx-auto px-4">
           <motion.div
@@ -441,6 +536,41 @@ export function CaseStudies() {
                   {selectedProject.detail}
                 </p>
 
+                {/* Per-project stats row */}
+                <div className="flex flex-wrap gap-4 mb-5 p-4 rounded-xl bg-accent/40 border border-border/60">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Timeline
+                      </p>
+                      <p className="font-semibold text-foreground">
+                        {selectedProject.timeline}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-green-500/30" />
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Status
+                      </p>
+                      <p className="font-semibold text-green-600">Live</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Tag className="w-4 h-4 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Category
+                      </p>
+                      <p className="font-semibold text-foreground">
+                        {selectedProject.category}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Tech stack */}
                 <div className="mb-6">
                   <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">
@@ -489,6 +619,54 @@ export function CaseStudies() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxProject && (
+          <motion.div
+            data-ocid="casestudies.lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setLightboxProject(null)}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              data-ocid="casestudies.lightbox.close_button"
+              aria-label="Close lightbox"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxProject(null);
+              }}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors border border-white/20 backdrop-blur-sm"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Image */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="max-w-5xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={lightboxProject.image}
+                alt={lightboxProject.title}
+                className="w-full rounded-xl shadow-2xl object-contain max-h-[85vh]"
+              />
+              <p className="text-white/80 text-center text-sm mt-3 font-medium">
+                {lightboxProject.title}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
       <WhatsAppButton />

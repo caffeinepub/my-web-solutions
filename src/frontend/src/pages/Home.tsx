@@ -164,7 +164,7 @@ const credentials = [
   {
     icon: ShieldCheck,
     title: "Certified Security Professional",
-    subtitle: "CSA, CSS, CSI, CSM, CSD",
+    subtitle: "CSA, CSS (Specialist), CSI (Investigator), CSM, CSD",
     accent: "from-emerald-50 to-green-50 border-emerald-200",
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-600",
@@ -655,8 +655,8 @@ export function Home() {
                 data-ocid={`projects.item.${index + 1}`}
                 className="group"
               >
-                <Card className="h-full overflow-hidden border border-border/70 bg-white shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col">
-                  {/* Screenshot image */}
+                <Card className="h-full overflow-hidden border border-border/70 bg-white shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-3 flex flex-col">
+                  {/* Screenshot image with shimmer gradient + title overlay */}
                   <div
                     className="relative overflow-hidden"
                     style={{ paddingTop: "56.25%" }}
@@ -664,22 +664,29 @@ export function Home() {
                     <img
                       src={project.image}
                       alt={project.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
+                    {/* Shimmer gradient overlay with title */}
+                    <div
+                      className="absolute inset-0 transition-opacity duration-300"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.0) 100%)",
+                      }}
+                    />
+                    {/* Project title overlaid at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/80 text-white mb-1.5 backdrop-blur-sm">
+                        {project.tag}
+                      </span>
+                      <h3 className="font-display text-white text-sm font-bold leading-snug drop-shadow-sm line-clamp-2">
+                        {project.title}
+                      </h3>
+                    </div>
                   </div>
 
                   <CardContent className="p-5 flex flex-col flex-1">
-                    {/* Tag badge */}
-                    <span className="inline-block self-start text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-3">
-                      {project.tag}
-                    </span>
-
-                    {/* Title */}
-                    <h3 className="font-display text-base font-bold text-foreground mb-2 leading-snug">
-                      {project.title}
-                    </h3>
-
                     {/* Description */}
                     <p className="text-muted-foreground text-sm leading-relaxed flex-1">
                       {project.description}
@@ -695,16 +702,16 @@ export function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="text-center mt-10"
+            className="text-center mt-12"
           >
             <Button
               asChild
-              variant="outline"
+              size="lg"
               data-ocid="projects.primary_button"
-              className="font-semibold border-primary/30 text-primary hover:bg-primary/5"
+              className="font-semibold h-12 px-8 gap-2 shadow-md hover:shadow-lg transition-shadow"
             >
-              <Link to="/contact">
-                Start Your Project <ExternalLink className="ml-2 w-4 h-4" />
+              <Link to="/case-studies">
+                View All Projects <ArrowRight className="ml-1 w-5 h-5" />
               </Link>
             </Button>
           </motion.div>

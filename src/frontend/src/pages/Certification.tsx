@@ -39,16 +39,16 @@ const certifications = [
   },
   {
     code: "CSS",
-    name: "Certified Security Supervisor",
-    level: "Supervisory",
+    name: "Certified Security Specialist",
+    level: "Specialist",
     levelColor: "bg-blue-100 text-blue-700",
-    forWho: "Supervisory-level security professionals",
+    forWho: "Security professionals seeking specialist-level credentials",
     description:
-      "Designed for security professionals stepping into supervisory roles. Covers team management, incident handling, shift coordination, and operational oversight.",
+      "Designed for security professionals who have developed specialized expertise in a specific domain of corporate security. Validates deep functional knowledge and professional competency.",
     benefits: [
-      "Validates supervisory and team leadership skills",
-      "Focuses on incident response and operational management",
-      "Preferred credential for security team leaders",
+      "Validates specialist-level security expertise",
+      "Recognized credential for domain-specific security roles",
+      "Preferred by organizations seeking certified specialists",
     ],
     icon: UserCheck,
     accentClass: "border-blue-200 bg-blue-50/50",
@@ -56,16 +56,16 @@ const certifications = [
   },
   {
     code: "CSI",
-    name: "Certified Security Inspector",
-    level: "Inspection & Compliance",
+    name: "Certified Security Investigator",
+    level: "Investigation",
     levelColor: "bg-violet-100 text-violet-700",
-    forWho: "Compliance and inspection-focused security professionals",
+    forWho: "Professionals engaged in security investigations and inquiries",
     description:
-      "Specialized certification for professionals involved in physical security inspections, compliance audits, and site assessments across commercial and industrial environments.",
+      "Specialized certification for professionals conducting security investigations, including incident inquiries, internal investigations, loss prevention, and evidence management.",
     benefits: [
-      "Expert credential for site security assessments",
-      "Covers compliance frameworks and audit methodologies",
-      "Widely recognized by corporate security departments",
+      "Expert credential for security investigation roles",
+      "Covers investigation methodologies and evidence handling",
+      "Recognized by corporate security and loss prevention teams",
     ],
     icon: ClipboardCheck,
     accentClass: "border-violet-200 bg-violet-50/50",
@@ -153,7 +153,7 @@ export function Certification() {
     document.title = "Security Certifications | My Web Solutions";
     const metaDesc = document.querySelector('meta[name="description"]');
     const content =
-      "Corp International accredited certification advisory for CSA, CSS, CSI, CSM, CSD. Individual security certification support in Bengaluru.";
+      "Corp International accredited certification advisory for CSA (Advisor), CSS (Specialist), CSI (Investigator), CSM, CSD. Individual security certification support in Bengaluru.";
     if (metaDesc) metaDesc.setAttribute("content", content);
     else {
       const meta = document.createElement("meta");
