@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSubmitLead } from "@/hooks/useQueries";
 import { CheckCircle, Clock, Loader2, Mail, MapPin, Phone } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const services = [
@@ -36,6 +36,20 @@ const services = [
 ];
 
 export function Contact() {
+  useEffect(() => {
+    document.title = "Contact Us | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Get in touch with My Web Solutions for web development, SaaS, certifications, and government services. WhatsApp: +91 9901563799";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",

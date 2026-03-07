@@ -8,6 +8,17 @@ const navLinks = [
   { label: "Services", href: "/services", ocid: "nav.services_link" },
   { label: "Pricing", href: "/pricing", ocid: "nav.pricing_link" },
   { label: "Blog", href: "/blog", ocid: "nav.blog_link" },
+  { label: "FAQ", href: "/faq", ocid: "nav.faq_link" },
+  {
+    label: "Certifications",
+    href: "/certification",
+    ocid: "nav.certification_link",
+  },
+  {
+    label: "Case Studies",
+    href: "/case-studies",
+    ocid: "nav.casestudies_link",
+  },
   { label: "About", href: "/about", ocid: "nav.about_link" },
   { label: "Contact", href: "/contact", ocid: "nav.contact_link" },
 ];

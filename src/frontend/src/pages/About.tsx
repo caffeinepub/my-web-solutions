@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Award, Layers, Star, Target, Users } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 
 const credentials = [
   "Certified Security Professional",
@@ -49,6 +50,20 @@ const itemVariants = {
 };
 
 export function About() {
+  useEffect(() => {
+    document.title = "About Us | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Mounith H C – Certified Security Professional and Accredited Certification Advisor with 11+ years at Wells Fargo and Samsung Semiconductor.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />

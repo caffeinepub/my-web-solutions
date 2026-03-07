@@ -8,6 +8,7 @@ import { useListBlogPosts } from "@/hooks/useQueries";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Calendar, User } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 
 function formatDate(ts: bigint) {
   return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
@@ -28,6 +29,20 @@ const itemVariants = {
 };
 
 export function Blog() {
+  useEffect(() => {
+    document.title = "Blog | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Articles and insights on web development, corporate security, government services, and small business digital transformation.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   const { data: posts = [], isLoading } = useListBlogPosts();
 
   return (

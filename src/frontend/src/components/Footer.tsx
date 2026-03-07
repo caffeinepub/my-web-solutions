@@ -1,5 +1,59 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
-import { Globe, Mail, MapPin, Phone } from "lucide-react";
+import { Globe, Mail, MapPin, Phone, Send } from "lucide-react";
+import { useState } from "react";
+
+function FooterNewsletter() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    setSubscribed(true);
+    setEmail("");
+  };
+
+  return (
+    <div>
+      <h4 className="font-display font-semibold text-white mb-4 text-sm uppercase tracking-wider">
+        Newsletter
+      </h4>
+      <p className="text-xs text-sidebar-foreground/60 mb-3 leading-relaxed">
+        Tips on web, security &amp; government services.
+      </p>
+      {subscribed ? (
+        <p
+          data-ocid="footer.newsletter.success_state"
+          className="text-sm text-emerald-400 font-medium"
+        >
+          Subscribed! Thank you.
+        </p>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <Input
+            type="email"
+            placeholder="Your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            data-ocid="footer.newsletter.input"
+            className="h-9 text-sm bg-sidebar-foreground/10 border-sidebar-foreground/20 text-white placeholder:text-sidebar-foreground/50 focus-visible:ring-primary"
+          />
+          <Button
+            type="submit"
+            size="sm"
+            data-ocid="footer.newsletter.submit_button"
+            className="h-9 text-xs font-semibold gap-1.5"
+          >
+            <Send className="w-3 h-3" />
+            Subscribe
+          </Button>
+        </form>
+      )}
+    </div>
+  );
+}
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -9,9 +63,9 @@ export function Footer() {
   return (
     <footer className="bg-navy-deep text-sidebar-foreground">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Globe className="w-4 h-4 text-white" />
@@ -57,6 +111,9 @@ export function Footer() {
                 { label: "Services", to: "/services" },
                 { label: "Pricing", to: "/pricing" },
                 { label: "Blog", to: "/blog" },
+                { label: "FAQ", to: "/faq" },
+                { label: "Certifications", to: "/certification" },
+                { label: "Case Studies", to: "/case-studies" },
                 { label: "About", to: "/about" },
                 { label: "Contact", to: "/contact" },
               ].map((link) => (
@@ -96,6 +153,11 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <FooterNewsletter />
           </div>
         </div>
 

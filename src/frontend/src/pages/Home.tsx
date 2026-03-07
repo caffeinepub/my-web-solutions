@@ -1,25 +1,36 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Award,
+  Briefcase,
   CalendarClock,
   CheckCircle,
   ExternalLink,
+  Heart,
+  Home as HomeIcon,
   Mail,
   MessageSquareText,
   Quote,
+  Scale,
+  Send,
+  Shield,
+  ShieldCheck,
   Star,
   TrendingUp,
+  Trophy,
   Users,
+  Wrench,
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const serviceCategories = [
   {
@@ -93,6 +104,78 @@ const trustPoints = [
     title: "Founder-Led Personalized Service",
     description:
       "You work directly with Mounith — no middlemen, no outsourcing. Every client gets dedicated, personal attention.",
+  },
+  {
+    icon: Shield,
+    title: "Security-Trained Discipline",
+    description:
+      "Every project is managed with the same rigor as Fortune 500 corporate security operations. Zero compromises on quality.",
+  },
+  {
+    icon: CheckCircle,
+    title: "Transparent Pricing, No Hidden Costs",
+    description:
+      "What you see on our pricing page is what you pay. No surprises, no add-ons. Honest pricing from day one.",
+  },
+];
+
+const industries = [
+  { icon: HomeIcon, label: "Real Estate", color: "text-blue-600 bg-blue-50" },
+  {
+    icon: Scale,
+    label: "Legal Services",
+    color: "text-indigo-600 bg-indigo-50",
+  },
+  {
+    icon: Wrench,
+    label: "Home Services",
+    color: "text-orange-600 bg-orange-50",
+  },
+  {
+    icon: Shield,
+    label: "Government & Compliance",
+    color: "text-green-600 bg-green-50",
+  },
+  { icon: Heart, label: "Healthcare", color: "text-rose-600 bg-rose-50" },
+  {
+    icon: Briefcase,
+    label: "Small Business",
+    color: "text-purple-600 bg-purple-50",
+  },
+];
+
+const credentials = [
+  {
+    icon: Award,
+    title: "Corp International Accredited Advisor",
+    subtitle: "Security Certifications",
+    accent: "from-amber-50 to-yellow-50 border-amber-200",
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+  },
+  {
+    icon: Trophy,
+    title: "11+ Years Corporate Experience",
+    subtitle: "Wells Fargo & Samsung Alumni",
+    accent: "from-blue-50 to-sky-50 border-blue-200",
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Certified Security Professional",
+    subtitle: "CSA, CSS, CSI, CSM, CSD",
+    accent: "from-emerald-50 to-green-50 border-emerald-200",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+  },
+  {
+    icon: Star,
+    title: "Founder-Led Personalized Service",
+    subtitle: "Direct engagement, no outsourcing",
+    accent: "from-purple-50 to-violet-50 border-purple-200",
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
   },
 ];
 
@@ -289,7 +372,86 @@ function ServiceCategoryCard({
   );
 }
 
+function NewsletterForm({ compact = false }: { compact?: boolean }) {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    setSubscribed(true);
+    setEmail("");
+    toast.success("Thank you for subscribing!");
+  };
+
+  if (subscribed && compact) {
+    return (
+      <p
+        data-ocid="newsletter.success_state"
+        className="text-sm text-emerald-400 font-medium"
+      >
+        Subscribed!
+      </p>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className={
+        compact
+          ? "flex gap-2"
+          : "flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+      }
+    >
+      <Input
+        type="email"
+        placeholder="Your email address"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        data-ocid="newsletter.input"
+        className={
+          compact
+            ? "h-9 text-sm bg-sidebar-foreground/10 border-sidebar-foreground/20 text-white placeholder:text-sidebar-foreground/50 focus-visible:ring-primary"
+            : "h-11 flex-1 border-border"
+        }
+      />
+      <Button
+        type="submit"
+        size={compact ? "sm" : "default"}
+        data-ocid="newsletter.submit_button"
+        className={
+          compact
+            ? "h-9 px-4 text-xs font-semibold shrink-0"
+            : "h-11 px-6 font-semibold shrink-0 gap-2"
+        }
+      >
+        {!compact && <Send className="w-4 h-4" />}
+        Subscribe
+      </Button>
+    </form>
+  );
+}
+
 export function Home() {
+  useEffect(() => {
+    document.title =
+      "My Web Solutions | Web, SaaS & Security Services – Bengaluru";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Professional web development, SaaS systems, security certifications, police verification and government services in Bengaluru. 11+ years corporate experience.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -549,6 +711,60 @@ export function Home() {
         </div>
       </section>
 
+      {/* Trusted Across Industries */}
+      <section
+        data-ocid="home.industries.section"
+        className="py-20 bg-background border-b border-border"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              Industries
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Trusted Across Industries
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              From real estate to legal services — building digital solutions
+              for businesses that matter.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
+          >
+            {industries.map((industry) => (
+              <motion.div
+                key={industry.label}
+                variants={itemVariants}
+                className="flex flex-col items-center gap-3 p-4 rounded-2xl border border-border bg-white hover:shadow-md hover:-translate-y-1 transition-all duration-250 cursor-default"
+              >
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center ${industry.color.split(" ")[1]}`}
+                >
+                  <industry.icon
+                    className={`w-5 h-5 ${industry.color.split(" ")[0]}`}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-foreground text-center leading-tight">
+                  {industry.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* Why Choose Us */}
       <section className="py-20 bg-secondary/40 border-y border-border">
         <div className="container mx-auto px-4">
@@ -577,7 +793,7 @@ export function Home() {
             viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
-            {trustPoints.map((point) => (
+            {trustPoints.slice(0, 3).map((point) => (
               <motion.div
                 key={point.title}
                 variants={itemVariants}
@@ -592,6 +808,87 @@ export function Home() {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {point.description}
                 </p>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 md:max-w-2xl md:mx-auto"
+          >
+            {trustPoints.slice(3).map((point) => (
+              <motion.div
+                key={point.title}
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <point.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">
+                  {point.title}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {point.description}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Credentials & Recognition */}
+      <section
+        data-ocid="home.credentials.section"
+        className="py-20 bg-background"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              Credentials
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Credentials &amp; Recognition
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Backed by real experience and accredited expertise.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto"
+          >
+            {credentials.map((cred) => (
+              <motion.div key={cred.title} variants={itemVariants}>
+                <div
+                  className={`flex items-start gap-4 p-6 rounded-2xl border bg-gradient-to-br ${cred.accent} hover:shadow-md transition-shadow duration-300`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${cred.iconBg}`}
+                  >
+                    <cred.icon className={`w-6 h-6 ${cred.iconColor}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-sm font-bold text-foreground leading-snug mb-1">
+                      {cred.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {cred.subtitle}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -711,6 +1008,39 @@ export function Home() {
                   Get in Touch <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Newsletter Signup */}
+      <section data-ocid="newsletter.section" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div
+              className="rounded-2xl p-10 md:p-14 text-center border border-primary/15 max-w-2xl mx-auto"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.93 0.04 255 / 1), oklch(0.97 0.02 255 / 1))",
+              }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-semibold text-primary uppercase tracking-widest mb-5">
+                <Send className="w-3 h-3" />
+                Newsletter
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
+                Stay Updated
+              </h2>
+              <p className="text-muted-foreground text-base mb-8 max-w-sm mx-auto">
+                Get tips on web development, security certifications, and
+                government services — straight to your inbox.
+              </p>
+              <NewsletterForm />
             </div>
           </motion.div>
         </div>

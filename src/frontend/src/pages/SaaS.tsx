@@ -13,6 +13,7 @@ import {
   Shield,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 
 const features = [
   {
@@ -51,6 +52,20 @@ const features = [
 ];
 
 export function SaaS() {
+  useEffect(() => {
+    document.title = "SaaS Service Management | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Custom SaaS Service Management Systems for small businesses starting at ₹34,999. Manage clients, services, and operations in one platform.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -12,9 +12,12 @@ import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AdminLogin } from "@/pages/AdminLogin";
 import { Blog } from "@/pages/Blog";
 import { BlogPostPage } from "@/pages/BlogPost";
+import { CaseStudies } from "@/pages/CaseStudies";
+import { Certification } from "@/pages/Certification";
 import { ClientDashboard } from "@/pages/ClientDashboard";
 import { ClientLogin } from "@/pages/ClientLogin";
 import { Contact } from "@/pages/Contact";
+import { FAQ } from "@/pages/FAQ";
 // Pages
 import { Home } from "@/pages/Home";
 import { Pricing } from "@/pages/Pricing";
@@ -82,6 +85,24 @@ const blogPostRoute = createRoute({
   component: BlogPostPage,
 });
 
+const faqRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/faq",
+  component: FAQ,
+});
+
+const certificationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/certification",
+  component: Certification,
+});
+
+const caseStudiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/case-studies",
+  component: CaseStudies,
+});
+
 // Auth routes
 const adminLoginRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -130,6 +151,9 @@ const routeTree = rootRoute.addChildren([
   pricingRoute,
   blogRoute,
   blogPostRoute,
+  faqRoute,
+  certificationRoute,
+  caseStudiesRoute,
   adminLoginRoute,
   staffLoginRoute,
   clientLoginRoute,

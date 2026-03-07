@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 
 const WA_LINK = "https://wa.me/919901563799";
 
@@ -75,6 +76,20 @@ const itemVariants = {
 };
 
 export function Pricing() {
+  useEffect(() => {
+    document.title = "Pricing | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Transparent pricing for websites (₹3,999+), SaaS systems (₹34,999+), and security documentation services.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />

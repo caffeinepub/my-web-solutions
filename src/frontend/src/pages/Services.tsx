@@ -23,6 +23,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 
 const WHATSAPP_NUMBER = "919901563799";
 const MAIL_ADDRESS = "mywebsoloutions97@gmail.com";
@@ -228,6 +229,20 @@ function ServiceActionButtons({ serviceTitle }: { serviceTitle: string }) {
 }
 
 export function Services() {
+  useEffect(() => {
+    document.title = "Services | My Web Solutions";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const content =
+      "Explore our 12 services: website development, SaaS systems, security certifications, police verification, UMANG guidance, resume writing, and more.";
+    if (metaDesc) metaDesc.setAttribute("content", content);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = content;
+      document.head.appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
