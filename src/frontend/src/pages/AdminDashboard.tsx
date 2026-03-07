@@ -1,5 +1,6 @@
 import {
   type BlogPost,
+  BookingStatus,
   LeadStatus,
   Role,
   ServiceRequestStatus,
@@ -47,13 +48,16 @@ import {
   useCreateBlogPost,
   useCreateUser,
   useDeleteBlogPost,
+  useDeleteBooking,
   useGetLeads,
   useGetRevenueStats,
   useListAllBlogPosts,
   useListAllServiceRequests,
+  useListBookings,
   useListUsers,
   useToggleUserActive,
   useUpdateBlogPost,
+  useUpdateBookingStatus,
   useUpdateLeadStatus,
   useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
@@ -62,12 +66,14 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   BarChart2,
   BookOpen,
+  CalendarCheck,
   ClipboardList,
   Globe,
   KeyRound,
   LayoutDashboard,
   Loader2,
   LogOut,
+  MessageCircle,
   MessageSquare,
   Pencil,
   Plus,
@@ -96,7 +102,8 @@ type Tab =
   | "users"
   | "blog"
   | "service-requests"
-  | "analytics";
+  | "analytics"
+  | "bookings";
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
   if (status === LeadStatus.new_) {
@@ -401,6 +408,7 @@ export function AdminDashboard() {
   const { data: serviceRequests = [], isLoading: srLoading } =
     useListAllServiceRequests();
   const { data: revenueStats, isLoading: statsLoading } = useGetRevenueStats();
+  const { data: bookings = [], isLoading: bookingsLoading } = useListBookings();
 
   const { mutate: updateStatus } = useUpdateLeadStatus();
   const { mutate: toggleActive } = useToggleUserActive();
@@ -413,6 +421,31 @@ export function AdminDashboard() {
     useDeleteBlogPost();
   const { mutate: updateSRStatus } = useUpdateServiceRequestStatus();
   const { mutateAsync: assignStaff } = useAssignStaffToRequest();
+  const { mutate: updateBookingStatusMutate } = useUpdateBookingStatus();
+  const { mutateAsync: deleteBookingMutate, isPending: deletingBooking } =
+    useDeleteBooking();
+
+  // Booking delete dialog state
+  const [deleteBookingId, setDeleteBookingId] = useState<bigint | null>(null);
+  const [deleteBookingOpen, setDeleteBookingOpen] = useState(false);
+
+  const confirmDeleteBooking = (id: bigint) => {
+    setDeleteBookingId(id);
+    setDeleteBookingOpen(true);
+  };
+
+  const handleDeleteBooking = async () => {
+    if (!deleteBookingId) return;
+    try {
+      await deleteBookingMutate(deleteBookingId);
+      toast.success("Booking deleted");
+    } catch {
+      toast.error("Failed to delete booking");
+    } finally {
+      setDeleteBookingOpen(false);
+      setDeleteBookingId(null);
+    }
+  };
 
   const staffUsers = users.filter((u) => u.role === Role.staff);
 
@@ -570,6 +603,12 @@ export function AdminDashboard() {
       label: "Leads",
       icon: MessageSquare,
       ocid: "admin_dashboard.leads.tab",
+    },
+    {
+      id: "bookings" as Tab,
+      label: "Bookings",
+      icon: CalendarCheck,
+      ocid: "admin_dashboard.bookings.tab",
     },
     {
       id: "service-requests" as Tab,
@@ -1032,6 +1071,241 @@ export function AdminDashboard() {
                             </TableCell>
                           </TableRow>
                         ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ── Bookings ── */}
+        {activeTab === "bookings" && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Bookings
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                All appointment booking requests
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {
+                  label: "Total",
+                  count: bookings.length,
+                  color: "text-foreground",
+                },
+                {
+                  label: "Pending",
+                  count: bookings.filter(
+                    (b) => b.status === BookingStatus.pending,
+                  ).length,
+                  color: "text-yellow-600",
+                },
+                {
+                  label: "Confirmed",
+                  count: bookings.filter(
+                    (b) => b.status === BookingStatus.confirmed,
+                  ).length,
+                  color: "text-green-600",
+                },
+                {
+                  label: "Completed",
+                  count: bookings.filter(
+                    (b) => b.status === BookingStatus.completed,
+                  ).length,
+                  color: "text-blue-600",
+                },
+              ].map((stat) => (
+                <Card key={stat.label}>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p
+                      className={`font-display text-3xl font-bold ${stat.color}`}
+                    >
+                      {stat.count}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stat.label}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {bookingsLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : bookings.length === 0 ? (
+                  <div
+                    data-ocid="bookings.empty_state"
+                    className="py-16 text-center"
+                  >
+                    <CalendarCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No bookings yet. They'll appear here once clients submit
+                      an appointment request.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table data-ocid="bookings.table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Phone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bookings.map((booking, index) => {
+                          const waNotifyUrl = `https://wa.me/91${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${booking.name}, your appointment for ${booking.service} on ${booking.preferredDate} has been confirmed! - My Web Solutions`)}`;
+
+                          return (
+                            <TableRow
+                              key={booking.id.toString()}
+                              data-ocid={`bookings.row.${index + 1}`}
+                            >
+                              <TableCell className="font-medium text-sm whitespace-nowrap">
+                                {booking.name}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {booking.phone}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                                {booking.email}
+                              </TableCell>
+                              <TableCell className="text-sm max-w-[160px] truncate">
+                                {booking.service}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {booking.preferredDate}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {booking.preferredTime}
+                              </TableCell>
+                              <TableCell>
+                                {booking.status === BookingStatus.pending && (
+                                  <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 whitespace-nowrap">
+                                    Pending
+                                  </Badge>
+                                )}
+                                {booking.status === BookingStatus.confirmed && (
+                                  <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 whitespace-nowrap">
+                                    Confirmed
+                                  </Badge>
+                                )}
+                                {booking.status === BookingStatus.completed && (
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 whitespace-nowrap">
+                                    Completed
+                                  </Badge>
+                                )}
+                                {booking.status === BookingStatus.rejected && (
+                                  <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100 whitespace-nowrap">
+                                    Rejected
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5 flex-wrap min-w-[200px]">
+                                  {/* Confirm */}
+                                  {booking.status !==
+                                    BookingStatus.confirmed && (
+                                    <Button
+                                      size="sm"
+                                      className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                                      data-ocid={`bookings.confirm_button.${index + 1}`}
+                                      onClick={() =>
+                                        updateBookingStatusMutate({
+                                          id: booking.id,
+                                          status: BookingStatus.confirmed,
+                                        })
+                                      }
+                                    >
+                                      Confirm
+                                    </Button>
+                                  )}
+                                  {/* WhatsApp Notify (shown when confirmed) */}
+                                  {booking.status ===
+                                    BookingStatus.confirmed && (
+                                    <a
+                                      href={waNotifyUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      data-ocid={`bookings.whatsapp_notify_button.${index + 1}`}
+                                      className="inline-flex items-center gap-1 h-7 px-2 text-xs rounded-md bg-[#25D366] text-white font-medium hover:bg-[#1ebe5d] transition-colors"
+                                    >
+                                      <MessageCircle className="w-3 h-3" />
+                                      Notify
+                                    </a>
+                                  )}
+                                  {/* Reject */}
+                                  {booking.status !==
+                                    BookingStatus.rejected && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                                      data-ocid={`bookings.reject_button.${index + 1}`}
+                                      onClick={() =>
+                                        updateBookingStatusMutate({
+                                          id: booking.id,
+                                          status: BookingStatus.rejected,
+                                        })
+                                      }
+                                    >
+                                      Reject
+                                    </Button>
+                                  )}
+                                  {/* Complete */}
+                                  {booking.status !==
+                                    BookingStatus.completed && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 px-2 text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                                      data-ocid={`bookings.complete_button.${index + 1}`}
+                                      onClick={() =>
+                                        updateBookingStatusMutate({
+                                          id: booking.id,
+                                          status: BookingStatus.completed,
+                                        })
+                                      }
+                                    >
+                                      Complete
+                                    </Button>
+                                  )}
+                                  {/* Delete */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
+                                    data-ocid={`bookings.delete_button.${index + 1}`}
+                                    onClick={() =>
+                                      confirmDeleteBooking(booking.id)
+                                    }
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -1719,6 +1993,43 @@ export function AdminDashboard() {
                 </>
               ) : (
                 "Delete Post"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Booking Confirmation */}
+      <Dialog open={deleteBookingOpen} onOpenChange={setDeleteBookingOpen}>
+        <DialogContent data-ocid="bookings.delete_booking.dialog">
+          <DialogHeader>
+            <DialogTitle>Delete Booking</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-2">
+            Are you sure you want to delete this booking? This action cannot be
+            undone.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              data-ocid="bookings.delete_booking.cancel_button"
+              onClick={() => setDeleteBookingOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              data-ocid="bookings.delete_booking.confirm_button"
+              disabled={deletingBooking}
+              onClick={handleDeleteBooking}
+            >
+              {deletingBooking ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Booking"
               )}
             </Button>
           </DialogFooter>

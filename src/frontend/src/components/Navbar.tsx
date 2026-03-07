@@ -61,9 +61,20 @@ export function Navbar() {
         </nav>
 
         {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Button asChild size="sm" className="font-medium">
-            <Link to="/contact">Get Started</Link>
+        <div className="hidden md:flex items-center gap-2">
+          <Button asChild size="sm" variant="outline" className="font-medium">
+            <Link to="/contact" data-ocid="nav.contact_cta_link">
+              Get Started
+            </Link>
+          </Button>
+          <Button
+            asChild
+            size="sm"
+            className="font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Link to="/booking" data-ocid="nav.book_now_button">
+              Book Now
+            </Link>
           </Button>
         </div>
 
@@ -100,10 +111,28 @@ export function Navbar() {
                 </Link>
               );
             })}
-            <div className="pt-2 pb-1">
-              <Button asChild size="sm" className="w-full font-medium">
-                <Link to="/contact" onClick={() => setIsOpen(false)}>
+            <div className="pt-2 pb-1 space-y-2">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="w-full font-medium"
+              >
+                <Link
+                  to="/contact"
+                  onClick={() => setIsOpen(false)}
+                  data-ocid="nav.mobile_contact_cta_link"
+                >
                   Get Started
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="w-full font-semibold">
+                <Link
+                  to="/booking"
+                  onClick={() => setIsOpen(false)}
+                  data-ocid="nav.mobile_book_now_button"
+                >
+                  Book Now
                 </Link>
               </Button>
             </div>

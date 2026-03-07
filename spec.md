@@ -1,41 +1,43 @@
 # My Web Solutions
 
 ## Current State
-- Blog page (`/blog`) shows all published posts in a grid with no filtering or search
-- Blog post page (`/blog/$id`) shows individual post content
-- BlogPost type in backend: `{ id, title, content, excerpt, authorName, createdAt, updatedAt, isPublished }`
-- No category field in backend data model
-- No search, no related posts, no social share buttons
+
+Full multi-page website with:
+- Public pages: Home, Services, SaaS, Contact, About, Pricing, Blog, FAQ, Certifications, Case Studies
+- 3 separate login portals: /admin-login, /staff-login, /client-login
+- 3 dashboards: Admin (analytics, leads, users, service requests, blog), Staff (assigned clients, requests, notes), Client (requests timeline, invoices, change password)
+- Dynamic blog system (admin-controlled)
+- WhatsApp floating button (+91 9901563799)
+- Contact form storing leads in backend
+- Authorization system with role-based access
+- Backend functions: submitLead, getLeads, updateLeadStatus, login, createUser, listUsers, toggleUserActive, blog CRUD, service request CRUD, assignStaff, addStaffNote, changePassword, adminResetPassword, getRevenueStats, getStaffAssignedRequests, initAdmin
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Blog Categories** (frontend-only, keyword-based inference): Security, Technology, Government Services, Career, SaaS, General
-  - Category filter tabs on `/blog` listing page
-  - Each post card shows a category badge (inferred from title/content/excerpt keywords)
-  - Category filter persists via URL search param `?category=`
-- **Search bar** on `/blog` with real-time filtering by title and excerpt
-- **Related Posts** section at the bottom of `/blog/$id` (same inferred category, excluding current post, max 3)
-- **Social Share buttons** on `/blog/$id`: WhatsApp, Twitter/X, LinkedIn, Copy Link
-  - Toast feedback on "Copy Link"
-- Admin blog form: add a `category` select dropdown (stored as prefix in title or separate tag field -- since backend has no category field, store as a tag in the excerpt or use a convention like `[Category] Title`)
-  - Actually: infer category automatically from content keywords, no backend change needed
+- Appointment booking form (public page at /book or as a section on Contact/Home)
+  - Fields: Name, Phone, Email, Service (dropdown), Preferred Date, Preferred Time, Message
+  - Stores booking in backend database
+- Admin: Bookings tab in admin dashboard to view all bookings
+  - Can confirm or reject each booking
+  - Can update booking status: Pending, Confirmed, Rejected, Completed
+- WhatsApp confirmation: when admin confirms a booking, a pre-filled WhatsApp message link is shown to admin to notify the client
+- Backend: Booking type, createBooking, listBookings, updateBookingStatus functions
 
 ### Modify
-- `Blog.tsx`: add search input, category filter tabs, filtered grid
-- `BlogPost.tsx`: add Related Posts section, Social Share buttons
+- Admin dashboard: add Bookings tab
+- Contact page or Home page: add Book Appointment section/button linking to booking form
+- Navbar: add "Book Now" link
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Create a `getBlogCategory(post)` utility function that infers category from title/content/excerpt keywords
-2. Update `Blog.tsx`:
-   - Add search input (filter by title + excerpt)
-   - Add category filter tabs (All, Security, Technology, Government Services, Career, SaaS, General)
-   - Apply both filters together
-   - Show category badge on each post card
-3. Update `BlogPost.tsx`:
-   - Add Social Share section (WhatsApp share, Twitter/X share, LinkedIn share, Copy Link)
-   - Add Related Posts section at bottom (same category, max 3, using `useListBlogPosts`)
-4. No backend changes required
+
+1. Backend: Add Booking type, createBooking (public), listBookings (admin), updateBookingStatus (admin) to main.mo
+2. Regenerate backend to get updated backend.d.ts
+3. Frontend:
+   - New page /booking: Appointment booking form with all fields, stores in backend, success confirmation
+   - AdminDashboard: add Bookings tab with table, status update, WhatsApp confirmation link per row
+   - Navbar: add "Book Now" CTA button
+   - Contact page: add "Book an Appointment" button linking to /booking

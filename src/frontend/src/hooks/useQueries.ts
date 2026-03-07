@@ -441,3 +441,91 @@ export function useChangePassword() {
     },
   });
 }
+
+// ─── Bookings ─────────────────────────────────────────────────────────────────
+
+import type { Booking, BookingStatus } from "../backend.d";
+
+export function useCreateBooking() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      phone,
+      email,
+      service,
+      preferredDate,
+      preferredTime,
+      message,
+    }: {
+      name: string;
+      phone: string;
+      email: string;
+      service: string;
+      preferredDate: string;
+      preferredTime: string;
+      message: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.createBooking(
+        name,
+        phone,
+        email,
+        service,
+        preferredDate,
+        preferredTime,
+        message,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useListBookings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Booking[]>({
+    queryKey: ["bookings"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listBookings();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUpdateBookingStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: bigint;
+      status: BookingStatus;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.updateBookingStatus(id, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useDeleteBooking() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.deleteBooking(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}

@@ -45,11 +45,29 @@ export interface User {
     isActive: boolean;
     passwordHash: string;
 }
+export interface Booking {
+    id: bigint;
+    service: string;
+    status: BookingStatus;
+    name: string;
+    createdAt: bigint;
+    email: string;
+    message: string;
+    preferredDate: string;
+    preferredTime: string;
+    phone: string;
+}
 export interface UserProfile {
     username: string;
     userId: bigint;
     name: string;
     role: Role;
+}
+export enum BookingStatus {
+    pending = "pending",
+    completed = "completed",
+    rejected = "rejected",
+    confirmed = "confirmed"
 }
 export enum LeadStatus {
     new_ = "new",
@@ -84,9 +102,11 @@ export interface backendInterface {
         err: string;
     }>;
     createBlogPost(title: string, content: string, excerpt: string, authorName: string): Promise<bigint>;
+    createBooking(name: string, phone: string, email: string, service: string, preferredDate: string, preferredTime: string, message: string): Promise<bigint>;
     createServiceRequest(clientUserId: bigint, clientName: string, serviceType: string, description: string): Promise<bigint>;
     createUser(username: string, passwordHash: string, role: Role): Promise<bigint>;
     deleteBlogPost(id: bigint): Promise<boolean>;
+    deleteBooking(id: bigint): Promise<boolean>;
     deleteServiceRequest(id: bigint): Promise<boolean>;
     getBlogPost(id: bigint): Promise<BlogPost | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -109,6 +129,7 @@ export interface backendInterface {
     listAllBlogPosts(): Promise<Array<BlogPost>>;
     listAllServiceRequests(): Promise<Array<ServiceRequest>>;
     listBlogPosts(): Promise<Array<BlogPost>>;
+    listBookings(): Promise<Array<Booking>>;
     listUsers(): Promise<Array<User>>;
     login(username: string, passwordHash: string): Promise<{
         __kind__: "ok";
@@ -124,6 +145,7 @@ export interface backendInterface {
     submitLead(name: string, phone: string, service: string, message: string): Promise<bigint>;
     toggleUserActive(userId: bigint): Promise<boolean>;
     updateBlogPost(id: bigint, title: string, content: string, excerpt: string, isPublished: boolean): Promise<boolean>;
+    updateBookingStatus(id: bigint, status: BookingStatus): Promise<boolean>;
     updateLeadStatus(id: bigint, status: LeadStatus): Promise<boolean>;
     updateServiceRequestStatus(id: bigint, status: ServiceRequestStatus): Promise<boolean>;
 }

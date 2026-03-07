@@ -20,6 +20,22 @@ export interface BlogPost {
   'updatedAt' : bigint,
   'excerpt' : string,
 }
+export interface Booking {
+  'id' : bigint,
+  'service' : string,
+  'status' : BookingStatus,
+  'name' : string,
+  'createdAt' : bigint,
+  'email' : string,
+  'message' : string,
+  'preferredDate' : string,
+  'preferredTime' : string,
+  'phone' : string,
+}
+export type BookingStatus = { 'pending' : null } |
+  { 'completed' : null } |
+  { 'rejected' : null } |
+  { 'confirmed' : null };
 export interface Lead {
   'id' : bigint,
   'service' : string,
@@ -78,12 +94,17 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'createBlogPost' : ActorMethod<[string, string, string, string], bigint>,
+  'createBooking' : ActorMethod<
+    [string, string, string, string, string, string, string],
+    bigint
+  >,
   'createServiceRequest' : ActorMethod<
     [bigint, string, string, string],
     bigint
   >,
   'createUser' : ActorMethod<[string, string, Role], bigint>,
   'deleteBlogPost' : ActorMethod<[bigint], boolean>,
+  'deleteBooking' : ActorMethod<[bigint], boolean>,
   'deleteServiceRequest' : ActorMethod<[bigint], boolean>,
   'getBlogPost' : ActorMethod<[bigint], [] | [BlogPost]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -109,6 +130,7 @@ export interface _SERVICE {
   'listAllBlogPosts' : ActorMethod<[], Array<BlogPost>>,
   'listAllServiceRequests' : ActorMethod<[], Array<ServiceRequest>>,
   'listBlogPosts' : ActorMethod<[], Array<BlogPost>>,
+  'listBookings' : ActorMethod<[], Array<Booking>>,
   'listUsers' : ActorMethod<[], Array<User>>,
   'login' : ActorMethod<
     [string, string],
@@ -122,6 +144,7 @@ export interface _SERVICE {
     [bigint, string, string, string, boolean],
     boolean
   >,
+  'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], boolean>,
   'updateLeadStatus' : ActorMethod<[bigint, LeadStatus], boolean>,
   'updateServiceRequestStatus' : ActorMethod<
     [bigint, ServiceRequestStatus],

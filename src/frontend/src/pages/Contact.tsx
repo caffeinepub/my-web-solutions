@@ -14,7 +14,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubmitLead } from "@/hooks/useQueries";
-import { CheckCircle, Clock, Loader2, Mail, MapPin, Phone } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import {
+  CalendarCheck,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -97,6 +106,45 @@ export function Contact() {
               Ready to start your project? Send us a message and we'll respond
               within 24 hours.
             </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Book Appointment Banner */}
+      <section className="py-10 bg-accent/30 border-b border-border">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            <Card className="max-w-5xl mx-auto bg-primary border-0 shadow-lg overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row items-center gap-6 p-6 md:p-8">
+                  <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white/15 shrink-0">
+                    <CalendarCheck className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="font-display text-xl font-bold text-white mb-1">
+                      Book an Appointment
+                    </h3>
+                    <p className="text-primary-foreground/80 text-sm max-w-lg">
+                      Schedule a consultation directly — choose your service,
+                      preferred date and time. We'll confirm within 2–4 hours.
+                    </p>
+                  </div>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="secondary"
+                    className="shrink-0 font-semibold bg-white text-primary hover:bg-white/90 border-0 shadow-sm"
+                    data-ocid="contact.book_appointment_button"
+                  >
+                    <Link to="/booking">Book Now →</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
       </section>

@@ -9,9 +9,9 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   // Authorization
   let accessControlState = AccessControl.initState();
@@ -119,6 +119,26 @@ actor {
     staffNote : Text;
   };
 
+  type BookingStatus = {
+    #pending;
+    #confirmed;
+    #rejected;
+    #completed;
+  };
+
+  type Booking = {
+    id : Nat;
+    name : Text;
+    phone : Text;
+    email : Text;
+    service : Text;
+    preferredDate : Text;
+    preferredTime : Text;
+    message : Text;
+    status : BookingStatus;
+    createdAt : Int;
+  };
+
   // Storage
   let leads = Map.empty<Nat, Lead>();
   var nextLeadId = 1;
@@ -133,6 +153,9 @@ actor {
 
   let serviceRequests = Map.empty<Nat, ServiceRequest>();
   var nextServiceRequestId = 1;
+
+  let bookings = Map.empty<Nat, Booking>();
+  var nextBookingId = 1;
 
   // Helper function to check if caller is admin or staff
   func isAdminOrStaff(caller : Principal) : Bool {
@@ -696,5 +719,71 @@ actor {
       func(request) { switch (request.assignedStaffId) { case (null) { false }; case (?staffId) { staffId == staffUserId } } }
     );
     assignedRequests;
+  };
+
+  // BOOKINGS FUNCTIONALITY
+  public shared func createBooking(
+    name : Text,
+    phone : Text,
+    email : Text,
+    service : Text,
+    preferredDate : Text,
+    preferredTime : Text,
+    message : Text,
+  ) : async Nat {
+    // Public function - no auth required
+    let booking : Booking = {
+      id = nextBookingId;
+      name;
+      phone;
+      email;
+      service;
+      preferredDate;
+      preferredTime;
+      message;
+      status = #pending;
+      createdAt = Time.now();
+    };
+
+    bookings.add(nextBookingId, booking);
+    nextBookingId += 1;
+    booking.id;
+  };
+
+  public query ({ caller }) func listBookings() : async [Booking] {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can list bookings");
+    };
+    bookings.values().toArray();
+  };
+
+  public shared ({ caller }) func updateBookingStatus(id : Nat, status : BookingStatus) : async Bool {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update booking status");
+    };
+    switch (bookings.get(id)) {
+      case (null) { false };
+      case (?booking) {
+        let updatedBooking = { booking with status };
+        bookings.add(id, updatedBooking);
+        true;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteBooking(id : Nat) : async Bool {
+    // Admin only check
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete bookings");
+    };
+    switch (bookings.get(id)) {
+      case (null) { false };
+      case (?_booking) {
+        bookings.remove(id);
+        true;
+      };
+    };
   };
 };

@@ -12,6 +12,7 @@ import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AdminLogin } from "@/pages/AdminLogin";
 import { Blog } from "@/pages/Blog";
 import { BlogPostPage } from "@/pages/BlogPost";
+import { Booking } from "@/pages/Booking";
 import { CaseStudies } from "@/pages/CaseStudies";
 import { Certification } from "@/pages/Certification";
 import { ClientDashboard } from "@/pages/ClientDashboard";
@@ -103,6 +104,12 @@ const caseStudiesRoute = createRoute({
   component: CaseStudies,
 });
 
+const bookingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/booking",
+  component: Booking,
+});
+
 // Auth routes
 const adminLoginRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -154,6 +161,7 @@ const routeTree = rootRoute.addChildren([
   faqRoute,
   certificationRoute,
   caseStudiesRoute,
+  bookingRoute,
   adminLoginRoute,
   staffLoginRoute,
   clientLoginRoute,

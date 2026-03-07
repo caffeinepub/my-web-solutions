@@ -65,6 +65,24 @@ export const Lead = IDL.Record({
   'message' : IDL.Text,
   'phone' : IDL.Text,
 });
+export const BookingStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+  'rejected' : IDL.Null,
+  'confirmed' : IDL.Null,
+});
+export const Booking = IDL.Record({
+  'id' : IDL.Nat,
+  'service' : IDL.Text,
+  'status' : BookingStatus,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'email' : IDL.Text,
+  'message' : IDL.Text,
+  'preferredDate' : IDL.Text,
+  'preferredTime' : IDL.Text,
+  'phone' : IDL.Text,
+});
 export const User = IDL.Record({
   'id' : IDL.Nat,
   'username' : IDL.Text,
@@ -89,6 +107,11 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'createBooking' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'createServiceRequest' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -96,6 +119,7 @@ export const idlService = IDL.Service({
     ),
   'createUser' : IDL.Func([IDL.Text, IDL.Text, Role], [IDL.Nat], []),
   'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteBooking' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'deleteServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -136,6 +160,7 @@ export const idlService = IDL.Service({
   'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'listAllServiceRequests' : IDL.Func([], [IDL.Vec(ServiceRequest)], ['query']),
   'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'listBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
   'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'login' : IDL.Func(
       [IDL.Text, IDL.Text],
@@ -159,6 +184,7 @@ export const idlService = IDL.Service({
       [IDL.Bool],
       [],
     ),
+  'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
   'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
   'updateServiceRequestStatus' : IDL.Func(
       [IDL.Nat, ServiceRequestStatus],
@@ -227,6 +253,24 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'phone' : IDL.Text,
   });
+  const BookingStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+    'rejected' : IDL.Null,
+    'confirmed' : IDL.Null,
+  });
+  const Booking = IDL.Record({
+    'id' : IDL.Nat,
+    'service' : IDL.Text,
+    'status' : BookingStatus,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'email' : IDL.Text,
+    'message' : IDL.Text,
+    'preferredDate' : IDL.Text,
+    'preferredTime' : IDL.Text,
+    'phone' : IDL.Text,
+  });
   const User = IDL.Record({
     'id' : IDL.Nat,
     'username' : IDL.Text,
@@ -251,6 +295,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'createBooking' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'createServiceRequest' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -258,6 +307,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createUser' : IDL.Func([IDL.Text, IDL.Text, Role], [IDL.Nat], []),
     'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteBooking' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'deleteServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -302,6 +352,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'listBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
     'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'login' : IDL.Func(
         [IDL.Text, IDL.Text],
@@ -325,6 +376,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
     'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
     'updateServiceRequestStatus' : IDL.Func(
         [IDL.Nat, ServiceRequestStatus],
