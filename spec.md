@@ -1,49 +1,41 @@
 # My Web Solutions
 
 ## Current State
-- Full multi-page website: Home, Services, SaaS, Contact, About, Pricing, Blog, FAQ, Certification, Case Studies
-- 3 separate login portals: /admin-login, /staff-login, /client-login
-- 3 dashboards with Batch 1 upgrades (analytics, staff assignment, change password, client timeline)
-- Contact form stores leads in backend
-- WhatsApp floating button (+91 9901563799)
-- Dynamic blog (admin can add/edit/delete/publish posts)
-- 12 services with images and Book Now / WhatsApp / Email buttons
-- Logo and founder photo from uploaded images
-- Hero banner from user-provided URL
-- Our Projects section with 5 project screenshots
-- "Why Choose Us" section on Home page with 3 trust points
+- Blog page (`/blog`) shows all published posts in a grid with no filtering or search
+- Blog post page (`/blog/$id`) shows individual post content
+- BlogPost type in backend: `{ id, title, content, excerpt, authorName, createdAt, updatedAt, isPublished }`
+- No category field in backend data model
+- No search, no related posts, no social share buttons
 
 ## Requested Changes (Diff)
 
 ### Add
-- "Why Choose Us" section -- enhanced version with more trust signals (already partially exists, needs visual upgrade and more content)
-- Partner/Client logos section -- a new horizontal logos row section on Home page showing 3-4 sample client industry icons/logos (no real client logos, so use professional placeholder brand marks)
-- Awards & Certifications badges section on Home page -- showcasing Mounith's credentials: Corp International Accredited Advisor, 11+ Years Experience, Wells Fargo Alumni, Samsung Semiconductor Alumni
-- Newsletter signup section on Home page and Footer -- a simple email input + subscribe button (frontend only, stores email in backend)
-- Meta titles/descriptions for all pages -- add document title + meta description via useEffect in each page component
-- New backend function: subscribeNewsletter(email: Text) -> async Result -- stores subscriber emails
-- New page: /newsletter-unsubscribe (simple confirmation page)
+- **Blog Categories** (frontend-only, keyword-based inference): Security, Technology, Government Services, Career, SaaS, General
+  - Category filter tabs on `/blog` listing page
+  - Each post card shows a category badge (inferred from title/content/excerpt keywords)
+  - Category filter persists via URL search param `?category=`
+- **Search bar** on `/blog` with real-time filtering by title and excerpt
+- **Related Posts** section at the bottom of `/blog/$id` (same inferred category, excluding current post, max 3)
+- **Social Share buttons** on `/blog/$id`: WhatsApp, Twitter/X, LinkedIn, Copy Link
+  - Toast feedback on "Copy Link"
+- Admin blog form: add a `category` select dropdown (stored as prefix in title or separate tag field -- since backend has no category field, store as a tag in the excerpt or use a convention like `[Category] Title`)
+  - Actually: infer category automatically from content keywords, no backend change needed
 
 ### Modify
-- Home page: Add Partners/Clients logos strip section between Projects and Why Choose Us
-- Home page: Add Awards & Certifications badges section after Why Choose Us
-- Home page: Add Newsletter signup section before Footer
-- Footer: Add newsletter signup mini-form in footer column
-- All public pages: Add useEffect to set document.title and meta description
-- Backend: Add newsletter subscriber storage and subscribeNewsletter function
+- `Blog.tsx`: add search input, category filter tabs, filtered grid
+- `BlogPost.tsx`: add Related Posts section, Social Share buttons
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Add `subscribeNewsletter` and `getNewsletterSubscribers` to backend (main.mo)
-2. Add `useSubscribeNewsletter` hook to useQueries.ts / backend.d.ts
-3. Create NewsletterSignup component (reusable, used in Home + Footer)
-4. Update Home.tsx:
-   - Add Partners/Logos section (industry icons with placeholder client names)
-   - Upgrade Why Choose Us section (more trust points, richer layout)
-   - Add Awards & Certifications badges section
-   - Add Newsletter signup section
-5. Update Footer.tsx: add newsletter mini-form
-6. Add meta title/description useEffect to all public page components (Home, Services, SaaS, Contact, About, Pricing, Blog, FAQ, Certification, CaseStudies)
-7. Validate and deploy
+1. Create a `getBlogCategory(post)` utility function that infers category from title/content/excerpt keywords
+2. Update `Blog.tsx`:
+   - Add search input (filter by title + excerpt)
+   - Add category filter tabs (All, Security, Technology, Government Services, Career, SaaS, General)
+   - Apply both filters together
+   - Show category badge on each post card
+3. Update `BlogPost.tsx`:
+   - Add Social Share section (WhatsApp share, Twitter/X share, LinkedIn share, Copy Link)
+   - Add Related Posts section at bottom (same category, max 3, using `useListBlogPosts`)
+4. No backend changes required

@@ -1,12 +1,32 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetBlogPost } from "@/hooks/useQueries";
+import { useGetBlogPost, useListBlogPosts } from "@/hooks/useQueries";
+import {
+  type BlogCategory,
+  categoryColors,
+  getBlogCategory,
+} from "@/utils/blogCategory";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Calendar, User } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Check,
+  Link2,
+  Linkedin,
+  MessageCircle,
+  Share2,
+  Twitter,
+  User,
+} from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 function formatDate(ts: bigint) {
   return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
@@ -16,10 +36,158 @@ function formatDate(ts: bigint) {
   });
 }
 
+function ShareButtons({ title }: { title: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function shareWhatsApp() {
+    const url = `https://wa.me/?text=${encodeURIComponent(`${title} ${window.location.href}`)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function shareTwitter() {
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(window.location.href)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function shareLinkedIn() {
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy link");
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap py-4 border-y border-border mb-8">
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mr-1">
+        <Share2 className="w-4 h-4" />
+        Share
+      </span>
+      <button
+        type="button"
+        onClick={shareWhatsApp}
+        data-ocid="blog_post.share_whatsapp_button"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent transition-all duration-200"
+        aria-label="Share on WhatsApp"
+      >
+        <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+        WhatsApp
+      </button>
+      <button
+        type="button"
+        onClick={shareTwitter}
+        data-ocid="blog_post.share_twitter_button"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent transition-all duration-200"
+        aria-label="Share on X / Twitter"
+      >
+        <Twitter className="w-3.5 h-3.5 text-sky-500" />X / Twitter
+      </button>
+      <button
+        type="button"
+        onClick={shareLinkedIn}
+        data-ocid="blog_post.share_linkedin_button"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent transition-all duration-200"
+        aria-label="Share on LinkedIn"
+      >
+        <Linkedin className="w-3.5 h-3.5 text-blue-700" />
+        LinkedIn
+      </button>
+      <button
+        type="button"
+        onClick={copyLink}
+        data-ocid="blog_post.share_copy_button"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent transition-all duration-200"
+        aria-label="Copy link"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-green-600" />
+        ) : (
+          <Link2 className="w-3.5 h-3.5" />
+        )}
+        {copied ? "Copied!" : "Copy link"}
+      </button>
+    </div>
+  );
+}
+
+function RelatedPosts({
+  currentPostId,
+  currentCategory,
+}: {
+  currentPostId: bigint;
+  currentCategory: BlogCategory;
+}) {
+  const { data: posts = [] } = useListBlogPosts();
+
+  const related = posts
+    .filter(
+      (p) => p.id !== currentPostId && getBlogCategory(p) === currentCategory,
+    )
+    .slice(0, 3);
+
+  if (related.length === 0) return null;
+
+  return (
+    <section className="mt-12" data-ocid="blog_post.related_posts_section">
+      <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+        Related Articles
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {related.map((post, index) => {
+          const cat = getBlogCategory(post);
+          const badgeColors = categoryColors[cat];
+          return (
+            <motion.div
+              key={post.id.toString()}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <Link to="/blog/$id" params={{ id: post.id.toString() }}>
+                <Card className="h-full shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-0.5 border-border group cursor-pointer">
+                  <CardContent className="p-4 flex flex-col h-full">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs border self-start mb-3 ${badgeColors}`}
+                    >
+                      {cat}
+                    </Badge>
+                    <h3 className="font-display text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2 flex-1">
+                      {post.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                      {post.excerpt}
+                    </p>
+                    <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
+                      Read more
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function BlogPostPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const postId = id ? BigInt(id) : null;
   const { data: post, isLoading } = useGetBlogPost(postId);
+
+  const currentCategory = post ? getBlogCategory(post) : null;
+  const badgeColors = currentCategory ? categoryColors[currentCategory] : "";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -79,12 +247,17 @@ export function BlogPostPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Meta */}
-              <div className="flex items-center gap-3 mb-6 flex-wrap">
-                <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest">
-                  Article
+              {/* Category Badge */}
+              {currentCategory && (
+                <div className="flex items-center gap-3 mb-6 flex-wrap">
+                  <Badge
+                    variant="outline"
+                    className={`text-xs border ${badgeColors}`}
+                  >
+                    {currentCategory}
+                  </Badge>
                 </div>
-              </div>
+              )}
 
               {/* Title */}
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-black text-foreground leading-tight mb-6">
@@ -92,7 +265,7 @@ export function BlogPostPage() {
               </h1>
 
               {/* Author & Date */}
-              <div className="flex items-center gap-4 pb-6 border-b border-border mb-8 flex-wrap">
+              <div className="flex items-center gap-4 pb-6 border-b border-border mb-0 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="w-4 h-4 text-primary" />
@@ -111,6 +284,9 @@ export function BlogPostPage() {
                   </span>
                 )}
               </div>
+
+              {/* Social Share Buttons */}
+              <ShareButtons title={post.title} />
 
               {/* Excerpt */}
               {post.excerpt && (
@@ -156,6 +332,14 @@ export function BlogPostPage() {
                   </a>
                 </Button>
               </div>
+
+              {/* Related Posts */}
+              {currentCategory && postId && (
+                <RelatedPosts
+                  currentPostId={postId}
+                  currentCategory={currentCategory}
+                />
+              )}
             </motion.article>
           )}
         </div>
