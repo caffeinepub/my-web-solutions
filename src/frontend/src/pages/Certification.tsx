@@ -22,7 +22,7 @@ import { useEffect } from "react";
 const certifications = [
   {
     code: "CSA",
-    name: "Certified Security Advisor",
+    name: "Certified Security Associate",
     level: "Entry Level",
     levelColor: "bg-emerald-100 text-emerald-700",
     forWho: "Individuals seeking entry into corporate security roles",
@@ -153,7 +153,7 @@ export function Certification() {
     document.title = "Security Certifications | My Web Solutions";
     const metaDesc = document.querySelector('meta[name="description"]');
     const content =
-      "Corp International accredited certification advisory for CSA (Advisor), CSS (Specialist), CSI (Investigator), CSM, CSD. Individual security certification support in Bengaluru.";
+      "Corp International accredited certification advisory for CSA (Associate), CSS (Specialist), CSI (Investigator), CSM, CSD. Individual security certification support in Bengaluru.";
     if (metaDesc) metaDesc.setAttribute("content", content);
     else {
       const meta = document.createElement("meta");
