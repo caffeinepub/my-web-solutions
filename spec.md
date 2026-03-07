@@ -1,35 +1,31 @@
 # My Web Solutions
 
 ## Current State
-- CaseStudies page exists at /case-studies with 5 projects, category filter tabs (All, Web, SaaS, Legal), project detail dialog, and "Request Similar" WhatsApp buttons
-- Home page has an "Our Projects" section linking to /case-studies
-- CSS was named "Certified Security Supervisor" (now fixed to "Certified Security Specialist")
-- CSI was named "Certified Security Inspector" (now fixed to "Certified Security Investigator")
-- Certification.tsx, Services.tsx, Home.tsx already updated with corrected names
+The Staff Dashboard has:
+- Overview tab with 4 stat cards (Total, Pending, In Progress, Completed) and recent requests list
+- Service Requests tab with full table, status update select, and staff note editor
+- My Clients tab showing client cards derived from assigned requests
 
 ## Requested Changes (Diff)
 
 ### Add
-- Dedicated project detail pages at /projects/:id (instead of or in addition to dialog)
-- "Request Similar Project" prominent CTA on each detail page
-- Stats/metrics section per project (timeline, deliverables, outcome)
-- Client testimonial snippet per project (where applicable)
+- WhatsApp button per client card in the My Clients tab (opens chat with client phone if available, or a WhatsApp generic link)
+- Task completion progress bar in the Overview tab showing % of requests completed
+- Status filter pills (All / Pending / In Progress / Completed) on the Service Requests tab to filter the table
+- Upcoming Bookings view — a new sidebar tab "Upcoming Bookings" showing bookings assigned/relevant to staff (uses listBookings, filtered to show only pending/confirmed ones, all visible to staff)
 
 ### Modify
-- CaseStudies page: upgrade card hover animations (scale, shadow, border highlight)
-- CaseStudies page: add "Live Preview" button that opens project image in full screen / lightbox
-- CaseStudies page: improve stats strip with better visual treatment
-- CaseStudies page: add a "Start Your Project" CTA strip mid-page
-- Home "Our Projects" section: show project images with improved card design and hover effects
-- Category filter tabs: add count badges per category
+- Overview tab: add a visual progress bar showing completion percentage below the stat cards
+- Service Requests tab: add filter pills above the table for status filtering
+- My Clients tab: add a WhatsApp action button on each client card
 
 ### Remove
-- Nothing to remove
+- Nothing removed
 
 ## Implementation Plan
-1. Upgrade CaseStudies page cards with better hover animations, count badges on filter tabs
-2. Add full-screen lightbox view for project images (click to expand)
-3. Add per-project stats (Timeline, Deliverables, Status) inside detail dialog
-4. Add mid-page CTA strip: "Have a project in mind? Let's build it."
-5. Improve Home "Our Projects" cards with image zoom and better layout
-6. All changes frontend-only, no backend changes needed
+1. Add "Upcoming Bookings" tab to sidebar nav in StaffDashboard
+2. Add `useListBookings` hook usage in StaffDashboard for the new bookings tab
+3. Add status filter state + filter pills UI above the service requests table
+4. Add completion progress bar (completed / total %) in Overview section
+5. Add WhatsApp button per client card in My Clients tab (links to `https://wa.me/91${phone}` or generic WhatsApp if no phone available — since ServiceRequest has clientName but no phone, use a generic WhatsApp to the business number as fallback, opening with client name pre-filled)
+6. Upcoming Bookings tab: show bookings filtered to pending/confirmed status in a clean card grid with status badge, name, service, date, time

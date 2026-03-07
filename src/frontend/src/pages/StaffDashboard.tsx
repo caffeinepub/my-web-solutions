@@ -1,4 +1,4 @@
-import { ServiceRequestStatus } from "@/backend.d";
+import { BookingStatus, ServiceRequestStatus } from "@/backend.d";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -32,11 +33,13 @@ import {
   useAddStaffNote,
   useChangePassword,
   useGetStaffAssignedRequests,
+  useListBookings,
   useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
 import { clearSession, getSession, hashPassword } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  CalendarDays,
   CheckCircle2,
   ClipboardList,
   Clock,
@@ -45,12 +48,17 @@ import {
   LayoutDashboard,
   Loader2,
   LogOut,
+  Mail,
+  MessageCircle,
   Pencil,
+  Phone,
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+type RequestFilterStatus = "all" | "pending" | "inProgress" | "completed";
 
 function StatusBadge({ status }: { status: ServiceRequestStatus }) {
   if (status === ServiceRequestStatus.pending) {
@@ -74,6 +82,35 @@ function StatusBadge({ status }: { status: ServiceRequestStatus }) {
   );
 }
 
+function BookingStatusBadge({ status }: { status: BookingStatus }) {
+  if (status === BookingStatus.pending) {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100">
+        Pending
+      </Badge>
+    );
+  }
+  if (status === BookingStatus.confirmed) {
+    return (
+      <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+        Confirmed
+      </Badge>
+    );
+  }
+  if (status === BookingStatus.completed) {
+    return (
+      <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+        Completed
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
+      Rejected
+    </Badge>
+  );
+}
+
 function formatDate(ts: bigint) {
   return new Date(Number(ts) / 1_000_000).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -82,7 +119,7 @@ function formatDate(ts: bigint) {
   });
 }
 
-type SideTab = "overview" | "requests" | "clients";
+type SideTab = "overview" | "requests" | "clients" | "bookings";
 
 // ─── Change Password Dialog ────────────────────────────────────────────────────
 
@@ -285,6 +322,35 @@ function StaffNoteDialog({
   );
 }
 
+// ─── Filter Pills ──────────────────────────────────────────────────────────────
+
+const REQUEST_FILTERS: {
+  label: string;
+  value: RequestFilterStatus;
+  ocid: string;
+}[] = [
+  {
+    label: "All",
+    value: "all",
+    ocid: "staff_dashboard.requests.filter.all",
+  },
+  {
+    label: "Pending",
+    value: "pending",
+    ocid: "staff_dashboard.requests.filter.pending",
+  },
+  {
+    label: "In Progress",
+    value: "inProgress",
+    ocid: "staff_dashboard.requests.filter.inprogress",
+  },
+  {
+    label: "Completed",
+    value: "completed",
+    ocid: "staff_dashboard.requests.filter.completed",
+  },
+];
+
 export function StaffDashboard() {
   const navigate = useNavigate();
   const session = getSession();
@@ -301,12 +367,16 @@ export function StaffDashboard() {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [noteRequestId, setNoteRequestId] = useState<bigint | null>(null);
   const [noteCurrentValue, setNoteCurrentValue] = useState("");
+  const [requestFilter, setRequestFilter] =
+    useState<RequestFilterStatus>("all");
 
   const staffUserId = session?.userId ? BigInt(session.userId) : null;
 
   const { data: serviceRequests = [], isLoading: srLoading } =
     useGetStaffAssignedRequests(staffUserId);
   const { mutate: updateStatus } = useUpdateServiceRequestStatus();
+  const { data: allBookings = [], isLoading: bookingsLoading } =
+    useListBookings();
 
   const handleLogout = () => {
     clearSession();
@@ -321,15 +391,46 @@ export function StaffDashboard() {
   };
 
   const total = serviceRequests.length;
-  const pending = serviceRequests.filter(
+  const pendingCount = serviceRequests.filter(
     (r) => r.status === ServiceRequestStatus.pending,
   ).length;
-  const inProgress = serviceRequests.filter(
+  const inProgressCount = serviceRequests.filter(
     (r) => r.status === ServiceRequestStatus.inProgress,
   ).length;
-  const completed = serviceRequests.filter(
+  const completedCount = serviceRequests.filter(
     (r) => r.status === ServiceRequestStatus.completed,
   ).length;
+
+  // Completion progress
+  const completionPct =
+    total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  const progressColor =
+    completionPct >= 75
+      ? "bg-green-500"
+      : completionPct >= 50
+        ? "bg-blue-500"
+        : "bg-yellow-500";
+
+  // Filtered service requests
+  const filteredRequests =
+    requestFilter === "all"
+      ? serviceRequests
+      : serviceRequests.filter((r) => {
+          if (requestFilter === "pending")
+            return r.status === ServiceRequestStatus.pending;
+          if (requestFilter === "inProgress")
+            return r.status === ServiceRequestStatus.inProgress;
+          if (requestFilter === "completed")
+            return r.status === ServiceRequestStatus.completed;
+          return true;
+        });
+
+  // Upcoming bookings: pending + confirmed only
+  const upcomingBookings = allBookings.filter(
+    (b) =>
+      b.status === BookingStatus.pending ||
+      b.status === BookingStatus.confirmed,
+  );
 
   // Derive unique clients from assigned requests
   const clientMap = new Map<
@@ -368,12 +469,18 @@ export function StaffDashboard() {
       icon: Users,
       ocid: "staff_dashboard.clients.tab",
     },
+    {
+      id: "bookings" as SideTab,
+      label: "Upcoming Bookings",
+      icon: CalendarDays,
+      ocid: "staff_dashboard.bookings.tab",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen">
+      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -401,7 +508,7 @@ export function StaffDashboard() {
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
-              <item.icon className="w-4 h-4" />
+              <item.icon className="w-4 h-4 shrink-0" />
               {item.label}
             </button>
           ))}
@@ -475,7 +582,7 @@ export function StaffDashboard() {
               <Card>
                 <CardContent className="pt-5 pb-4 text-center">
                   <p className="font-display text-3xl font-bold text-yellow-600">
-                    {srLoading ? "—" : pending}
+                    {srLoading ? "—" : pendingCount}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Pending</p>
                 </CardContent>
@@ -483,7 +590,7 @@ export function StaffDashboard() {
               <Card>
                 <CardContent className="pt-5 pb-4 text-center">
                   <p className="font-display text-3xl font-bold text-blue-600">
-                    {srLoading ? "—" : inProgress}
+                    {srLoading ? "—" : inProgressCount}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     In Progress
@@ -493,7 +600,7 @@ export function StaffDashboard() {
               <Card>
                 <CardContent className="pt-5 pb-4 text-center">
                   <p className="font-display text-3xl font-bold text-green-600">
-                    {srLoading ? "—" : completed}
+                    {srLoading ? "—" : completedCount}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Completed
@@ -501,6 +608,47 @@ export function StaffDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* ── Task Completion Progress Bar ── */}
+            <Card data-ocid="staff_dashboard.overview.progress_bar">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Task Completion</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {srLoading ? (
+                  <Skeleton className="h-4 w-full" />
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {completedCount} of {total} completed ({completionPct}%)
+                      </span>
+                      <span
+                        className={`font-semibold text-xs px-2 py-0.5 rounded-full ${
+                          completionPct >= 75
+                            ? "bg-green-100 text-green-700"
+                            : completionPct >= 50
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {completionPct >= 75
+                          ? "On Track"
+                          : completionPct >= 50
+                            ? "In Progress"
+                            : "Needs Attention"}
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${progressColor}`}
+                        style={{ width: `${completionPct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Recent Requests */}
             <Card>
@@ -566,6 +714,43 @@ export function StaffDashboard() {
               </p>
             </div>
 
+            {/* Filter Pills */}
+            <div className="flex flex-wrap gap-2">
+              {REQUEST_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  data-ocid={f.ocid}
+                  onClick={() => setRequestFilter(f.value)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                    requestFilter === f.value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  {f.label}
+                  {f.value === "all" && total > 0 && (
+                    <span className="ml-1.5 text-xs opacity-70">({total})</span>
+                  )}
+                  {f.value === "pending" && pendingCount > 0 && (
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({pendingCount})
+                    </span>
+                  )}
+                  {f.value === "inProgress" && inProgressCount > 0 && (
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({inProgressCount})
+                    </span>
+                  )}
+                  {f.value === "completed" && completedCount > 0 && (
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({completedCount})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
             <Card>
               <CardContent className="p-0">
                 {srLoading ? (
@@ -574,14 +759,16 @@ export function StaffDashboard() {
                       <Skeleton key={i} className="h-14 w-full" />
                     ))}
                   </div>
-                ) : serviceRequests.length === 0 ? (
+                ) : filteredRequests.length === 0 ? (
                   <div
                     data-ocid="staff_dashboard.requests.empty_state"
                     className="py-16 text-center"
                   >
                     <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm">
-                      No service requests assigned to you yet.
+                      {serviceRequests.length === 0
+                        ? "No service requests assigned to you yet."
+                        : `No ${requestFilter === "all" ? "" : requestFilter} requests found.`}
                     </p>
                   </div>
                 ) : (
@@ -599,7 +786,7 @@ export function StaffDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {serviceRequests.map((req, index) => (
+                        {filteredRequests.map((req, index) => (
                           <TableRow
                             key={req.id.toString()}
                             data-ocid={`staff_dashboard.requests.row.${index + 1}`}
@@ -740,6 +927,9 @@ export function StaffDashboard() {
                   const uniqueServices = [
                     ...new Set(client.requests.map((r) => r.serviceType)),
                   ];
+                  const waText = encodeURIComponent(
+                    `Hi, I'm following up on behalf of client ${client.clientName}`,
+                  );
                   return (
                     <Card
                       key={client.clientName}
@@ -758,21 +948,23 @@ export function StaffDashboard() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                            Services
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {uniqueServices.map((svc) => (
-                              <span
-                                key={svc}
-                                className="inline-block text-xs bg-accent text-accent-foreground rounded-md px-2 py-0.5"
-                              >
-                                {svc}
-                              </span>
-                            ))}
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1.5">
+                              Services
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {uniqueServices.map((svc) => (
+                                <span
+                                  key={svc}
+                                  className="inline-block text-xs bg-accent text-accent-foreground rounded-md px-2 py-0.5"
+                                >
+                                  {svc}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex gap-2 mt-3">
+                          <div className="flex gap-2 flex-wrap">
                             {[
                               ServiceRequestStatus.pending,
                               ServiceRequestStatus.inProgress,
@@ -795,11 +987,118 @@ export function StaffDashboard() {
                               );
                             })}
                           </div>
+                          {/* WhatsApp Button */}
+                          <a
+                            href={`https://wa.me/919901563799?text=${waText}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-ocid={`staff_dashboard.clients.whatsapp_button.${index + 1}`}
+                          >
+                            <Button
+                              size="sm"
+                              className="w-full bg-green-600 hover:bg-green-700 text-white mt-1"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              WhatsApp
+                            </Button>
+                          </a>
                         </div>
                       </CardContent>
                     </Card>
                   );
                 })}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── Upcoming Bookings ── */}
+        {activeTab === "bookings" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Upcoming Bookings
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Pending and confirmed appointments
+              </p>
+            </div>
+
+            {bookingsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-44 w-full" />
+                ))}
+              </div>
+            ) : upcomingBookings.length === 0 ? (
+              <Card>
+                <CardContent
+                  className="py-16 text-center"
+                  data-ocid="staff_dashboard.bookings.empty_state"
+                >
+                  <CalendarDays className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm font-medium">
+                    No upcoming bookings
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Pending and confirmed appointments will appear here.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {upcomingBookings.map((booking, index) => (
+                  <Card
+                    key={booking.id.toString()}
+                    data-ocid={`staff_dashboard.bookings.card.${index + 1}`}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <CardTitle className="text-base font-semibold truncate">
+                            {booking.name}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                            {booking.service}
+                          </p>
+                        </div>
+                        <BookingStatusBadge status={booking.status} />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2.5 pt-0">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-foreground">
+                          {booking.preferredDate}
+                          {booking.preferredTime
+                            ? ` at ${booking.preferredTime}`
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-foreground">{booking.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-foreground truncate">
+                          {booking.email}
+                        </span>
+                      </div>
+                      {booking.message && (
+                        <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 line-clamp-2">
+                          {booking.message}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </motion.div>

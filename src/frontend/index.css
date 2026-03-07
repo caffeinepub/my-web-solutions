@@ -63,14 +63,14 @@
     --chart-4: 0.72 0.10 200;
     --chart-5: 0.5 0.22 27;
 
-    /* Sidebar tokens — keep dark for dashboards */
-    --sidebar: 0.12 0.04 255;
-    --sidebar-foreground: 0.92 0.012 240;
+    /* Sidebar tokens — light professional theme */
+    --sidebar: 0.98 0.003 255;
+    --sidebar-foreground: 0.18 0.03 255;
     --sidebar-primary: 0.42 0.20 255;
     --sidebar-primary-foreground: 1 0 0;
-    --sidebar-accent: 0.2 0.04 255;
-    --sidebar-accent-foreground: 0.92 0.012 240;
-    --sidebar-border: 0.25 0.04 255;
+    --sidebar-accent: 0.93 0.015 255;
+    --sidebar-accent-foreground: 0.22 0.04 255;
+    --sidebar-border: 0.88 0.015 255;
     --sidebar-ring: 0.42 0.20 255;
 
     /* Brand-specific extras */

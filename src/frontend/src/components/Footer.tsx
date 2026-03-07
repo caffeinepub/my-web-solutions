@@ -1,8 +1,51 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
-import { Globe, Mail, MapPin, Phone, Send } from "lucide-react";
+import {
+  Facebook,
+  Globe,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Send,
+  Youtube,
+} from "lucide-react";
 import { useState } from "react";
+
+const SOCIAL_LINKS = [
+  {
+    label: "Facebook",
+    url: "https://www.facebook.com/share/1FyGPWtDUs/",
+    icon: Facebook,
+    title: "Facebook Profile",
+  },
+  {
+    label: "Facebook Page",
+    url: "https://www.facebook.com/share/1CVDLuBb8i/",
+    icon: Facebook,
+    title: "Facebook Page",
+  },
+  {
+    label: "YouTube",
+    url: "https://youtube.com/@aichef_mouni",
+    icon: Youtube,
+    title: "YouTube – Part-time Youtuber",
+  },
+  {
+    label: "Instagram",
+    url: "https://www.instagram.com/aichef_mouni",
+    icon: Instagram,
+    title: "Instagram",
+  },
+  {
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/mounith-hc-cpe%C2%AE-csa%C2%AE-aca%E2%84%A2-409b8123b",
+    icon: Linkedin,
+    title: "LinkedIn",
+  },
+];
 
 function FooterNewsletter() {
   const [email, setEmail] = useState("");
@@ -96,6 +139,29 @@ export function Footer() {
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-teal flex-shrink-0" />
                 Bengaluru, Karnataka, India
+              </div>
+            </div>
+
+            {/* Social Icons */}
+            <div className="mt-5">
+              <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mb-3 font-medium">
+                Follow Us
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.title}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={social.title}
+                    aria-label={social.title}
+                    data-ocid="footer.social.link"
+                    className="w-9 h-9 rounded-lg bg-sidebar-foreground/10 border border-sidebar-foreground/15 flex items-center justify-center text-sidebar-foreground/60 hover:text-teal hover:bg-sidebar-foreground/20 hover:border-teal/40 transition-all duration-200"
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>

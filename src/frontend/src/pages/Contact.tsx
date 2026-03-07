@@ -19,11 +19,48 @@ import {
   CalendarCheck,
   CheckCircle,
   Clock,
+  Facebook,
+  Instagram,
+  Linkedin,
   Loader2,
   Mail,
   MapPin,
   Phone,
+  Youtube,
 } from "lucide-react";
+
+const SOCIAL_LINKS = [
+  {
+    label: "Facebook",
+    url: "https://www.facebook.com/share/1FyGPWtDUs/",
+    icon: Facebook,
+    description: "Facebook Profile",
+  },
+  {
+    label: "Facebook Page",
+    url: "https://www.facebook.com/share/1CVDLuBb8i/",
+    icon: Facebook,
+    description: "Facebook Page",
+  },
+  {
+    label: "YouTube",
+    url: "https://youtube.com/@aichef_mouni",
+    icon: Youtube,
+    description: "Part-time Youtuber",
+  },
+  {
+    label: "Instagram",
+    url: "https://www.instagram.com/aichef_mouni",
+    icon: Instagram,
+    description: "Instagram",
+  },
+  {
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/mounith-hc-cpe%C2%AE-csa%C2%AE-aca%E2%84%A2-409b8123b",
+    icon: Linkedin,
+    description: "LinkedIn",
+  },
+];
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -384,6 +421,40 @@ export function Contact() {
                     </a>
                   </CardContent>
                 </Card>
+
+                {/* Follow Us */}
+                <div>
+                  <h4 className="font-display font-semibold text-foreground text-sm mb-3 uppercase tracking-wider">
+                    Follow Us
+                  </h4>
+                  <div className="space-y-2">
+                    {SOCIAL_LINKS.map((social) => (
+                      <a
+                        key={social.description}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={social.description}
+                        data-ocid="contact.social.link"
+                        className="flex items-center gap-3 group"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-accent border border-border flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:border-primary transition-all duration-200">
+                          <social.icon className="w-4 h-4 text-primary group-hover:text-white transition-colors duration-200" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors leading-none">
+                            {social.label}
+                          </p>
+                          {social.description !== social.label && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {social.description}
+                            </p>
+                          )}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>

@@ -4,7 +4,51 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Award, Layers, Star, Target, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  Facebook,
+  Instagram,
+  Layers,
+  Linkedin,
+  Star,
+  Target,
+  Users,
+  Youtube,
+} from "lucide-react";
+
+const SOCIAL_LINKS = [
+  {
+    label: "Facebook",
+    url: "https://www.facebook.com/share/1FyGPWtDUs/",
+    icon: Facebook,
+    title: "Facebook Profile",
+  },
+  {
+    label: "Facebook Page",
+    url: "https://www.facebook.com/share/1CVDLuBb8i/",
+    icon: Facebook,
+    title: "Facebook Page",
+  },
+  {
+    label: "Part-time Youtuber",
+    url: "https://youtube.com/@aichef_mouni",
+    icon: Youtube,
+    title: "YouTube – Part-time Youtuber",
+  },
+  {
+    label: "Instagram",
+    url: "https://www.instagram.com/aichef_mouni",
+    icon: Instagram,
+    title: "Instagram",
+  },
+  {
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/mounith-hc-cpe%C2%AE-csa%C2%AE-aca%E2%84%A2-409b8123b",
+    icon: Linkedin,
+    title: "LinkedIn",
+  },
+];
 import { motion } from "motion/react";
 import { useEffect } from "react";
 
@@ -171,6 +215,32 @@ export function About() {
                     {cred}
                   </span>
                 ))}
+              </div>
+
+              {/* Connect with Mounith */}
+              <div className="mt-6">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Connect with Mounith
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {SOCIAL_LINKS.map((social) => (
+                    <a
+                      key={social.title}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={social.title}
+                      aria-label={social.title}
+                      data-ocid="about.social.link"
+                      className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-accent border border-border hover:bg-primary hover:border-primary transition-all duration-200"
+                    >
+                      <social.icon className="w-4 h-4 text-primary group-hover:text-white transition-colors duration-200 flex-shrink-0" />
+                      <span className="text-xs font-medium text-foreground group-hover:text-white transition-colors duration-200 whitespace-nowrap">
+                        {social.label}
+                      </span>
+                    </a>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>

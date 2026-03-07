@@ -244,7 +244,7 @@ export function ClientDashboard() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen">
+      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">

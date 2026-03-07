@@ -5,6 +5,16 @@ import {
   Role,
   ServiceRequestStatus,
 } from "@/backend.d";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,11 +78,14 @@ import {
   BookOpen,
   CalendarCheck,
   ClipboardList,
+  Download,
+  Eye,
   Globe,
   KeyRound,
   LayoutDashboard,
   Loader2,
   LogOut,
+  Mail,
   MessageCircle,
   MessageSquare,
   Pencil,
@@ -103,7 +116,8 @@ type Tab =
   | "blog"
   | "service-requests"
   | "analytics"
-  | "bookings";
+  | "bookings"
+  | "newsletter";
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
   if (status === LeadStatus.new_) {
@@ -429,6 +443,20 @@ export function AdminDashboard() {
   const [deleteBookingId, setDeleteBookingId] = useState<bigint | null>(null);
   const [deleteBookingOpen, setDeleteBookingOpen] = useState(false);
 
+  // Feature 2: Full message view dialog
+  const [viewMessageOpen, setViewMessageOpen] = useState(false);
+  const [viewMessageText, setViewMessageText] = useState("");
+
+  // Feature 3: Deactivate user AlertDialog
+  const [deactivateUserId, setDeactivateUserId] = useState<bigint | null>(null);
+  const [deactivateUserOpen, setDeactivateUserOpen] = useState(false);
+
+  // Feature 4: Bookings filter state
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<
+    "all" | BookingStatus
+  >("all");
+  const [bookingDateSearch, setBookingDateSearch] = useState("");
+
   const confirmDeleteBooking = (id: bigint) => {
     setDeleteBookingId(id);
     setDeleteBookingOpen(true);
@@ -560,6 +588,55 @@ export function AdminDashboard() {
     setNoteDialogOpen(true);
   };
 
+  // Feature 1: CSV Export
+  const handleExportLeads = () => {
+    if (leads.length === 0) {
+      toast.error("No leads to export");
+      return;
+    }
+    const header = ["Name", "Phone", "Service", "Message", "Status", "Date"];
+    const rows = leads.map((lead) => [
+      `"${lead.name.replace(/"/g, '""')}"`,
+      `"${lead.phone.replace(/"/g, '""')}"`,
+      `"${lead.service.replace(/"/g, '""')}"`,
+      `"${lead.message.replace(/"/g, '""')}"`,
+      `"${lead.status}"`,
+      `"${formatDate(lead.createdAt)}"`,
+    ]);
+    const csv = [header.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "leads-export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Leads exported successfully");
+  };
+
+  // Feature 3: Deactivate user handler
+  const confirmDeactivateUser = (id: bigint) => {
+    setDeactivateUserId(id);
+    setDeactivateUserOpen(true);
+  };
+
+  const handleDeactivateUser = () => {
+    if (!deactivateUserId) return;
+    toggleActive(deactivateUserId);
+    toast.success("User deactivated");
+    setDeactivateUserOpen(false);
+    setDeactivateUserId(null);
+  };
+
+  // Feature 4: Filtered bookings
+  const filteredBookings = bookings.filter((b) => {
+    const statusMatch =
+      bookingStatusFilter === "all" || b.status === bookingStatusFilter;
+    const dateMatch =
+      !bookingDateSearch || b.preferredDate.includes(bookingDateSearch);
+    return statusMatch && dateMatch;
+  });
+
   const activeUsers = users.filter((u) => u.isActive).length;
   const pendingSR = serviceRequests.filter(
     (r) => r.status === ServiceRequestStatus.pending,
@@ -628,12 +705,18 @@ export function AdminDashboard() {
       icon: Users,
       ocid: "admin_dashboard.users.tab",
     },
+    {
+      id: "newsletter" as Tab,
+      label: "Newsletter",
+      icon: Mail,
+      ocid: "admin_dashboard.newsletter.tab",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen">
+      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -974,13 +1057,26 @@ export function AdminDashboard() {
         {/* ── Leads ── */}
         {activeTab === "leads" && (
           <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Leads
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                All contact form submissions
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Leads
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  All contact form submissions
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                data-ocid="leads.export_button"
+                onClick={handleExportLeads}
+                disabled={leadsLoading || leads.length === 0}
+                className="font-medium"
+              >
+                <Download className="w-4 h-4 mr-1.5" />
+                Export CSV
+              </Button>
             </div>
 
             <Card>
@@ -1031,8 +1127,26 @@ export function AdminDashboard() {
                             <TableCell className="text-sm">
                               {lead.service}
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {lead.message}
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                              <div className="flex items-center gap-1">
+                                <span className="truncate block max-w-[160px]">
+                                  {lead.message}
+                                </span>
+                                {lead.message && lead.message.length > 40 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 shrink-0"
+                                    data-ocid={`leads.view_message_button.${index + 1}`}
+                                    onClick={() => {
+                                      setViewMessageText(lead.message);
+                                      setViewMessageOpen(true);
+                                    }}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <LeadStatusBadge status={lead.status} />
@@ -1137,6 +1251,46 @@ export function AdminDashboard() {
               ))}
             </div>
 
+            {/* Feature 4: Bookings filter controls */}
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="flex flex-wrap gap-1.5">
+                {(
+                  [
+                    "all",
+                    BookingStatus.pending,
+                    BookingStatus.confirmed,
+                    BookingStatus.completed,
+                    BookingStatus.rejected,
+                  ] as const
+                ).map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    data-ocid={`bookings.filter_${status}.tab`}
+                    onClick={() => setBookingStatusFilter(status)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      bookingStatusFilter === status
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-accent"
+                    }`}
+                  >
+                    {status === "all"
+                      ? "All"
+                      : status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Input
+                  placeholder="Search by date e.g. 2026-03-15"
+                  value={bookingDateSearch}
+                  onChange={(e) => setBookingDateSearch(e.target.value)}
+                  data-ocid="bookings.date_search_input"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+
             <Card>
               <CardContent className="p-0">
                 {bookingsLoading ? (
@@ -1145,15 +1299,16 @@ export function AdminDashboard() {
                       <Skeleton key={i} className="h-12 w-full" />
                     ))}
                   </div>
-                ) : bookings.length === 0 ? (
+                ) : filteredBookings.length === 0 ? (
                   <div
                     data-ocid="bookings.empty_state"
                     className="py-16 text-center"
                   >
                     <CalendarCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm">
-                      No bookings yet. They'll appear here once clients submit
-                      an appointment request.
+                      {bookings.length === 0
+                        ? "No bookings yet. They'll appear here once clients submit an appointment request."
+                        : "No bookings match the current filters."}
                     </p>
                   </div>
                 ) : (
@@ -1172,7 +1327,7 @@ export function AdminDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {bookings.map((booking, index) => {
+                        {filteredBookings.map((booking, index) => {
                           const waNotifyUrl = `https://wa.me/91${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${booking.name}, your appointment for ${booking.service} on ${booking.preferredDate} has been confirmed! - My Web Solutions`)}`;
 
                           return (
@@ -1791,7 +1946,7 @@ export function AdminDashboard() {
                           <TableHead>Username</TableHead>
                           <TableHead>Role</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1829,15 +1984,31 @@ export function AdminDashboard() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                data-ocid={`users.toggle_button.${index + 1}`}
-                                onClick={() => toggleActive(user.id)}
-                                className="text-xs h-7"
-                              >
-                                {user.isActive ? "Deactivate" : "Activate"}
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  data-ocid={`users.toggle_button.${index + 1}`}
+                                  onClick={() => toggleActive(user.id)}
+                                  className="text-xs h-7"
+                                >
+                                  {user.isActive ? "Deactivate" : "Activate"}
+                                </Button>
+                                {user.role !== Role.admin && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    data-ocid={`users.delete_button.${index + 1}`}
+                                    onClick={() =>
+                                      confirmDeactivateUser(user.id)
+                                    }
+                                    className="h-7 w-7 p-0 text-destructive border-destructive/20 hover:bg-destructive/10"
+                                    title="Deactivate user"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1845,6 +2016,41 @@ export function AdminDashboard() {
                     </Table>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ── Newsletter ── */}
+        {activeTab === "newsletter" && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Newsletter Subscribers
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Email addresses collected from the website newsletter signup
+                form.
+              </p>
+            </div>
+
+            <Card data-ocid="newsletter.card">
+              <CardContent className="py-16 flex flex-col items-center justify-center text-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                  <Mail className="w-7 h-7 text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground text-sm">
+                    No subscribers yet
+                  </p>
+                  <p className="text-muted-foreground text-sm mt-1 max-w-sm">
+                    Email addresses collected from the website newsletter signup
+                    form will appear here in a future update.
+                  </p>
+                </div>
+                <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 mt-1">
+                  Coming Soon
+                </Badge>
               </CardContent>
             </Card>
           </div>
@@ -2051,6 +2257,63 @@ export function AdminDashboard() {
           currentNote={noteCurrentValue}
         />
       )}
+
+      {/* Feature 2: Full Message View Dialog */}
+      <Dialog open={viewMessageOpen} onOpenChange={setViewMessageOpen}>
+        <DialogContent data-ocid="leads.view_message.dialog">
+          <DialogHeader>
+            <DialogTitle>Full Message</DialogTitle>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+              {viewMessageText}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              data-ocid="leads.view_message.close_button"
+              onClick={() => setViewMessageOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feature 3: Deactivate User AlertDialog */}
+      <AlertDialog
+        open={deactivateUserOpen}
+        onOpenChange={setDeactivateUserOpen}
+      >
+        <AlertDialogContent data-ocid="users.deactivate_user.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate this user? They will no longer
+              be able to log in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              data-ocid="users.deactivate_user.cancel_button"
+              onClick={() => {
+                setDeactivateUserOpen(false);
+                setDeactivateUserId(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-ocid="users.deactivate_user.confirm_button"
+              onClick={handleDeactivateUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
