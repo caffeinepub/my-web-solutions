@@ -110,7 +110,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignStaffToRequest(requestId: bigint, staffUserId: bigint): Promise<boolean>;
     cancelServiceRequest(id: bigint): Promise<boolean>;
-    changePassword(oldPasswordHash: string, newPasswordHash: string): Promise<{
+    changePassword(userId: bigint, oldPasswordHash: string, newPasswordHash: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {

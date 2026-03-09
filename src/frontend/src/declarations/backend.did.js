@@ -114,7 +114,7 @@ export const idlService = IDL.Service({
   'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
   'cancelServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'changePassword' : IDL.Func(
-      [IDL.Text, IDL.Text],
+      [IDL.Nat, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -323,7 +323,7 @@ export const idlFactory = ({ IDL }) => {
     'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
     'cancelServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'changePassword' : IDL.Func(
-        [IDL.Text, IDL.Text],
+        [IDL.Nat, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),

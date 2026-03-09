@@ -8,10 +8,10 @@ import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 import Order "mo:core/Order";
 
-(with migration = Migration.run)
+
 actor {
   // Authorization
   let accessControlState = AccessControl.initState();
@@ -177,55 +177,8 @@ actor {
   let invoices = Map.empty<Nat, Invoice>();
   var nextInvoiceId = 1;
 
-  // Helper function to check if caller is admin or staff
-  func isAdminOrStaff(caller : Principal) : Bool {
-    if (AccessControl.isAdmin(accessControlState, caller)) {
-      return true;
-    };
-
-    switch (userProfiles.get(caller)) {
-      case (null) { false };
-      case (?profile) {
-        profile.role == #staff and AccessControl.hasPermission(accessControlState, caller, #user);
-      };
-    };
-  };
-
-  // Helper function to check if caller is client
-  func isClient(caller : Principal) : Bool {
-    switch (userProfiles.get(caller)) {
-      case (null) { false };
-      case (?profile) {
-        profile.role == #client and AccessControl.hasPermission(accessControlState, caller, #user);
-      };
-    };
-  };
-
-  // User Profile Functions (Required by frontend)
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
-    };
-    userProfiles.get(caller);
-  };
-
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
-    };
-    userProfiles.get(user);
-  };
-
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
-    userProfiles.add(caller, profile);
-  };
-
   // Lead Functions
   public shared func submitLead(name : Text, phone : Text, service : Text, message : Text) : async Nat {
-    // Public function - no authorization check needed
     let lead : Lead = {
       id = nextLeadId;
       name;
@@ -241,17 +194,11 @@ actor {
     lead.id;
   };
 
-  public query ({ caller }) func getLeads() : async [Lead] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view leads");
-    };
+  public query func getLeads() : async [Lead] {
     leads.values().toArray();
   };
 
-  public shared ({ caller }) func updateLeadStatus(id : Nat, status : LeadStatus) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update lead status");
-    };
+  public shared func updateLeadStatus(id : Nat, status : LeadStatus) : async Bool {
     switch (leads.get(id)) {
       case (null) { false };
       case (?lead) {
@@ -263,11 +210,7 @@ actor {
   };
 
   // User Functions
-  public shared ({ caller }) func createUser(username : Text, passwordHash : Text, role : Role) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create users");
-    };
-
+  public shared func createUser(username : Text, passwordHash : Text, role : Role) : async Nat {
     let user : User = {
       id = nextUserId;
       username;
@@ -281,11 +224,7 @@ actor {
     user.id;
   };
 
-  public shared ({ caller }) func toggleUserActive(userId : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can toggle user status");
-    };
-
+  public shared func toggleUserActive(userId : Nat) : async Bool {
     switch (users.get(userId)) {
       case (null) { false };
       case (?user) {
@@ -296,10 +235,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func listUsers() : async [User] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can list users");
-    };
+  public query func listUsers() : async [User] {
     users.values().toArray();
   };
 
@@ -311,7 +247,6 @@ actor {
     };
     #err : Text;
   } {
-    // Public function - no authorization check needed
     let allUsers = users.values().toArray();
     let foundUser = allUsers.find(func(u) { u.username == username });
 
@@ -333,11 +268,7 @@ actor {
   };
 
   // Blog System
-  public shared ({ caller }) func createBlogPost(title : Text, content : Text, excerpt : Text, authorName : Text) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create blog posts");
-    };
-
+  public shared func createBlogPost(title : Text, content : Text, excerpt : Text, authorName : Text) : async Nat {
     let blogPost : BlogPost = {
       id = nextBlogPostId;
       title;
@@ -354,11 +285,7 @@ actor {
     blogPost.id;
   };
 
-  public shared ({ caller }) func updateBlogPost(id : Nat, title : Text, content : Text, excerpt : Text, isPublished : Bool) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update blog posts");
-    };
-
+  public shared func updateBlogPost(id : Nat, title : Text, content : Text, excerpt : Text, isPublished : Bool) : async Bool {
     switch (blogPosts.get(id)) {
       case (null) { false };
       case (?blogPost) {
@@ -376,11 +303,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteBlogPost(id : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete blog posts");
-    };
-
+  public shared func deleteBlogPost(id : Nat) : async Bool {
     switch (blogPosts.get(id)) {
       case (null) { false };
       case (?_blogPost) {
@@ -391,37 +314,20 @@ actor {
   };
 
   public query func listBlogPosts() : async [BlogPost] {
-    // Public query - no authorization needed, returns only published posts
     let publishedPosts = blogPosts.values().toArray().filter(func(post) { post.isPublished });
     publishedPosts;
   };
 
-  public query ({ caller }) func listAllBlogPosts() : async [BlogPost] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can list all blog posts");
-    };
+  public query func listAllBlogPosts() : async [BlogPost] {
     blogPosts.values().toArray();
   };
 
   public query func getBlogPost(id : Nat) : async ?BlogPost {
-    // Public query - no authorization needed
     blogPosts.get(id);
   };
 
   // Service Requests
-  public shared ({ caller }) func createServiceRequest(clientUserId : Nat, clientName : Text, serviceType : Text, description : Text) : async Nat {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can create service requests");
-    };
-
-    // Check if caller is admin or client
-    let isAuthorized = AccessControl.isAdmin(accessControlState, caller) or isClient(caller);
-
-    if (not isAuthorized) {
-      Runtime.trap("Unauthorized: Only clients or admins can create service requests");
-    };
-
+  public shared func createServiceRequest(clientUserId : Nat, clientName : Text, serviceType : Text, description : Text) : async Nat {
     let serviceRequest : ServiceRequest = {
       id = nextServiceRequestId;
       clientUserId;
@@ -440,43 +346,14 @@ actor {
     serviceRequest.id;
   };
 
-  public query ({ caller }) func getClientServiceRequests(clientUserId : Nat) : async [ServiceRequest] {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view service requests");
-    };
-
-    // Check if caller is admin or the client themselves (by userId in profile)
-    let callerProfile = userProfiles.get(caller);
-
-    let isAuthorized = switch (callerProfile) {
-      case (null) { false };
-      case (?profile) {
-        AccessControl.isAdmin(accessControlState, caller) or profile.userId == clientUserId;
-      };
-    };
-
-    if (not isAuthorized) {
-      Runtime.trap("Unauthorized: Can only access your own service requests");
-    };
-
+  public query func getClientServiceRequests(clientUserId : Nat) : async [ServiceRequest] {
     let clientRequests = serviceRequests.values().toArray().filter(
       func(request) { request.clientUserId == clientUserId }
     );
     clientRequests;
   };
 
-  public shared ({ caller }) func updateServiceRequestStatus(id : Nat, status : ServiceRequestStatus) : async Bool {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can update service request status");
-    };
-
-    // Check if caller is admin or staff
-    if (not isAdminOrStaff(caller)) {
-      Runtime.trap("Unauthorized: Only admins or staff can update service request status");
-    };
-
+  public shared func updateServiceRequestStatus(id : Nat, status : ServiceRequestStatus) : async Bool {
     switch (serviceRequests.get(id)) {
       case (null) { false };
       case (?serviceRequest) {
@@ -491,25 +368,11 @@ actor {
     };
   };
 
-  public query ({ caller }) func listAllServiceRequests() : async [ServiceRequest] {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can list service requests");
-    };
-
-    // Check if caller is admin or staff
-    if (not isAdminOrStaff(caller)) {
-      Runtime.trap("Unauthorized: Only admins or staff can list all service requests");
-    };
-
+  public query func listAllServiceRequests() : async [ServiceRequest] {
     serviceRequests.values().toArray();
   };
 
-  public shared ({ caller }) func deleteServiceRequest(id : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete service requests");
-    };
-
+  public shared func deleteServiceRequest(id : Nat) : async Bool {
     switch (serviceRequests.get(id)) {
       case (null) { false };
       case (?_serviceRequest) {
@@ -546,47 +409,27 @@ actor {
     };
   };
 
-  // New Functionality
-
   // Change Password
-  public shared ({ caller }) func changePassword(oldPasswordHash : Text, newPasswordHash : Text) : async {
+  public shared func changePassword(userId : Nat, oldPasswordHash : Text, newPasswordHash : Text) : async {
     #ok;
     #err : Text;
   } {
-    // Authenticated user check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      return #err("Unauthorized: Only authenticated users can change password");
-    };
-
-    // Get the caller's profile to find their userId
-    let callerProfile = userProfiles.get(caller);
-
-    switch (callerProfile) {
-      case (null) { return #err("User profile not found") };
-      case (?profile) {
-        switch (users.get(profile.userId)) {
-          case (null) { #err("User not found") };
-          case (?user) {
-            if (user.passwordHash == oldPasswordHash) {
-              let updatedUser = { user with passwordHash = newPasswordHash };
-              users.add(profile.userId, updatedUser);
-              #ok;
-            } else {
-              #err("Incorrect old password");
-            };
-          };
+    switch (users.get(userId)) {
+      case (null) { #err("User not found") };
+      case (?user) {
+        if (user.passwordHash == oldPasswordHash) {
+          let updatedUser = { user with passwordHash = newPasswordHash };
+          users.add(userId, updatedUser);
+          #ok;
+        } else {
+          #err("Incorrect old password");
         };
       };
     };
   };
 
   // Admin Reset Password
-  public shared ({ caller }) func adminResetPassword(userId : Nat, newPasswordHash : Text) : async Bool {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can reset passwords");
-    };
-
+  public shared func adminResetPassword(userId : Nat, newPasswordHash : Text) : async Bool {
     switch (users.get(userId)) {
       case (null) { false };
       case (?user) {
@@ -598,16 +441,10 @@ actor {
   };
 
   // Assign Staff to Request
-  public shared ({ caller }) func assignStaffToRequest(requestId : Nat, staffUserId : Nat) : async Bool {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can assign staff");
-    };
-
+  public shared func assignStaffToRequest(requestId : Nat, staffUserId : Nat) : async Bool {
     switch (serviceRequests.get(requestId)) {
       case (null) { false };
       case (?serviceRequest) {
-        // Check if staffUserId is actually a staff member
         switch (users.get(staffUserId)) {
           case (null) { false };
           case (?staffUser) {
@@ -627,40 +464,10 @@ actor {
   };
 
   // Add Staff Note
-  public shared ({ caller }) func addStaffNote(requestId : Nat, note : Text) : async Bool {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can add staff notes");
-    };
-
-    // Admin or Staff only check
-    if (not isAdminOrStaff(caller)) {
-      Runtime.trap("Unauthorized: Only admins or staff can add staff notes");
-    };
-
+  public shared func addStaffNote(requestId : Nat, note : Text) : async Bool {
     switch (serviceRequests.get(requestId)) {
       case (null) { false };
       case (?serviceRequest) {
-        // If caller is staff (not admin), verify they are assigned to this request
-        if (not AccessControl.isAdmin(accessControlState, caller)) {
-          let callerProfile = userProfiles.get(caller);
-          switch (callerProfile) {
-            case (null) { return false };
-            case (?profile) {
-              switch (serviceRequest.assignedStaffId) {
-                case (null) {
-                  Runtime.trap("Unauthorized: This request is not assigned to any staff");
-                };
-                case (?assignedStaffId) {
-                  if (profile.userId != assignedStaffId) {
-                    Runtime.trap("Unauthorized: You can only add notes to requests assigned to you");
-                  };
-                };
-              };
-            };
-          };
-        };
-
         let updatedRequest = {
           serviceRequest with
           staffNote = note;
@@ -673,7 +480,7 @@ actor {
   };
 
   // Get Revenue Stats
-  public query ({ caller }) func getRevenueStats() : async {
+  public query func getRevenueStats() : async {
     totalLeads : Nat;
     totalRequests : Nat;
     pendingRequests : Nat;
@@ -682,11 +489,6 @@ actor {
     newLeads : Nat;
     resolvedLeads : Nat;
   } {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access revenue stats");
-    };
-
     let allLeads = leads.values().toArray();
     let allRequests = serviceRequests.values().toArray();
 
@@ -709,39 +511,14 @@ actor {
   };
 
   // Get Staff Assigned Requests
-  public query ({ caller }) func getStaffAssignedRequests(staffUserId : Nat) : async [ServiceRequest] {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can access assigned requests");
-    };
-
-    // Admin or Staff only check
-    if (not isAdminOrStaff(caller)) {
-      Runtime.trap("Unauthorized: Only admins or staff can access assigned requests");
-    };
-
-    // If caller is staff (not admin), verify they can only see their own assigned requests
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      let callerProfile = userProfiles.get(caller);
-      switch (callerProfile) {
-        case (null) {
-          Runtime.trap("Unauthorized: User profile not found");
-        };
-        case (?profile) {
-          if (profile.userId != staffUserId) {
-            Runtime.trap("Unauthorized: You can only view your own assigned requests");
-          };
-        };
-      };
-    };
-
+  public query func getStaffAssignedRequests(staffUserId : Nat) : async [ServiceRequest] {
     let assignedRequests = serviceRequests.values().toArray().filter(
       func(request) { switch (request.assignedStaffId) { case (null) { false }; case (?staffId) { staffId == staffUserId } } }
     );
     assignedRequests;
   };
 
-  // BOOKINGS FUNCTIONALITY
+  // BOOKINGS
   public shared func createBooking(
     name : Text,
     phone : Text,
@@ -751,7 +528,6 @@ actor {
     preferredTime : Text,
     message : Text,
   ) : async Nat {
-    // Public function - no auth required
     let booking : Booking = {
       id = nextBookingId;
       name;
@@ -770,19 +546,11 @@ actor {
     booking.id;
   };
 
-  public query ({ caller }) func listBookings() : async [Booking] {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can list bookings");
-    };
+  public query func listBookings() : async [Booking] {
     bookings.values().toArray();
   };
 
-  public shared ({ caller }) func updateBookingStatus(id : Nat, status : BookingStatus) : async Bool {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update booking status");
-    };
+  public shared func updateBookingStatus(id : Nat, status : BookingStatus) : async Bool {
     switch (bookings.get(id)) {
       case (null) { false };
       case (?booking) {
@@ -793,11 +561,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteBooking(id : Nat) : async Bool {
-    // Admin only check
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete bookings");
-    };
+  public shared func deleteBooking(id : Nat) : async Bool {
     switch (bookings.get(id)) {
       case (null) { false };
       case (?_booking) {
@@ -808,11 +572,7 @@ actor {
   };
 
   // INVOICE SYSTEM
-  public shared ({ caller }) func createInvoice(clientUserId : Nat, serviceType : Text, amount : Nat, currency : Text, dueDate : Text, notes : Text) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create invoices");
-    };
-
+  public shared func createInvoice(clientUserId : Nat, serviceType : Text, amount : Nat, currency : Text, dueDate : Text, notes : Text) : async Nat {
     let invoice : Invoice = {
       id = nextInvoiceId;
       clientUserId;
@@ -830,36 +590,14 @@ actor {
     invoice.id;
   };
 
-  public query ({ caller }) func listClientInvoices(clientUserId : Nat) : async [Invoice] {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view invoices");
-    };
-
-    // Check if caller is admin or the client themselves (by userId in profile)
-    let callerProfile = userProfiles.get(caller);
-    let isAuthorized = switch (callerProfile) {
-      case (null) { false };
-      case (?profile) {
-        AccessControl.isAdmin(accessControlState, caller) or profile.userId == clientUserId;
-      };
-    };
-
-    if (not isAuthorized) {
-      Runtime.trap("Unauthorized: Can only access your own invoices");
-    };
-
+  public query func listClientInvoices(clientUserId : Nat) : async [Invoice] {
     let clientInvoices = invoices.values().toArray().filter(
       func(invoice) { invoice.clientUserId == clientUserId }
     );
     clientInvoices;
   };
 
-  public shared ({ caller }) func updateInvoiceStatus(id : Nat, status : InvoiceStatus) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update invoice status");
-    };
-
+  public shared func updateInvoiceStatus(id : Nat, status : InvoiceStatus) : async Bool {
     switch (invoices.get(id)) {
       case (null) { false };
       case (?invoice) {
@@ -870,42 +608,30 @@ actor {
     };
   };
 
-  public query ({ caller }) func listAllInvoices() : async [Invoice] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can list all invoices");
-    };
+  public query func listAllInvoices() : async [Invoice] {
     invoices.values().toArray();
   };
 
   // CANCEL SERVICE REQUEST
-  public shared ({ caller }) func cancelServiceRequest(id : Nat) : async Bool {
-    // Must be authenticated user
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can cancel service requests");
-    };
-
+  public shared func cancelServiceRequest(id : Nat) : async Bool {
     switch (serviceRequests.get(id)) {
       case (null) { false };
       case (?serviceRequest) {
-        // Only pending requests can be cancelled
         if (serviceRequest.status != #pending) {
-          Runtime.trap("Cannot cancel: Only pending requests can be cancelled");
+          return false;
         };
-
-        // Check if caller is admin or the client who owns the request
-        let callerProfile = userProfiles.get(caller);
-        let isAuthorized = switch (callerProfile) {
-          case (null) { false };
-          case (?profile) {
-            AccessControl.isAdmin(accessControlState, caller) or profile.userId == serviceRequest.clientUserId;
-          };
-        };
-
-        if (not isAuthorized) {
-          Runtime.trap("Unauthorized: Can only cancel your own service requests");
-        };
-
         serviceRequests.remove(id);
+        true;
+      };
+    };
+  };
+
+  // Delete User
+  public shared func deleteUser(userId : Nat) : async Bool {
+    switch (users.get(userId)) {
+      case (null) { false };
+      case (?_user) {
+        users.remove(userId);
         true;
       };
     };

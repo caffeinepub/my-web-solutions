@@ -103,7 +103,7 @@ export interface _SERVICE {
   'assignStaffToRequest' : ActorMethod<[bigint, bigint], boolean>,
   'cancelServiceRequest' : ActorMethod<[bigint], boolean>,
   'changePassword' : ActorMethod<
-    [string, string],
+    [bigint, string, string],
     { 'ok' : null } |
       { 'err' : string }
   >,

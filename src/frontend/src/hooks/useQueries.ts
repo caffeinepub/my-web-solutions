@@ -430,14 +430,16 @@ export function useChangePassword() {
   const { actor } = useActor();
   return useMutation({
     mutationFn: async ({
+      userId,
       oldPasswordHash,
       newPasswordHash,
     }: {
+      userId: bigint;
       oldPasswordHash: string;
       newPasswordHash: string;
     }) => {
       if (!actor) throw new Error("Not connected");
-      return actor.changePassword(oldPasswordHash, newPasswordHash);
+      return actor.changePassword(userId, oldPasswordHash, newPasswordHash);
     },
   });
 }

@@ -193,7 +193,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignStaffToRequest(requestId: bigint, staffUserId: bigint): Promise<boolean>;
     cancelServiceRequest(id: bigint): Promise<boolean>;
-    changePassword(oldPasswordHash: string, newPasswordHash: string): Promise<{
+    changePassword(userId: bigint, oldPasswordHash: string, newPasswordHash: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -339,7 +339,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async changePassword(arg0: string, arg1: string): Promise<{
+    async changePassword(arg0: bigint, arg1: string, arg2: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -348,14 +348,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.changePassword(arg0, arg1);
+                const result = await this.actor.changePassword(arg0, arg1, arg2);
                 return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.changePassword(arg0, arg1);
+            const result = await this.actor.changePassword(arg0, arg1, arg2);
             return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
         }
     }

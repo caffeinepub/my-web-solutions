@@ -132,6 +132,8 @@ function ChangePasswordDialog({
 }) {
   const [form, setForm] = useState({ current: "", next: "", confirm: "" });
   const { mutateAsync: changePassword, isPending } = useChangePassword();
+  const session = getSession();
+  const sessionUserId = session?.userId ? BigInt(session.userId) : BigInt(1);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,6 +155,7 @@ function ChangePasswordDialog({
         hashPassword(form.next),
       ]);
       const result = await changePassword({
+        userId: sessionUserId,
         oldPasswordHash: oldHash,
         newPasswordHash: newHash,
       });

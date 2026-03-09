@@ -270,7 +270,11 @@ export function ClientDashboard() {
         hashPassword(pwForm.current),
         hashPassword(pwForm.next),
       ]);
+      const clientSessionUserId = session?.userId
+        ? BigInt(session.userId)
+        : BigInt(1);
       const result = await changePassword({
+        userId: clientSessionUserId,
         oldPasswordHash: oldHash,
         newPasswordHash: newHash,
       });
