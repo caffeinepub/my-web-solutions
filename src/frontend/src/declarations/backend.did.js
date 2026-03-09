@@ -65,6 +65,21 @@ export const Lead = IDL.Record({
   'message' : IDL.Text,
   'phone' : IDL.Text,
 });
+export const InvoiceStatus = IDL.Variant({
+  'paid' : IDL.Null,
+  'unpaid' : IDL.Null,
+});
+export const Invoice = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : InvoiceStatus,
+  'serviceType' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'dueDate' : IDL.Text,
+  'currency' : IDL.Text,
+  'notes' : IDL.Text,
+  'clientUserId' : IDL.Nat,
+  'amount' : IDL.Nat,
+});
 export const BookingStatus = IDL.Variant({
   'pending' : IDL.Null,
   'completed' : IDL.Null,
@@ -97,6 +112,7 @@ export const idlService = IDL.Service({
   'adminResetPassword' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+  'cancelServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'changePassword' : IDL.Func(
       [IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -109,6 +125,11 @@ export const idlService = IDL.Service({
     ),
   'createBooking' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'createInvoice' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
       [],
     ),
@@ -158,9 +179,11 @@ export const idlService = IDL.Service({
   'initAdmin' : IDL.Func([], [IDL.Bool], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'listAllInvoices' : IDL.Func([], [IDL.Vec(Invoice)], ['query']),
   'listAllServiceRequests' : IDL.Func([], [IDL.Vec(ServiceRequest)], ['query']),
   'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'listBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+  'listClientInvoices' : IDL.Func([IDL.Nat], [IDL.Vec(Invoice)], ['query']),
   'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'login' : IDL.Func(
       [IDL.Text, IDL.Text],
@@ -185,6 +208,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
+  'updateInvoiceStatus' : IDL.Func([IDL.Nat, InvoiceStatus], [IDL.Bool], []),
   'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
   'updateServiceRequestStatus' : IDL.Func(
       [IDL.Nat, ServiceRequestStatus],
@@ -253,6 +277,18 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'phone' : IDL.Text,
   });
+  const InvoiceStatus = IDL.Variant({ 'paid' : IDL.Null, 'unpaid' : IDL.Null });
+  const Invoice = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : InvoiceStatus,
+    'serviceType' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'dueDate' : IDL.Text,
+    'currency' : IDL.Text,
+    'notes' : IDL.Text,
+    'clientUserId' : IDL.Nat,
+    'amount' : IDL.Nat,
+  });
   const BookingStatus = IDL.Variant({
     'pending' : IDL.Null,
     'completed' : IDL.Null,
@@ -285,6 +321,7 @@ export const idlFactory = ({ IDL }) => {
     'adminResetPassword' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignStaffToRequest' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+    'cancelServiceRequest' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'changePassword' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -297,6 +334,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createBooking' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'createInvoice' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
         [],
       ),
@@ -346,6 +388,7 @@ export const idlFactory = ({ IDL }) => {
     'initAdmin' : IDL.Func([], [IDL.Bool], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'listAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'listAllInvoices' : IDL.Func([], [IDL.Vec(Invoice)], ['query']),
     'listAllServiceRequests' : IDL.Func(
         [],
         [IDL.Vec(ServiceRequest)],
@@ -353,6 +396,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'listBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
     'listBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
+    'listClientInvoices' : IDL.Func([IDL.Nat], [IDL.Vec(Invoice)], ['query']),
     'listUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'login' : IDL.Func(
         [IDL.Text, IDL.Text],
@@ -377,6 +421,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
+    'updateInvoiceStatus' : IDL.Func([IDL.Nat, InvoiceStatus], [IDL.Bool], []),
     'updateLeadStatus' : IDL.Func([IDL.Nat, LeadStatus], [IDL.Bool], []),
     'updateServiceRequestStatus' : IDL.Func(
         [IDL.Nat, ServiceRequestStatus],

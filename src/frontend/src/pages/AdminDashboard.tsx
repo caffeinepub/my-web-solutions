@@ -1,6 +1,7 @@
 import {
   type BlogPost,
   BookingStatus,
+  InvoiceStatus,
   LeadStatus,
   Role,
   ServiceRequestStatus,
@@ -56,18 +57,21 @@ import {
   useAssignStaffToRequest,
   useChangePassword,
   useCreateBlogPost,
+  useCreateInvoice,
   useCreateUser,
   useDeleteBlogPost,
   useDeleteBooking,
   useGetLeads,
   useGetRevenueStats,
   useListAllBlogPosts,
+  useListAllInvoices,
   useListAllServiceRequests,
   useListBookings,
   useListUsers,
   useToggleUserActive,
   useUpdateBlogPost,
   useUpdateBookingStatus,
+  useUpdateInvoiceStatus,
   useUpdateLeadStatus,
   useUpdateServiceRequestStatus,
 } from "@/hooks/useQueries";
@@ -80,6 +84,7 @@ import {
   ClipboardList,
   Download,
   Eye,
+  FileText,
   Globe,
   KeyRound,
   LayoutDashboard,
@@ -117,7 +122,8 @@ type Tab =
   | "service-requests"
   | "analytics"
   | "bookings"
-  | "newsletter";
+  | "newsletter"
+  | "invoices";
 
 function LeadStatusBadge({ status }: { status: LeadStatus }) {
   if (status === LeadStatus.new_) {
@@ -423,6 +429,8 @@ export function AdminDashboard() {
     useListAllServiceRequests();
   const { data: revenueStats, isLoading: statsLoading } = useGetRevenueStats();
   const { data: bookings = [], isLoading: bookingsLoading } = useListBookings();
+  const { data: invoices = [], isLoading: invoicesLoading } =
+    useListAllInvoices();
 
   const { mutate: updateStatus } = useUpdateLeadStatus();
   const { mutate: toggleActive } = useToggleUserActive();
@@ -438,6 +446,9 @@ export function AdminDashboard() {
   const { mutate: updateBookingStatusMutate } = useUpdateBookingStatus();
   const { mutateAsync: deleteBookingMutate, isPending: deletingBooking } =
     useDeleteBooking();
+  const { mutate: updateInvoiceStatusMutate } = useUpdateInvoiceStatus();
+  const { mutateAsync: createInvoice, isPending: creatingInvoice } =
+    useCreateInvoice();
 
   // Booking delete dialog state
   const [deleteBookingId, setDeleteBookingId] = useState<bigint | null>(null);
@@ -456,6 +467,17 @@ export function AdminDashboard() {
     "all" | BookingStatus
   >("all");
   const [bookingDateSearch, setBookingDateSearch] = useState("");
+
+  // Invoice state
+  const [createInvoiceOpen, setCreateInvoiceOpen] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState({
+    clientUserId: "",
+    serviceType: "",
+    amount: "",
+    currency: "INR",
+    dueDate: "",
+    notes: "",
+  });
 
   const confirmDeleteBooking = (id: bigint) => {
     setDeleteBookingId(id);
@@ -628,6 +650,42 @@ export function AdminDashboard() {
     setDeactivateUserId(null);
   };
 
+  // Invoice create handler
+  const handleCreateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !invoiceForm.clientUserId ||
+      !invoiceForm.serviceType ||
+      !invoiceForm.amount ||
+      !invoiceForm.dueDate
+    ) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    try {
+      await createInvoice({
+        clientUserId: BigInt(invoiceForm.clientUserId),
+        serviceType: invoiceForm.serviceType,
+        amount: BigInt(invoiceForm.amount),
+        currency: invoiceForm.currency,
+        dueDate: invoiceForm.dueDate,
+        notes: invoiceForm.notes,
+      });
+      toast.success("Invoice created successfully");
+      setCreateInvoiceOpen(false);
+      setInvoiceForm({
+        clientUserId: "",
+        serviceType: "",
+        amount: "",
+        currency: "INR",
+        dueDate: "",
+        notes: "",
+      });
+    } catch {
+      toast.error("Failed to create invoice");
+    }
+  };
+
   // Feature 4: Filtered bookings
   const filteredBookings = bookings.filter((b) => {
     const statusMatch =
@@ -710,6 +768,12 @@ export function AdminDashboard() {
       label: "Newsletter",
       icon: Mail,
       ocid: "admin_dashboard.newsletter.tab",
+    },
+    {
+      id: "invoices" as Tab,
+      label: "Invoices",
+      icon: FileText,
+      ocid: "admin_dashboard.invoices.tab",
     },
   ];
 
@@ -2055,6 +2119,161 @@ export function AdminDashboard() {
             </Card>
           </div>
         )}
+
+        {/* ── Invoices ── */}
+        {activeTab === "invoices" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Invoices
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Manage client invoices and billing
+                </p>
+              </div>
+              <Button
+                size="sm"
+                data-ocid="invoices.create_invoice_button"
+                onClick={() => setCreateInvoiceOpen(true)}
+                className="font-medium"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Create Invoice
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-3xl font-bold text-foreground">
+                    {invoices.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Total</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-3xl font-bold text-green-600">
+                    {
+                      invoices.filter((i) => i.status === InvoiceStatus.paid)
+                        .length
+                    }
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Paid</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 pb-4 text-center">
+                  <p className="font-display text-3xl font-bold text-orange-600">
+                    {
+                      invoices.filter((i) => i.status === InvoiceStatus.unpaid)
+                        .length
+                    }
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Unpaid</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardContent className="p-0">
+                {invoicesLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : invoices.length === 0 ? (
+                  <div
+                    data-ocid="invoices.empty_state"
+                    className="py-16 text-center"
+                  >
+                    <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No invoices yet. Create your first invoice above.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table data-ocid="invoices.table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client ID</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Currency</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoices.map((invoice, index) => {
+                          const isPaid = invoice.status === InvoiceStatus.paid;
+                          return (
+                            <TableRow
+                              key={invoice.id.toString()}
+                              data-ocid={`invoices.row.${index + 1}`}
+                            >
+                              <TableCell className="text-sm text-muted-foreground font-mono">
+                                {invoice.clientUserId.toString()}
+                              </TableCell>
+                              <TableCell className="text-sm font-medium max-w-[180px] truncate">
+                                {invoice.serviceType}
+                              </TableCell>
+                              <TableCell className="text-sm font-semibold">
+                                {invoice.currency === "INR"
+                                  ? `₹${Number(invoice.amount).toLocaleString("en-IN")}`
+                                  : `${invoice.currency} ${Number(invoice.amount).toLocaleString()}`}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {invoice.currency}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {invoice.dueDate}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={
+                                    isPaid
+                                      ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                      : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
+                                  }
+                                >
+                                  {isPaid ? "Paid" : "Unpaid"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  data-ocid={`invoices.toggle_status_button.${index + 1}`}
+                                  className={`h-7 text-xs ${isPaid ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-green-600 border-green-200 hover:bg-green-50"}`}
+                                  onClick={() =>
+                                    updateInvoiceStatusMutate({
+                                      id: invoice.id,
+                                      status: isPaid
+                                        ? InvoiceStatus.unpaid
+                                        : InvoiceStatus.paid,
+                                    })
+                                  }
+                                >
+                                  Mark {isPaid ? "Unpaid" : "Paid"}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
 
       {/* Blog Add/Edit Modal */}
@@ -2239,6 +2458,152 @@ export function AdminDashboard() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={createInvoiceOpen} onOpenChange={setCreateInvoiceOpen}>
+        <DialogContent data-ocid="invoices.create_invoice.dialog">
+          <DialogHeader>
+            <DialogTitle>Create Invoice</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateInvoice} className="space-y-4 pt-2">
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Client User ID *
+              </Label>
+              <Input
+                type="number"
+                placeholder="e.g. 2"
+                data-ocid="invoices.create_invoice.client_id_input"
+                value={invoiceForm.clientUserId}
+                onChange={(e) =>
+                  setInvoiceForm((p) => ({
+                    ...p,
+                    clientUserId: e.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Service Type *
+              </Label>
+              <Select
+                value={invoiceForm.serviceType}
+                onValueChange={(v) =>
+                  setInvoiceForm((p) => ({ ...p, serviceType: v }))
+                }
+              >
+                <SelectTrigger data-ocid="invoices.create_invoice.service_select">
+                  <SelectValue placeholder="Select a service..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "SaaS Service Management System",
+                    "Small Business Website Development",
+                    "WhatsApp Business Integration",
+                    "Google Business Profile Setup",
+                    "Security Certification Advisory",
+                    "Corporate Security SOP Documentation",
+                    "Risk Assessment Consultation",
+                    "Event Security Planning",
+                    "Police Verification Assistance",
+                    "UMANG App Government Services",
+                    "Resume Writing & Interview Prep",
+                    "AI Movie & Digital Content Creation",
+                    "Other",
+                  ].map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block">
+                  Amount (₹) *
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 3999"
+                  data-ocid="invoices.create_invoice.amount_input"
+                  value={invoiceForm.amount}
+                  onChange={(e) =>
+                    setInvoiceForm((p) => ({ ...p, amount: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block">
+                  Currency
+                </Label>
+                <Input
+                  placeholder="INR"
+                  data-ocid="invoices.create_invoice.currency_input"
+                  value={invoiceForm.currency}
+                  onChange={(e) =>
+                    setInvoiceForm((p) => ({ ...p, currency: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Due Date *
+              </Label>
+              <Input
+                type="date"
+                data-ocid="invoices.create_invoice.due_date_input"
+                value={invoiceForm.dueDate}
+                onChange={(e) =>
+                  setInvoiceForm((p) => ({ ...p, dueDate: e.target.value }))
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">Notes</Label>
+              <Textarea
+                data-ocid="invoices.create_invoice.notes_textarea"
+                placeholder="Optional notes for the client..."
+                rows={3}
+                value={invoiceForm.notes}
+                onChange={(e) =>
+                  setInvoiceForm((p) => ({ ...p, notes: e.target.value }))
+                }
+                className="resize-none"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                data-ocid="invoices.create_invoice.cancel_button"
+                onClick={() => setCreateInvoiceOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                data-ocid="invoices.create_invoice.submit_button"
+                disabled={creatingInvoice}
+              >
+                {creatingInvoice ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Invoice"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

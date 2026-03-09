@@ -36,6 +36,19 @@ export type BookingStatus = { 'pending' : null } |
   { 'completed' : null } |
   { 'rejected' : null } |
   { 'confirmed' : null };
+export interface Invoice {
+  'id' : bigint,
+  'status' : InvoiceStatus,
+  'serviceType' : string,
+  'createdAt' : bigint,
+  'dueDate' : string,
+  'currency' : string,
+  'notes' : string,
+  'clientUserId' : bigint,
+  'amount' : bigint,
+}
+export type InvoiceStatus = { 'paid' : null } |
+  { 'unpaid' : null };
 export interface Lead {
   'id' : bigint,
   'service' : string,
@@ -88,6 +101,7 @@ export interface _SERVICE {
   'adminResetPassword' : ActorMethod<[bigint, string], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignStaffToRequest' : ActorMethod<[bigint, bigint], boolean>,
+  'cancelServiceRequest' : ActorMethod<[bigint], boolean>,
   'changePassword' : ActorMethod<
     [string, string],
     { 'ok' : null } |
@@ -96,6 +110,10 @@ export interface _SERVICE {
   'createBlogPost' : ActorMethod<[string, string, string, string], bigint>,
   'createBooking' : ActorMethod<
     [string, string, string, string, string, string, string],
+    bigint
+  >,
+  'createInvoice' : ActorMethod<
+    [bigint, string, bigint, string, string, string],
     bigint
   >,
   'createServiceRequest' : ActorMethod<
@@ -128,9 +146,11 @@ export interface _SERVICE {
   'initAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listAllBlogPosts' : ActorMethod<[], Array<BlogPost>>,
+  'listAllInvoices' : ActorMethod<[], Array<Invoice>>,
   'listAllServiceRequests' : ActorMethod<[], Array<ServiceRequest>>,
   'listBlogPosts' : ActorMethod<[], Array<BlogPost>>,
   'listBookings' : ActorMethod<[], Array<Booking>>,
+  'listClientInvoices' : ActorMethod<[bigint], Array<Invoice>>,
   'listUsers' : ActorMethod<[], Array<User>>,
   'login' : ActorMethod<
     [string, string],
@@ -145,6 +165,7 @@ export interface _SERVICE {
     boolean
   >,
   'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], boolean>,
+  'updateInvoiceStatus' : ActorMethod<[bigint, InvoiceStatus], boolean>,
   'updateLeadStatus' : ActorMethod<[bigint, LeadStatus], boolean>,
   'updateServiceRequestStatus' : ActorMethod<
     [bigint, ServiceRequestStatus],

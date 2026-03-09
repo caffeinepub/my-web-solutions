@@ -57,6 +57,17 @@ export interface Booking {
     preferredTime: string;
     phone: string;
 }
+export interface Invoice {
+    id: bigint;
+    status: InvoiceStatus;
+    serviceType: string;
+    createdAt: bigint;
+    dueDate: string;
+    currency: string;
+    notes: string;
+    clientUserId: bigint;
+    amount: bigint;
+}
 export interface UserProfile {
     username: string;
     userId: bigint;
@@ -68,6 +79,10 @@ export enum BookingStatus {
     completed = "completed",
     rejected = "rejected",
     confirmed = "confirmed"
+}
+export enum InvoiceStatus {
+    paid = "paid",
+    unpaid = "unpaid"
 }
 export enum LeadStatus {
     new_ = "new",
@@ -94,6 +109,7 @@ export interface backendInterface {
     adminResetPassword(userId: bigint, newPasswordHash: string): Promise<boolean>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignStaffToRequest(requestId: bigint, staffUserId: bigint): Promise<boolean>;
+    cancelServiceRequest(id: bigint): Promise<boolean>;
     changePassword(oldPasswordHash: string, newPasswordHash: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -103,6 +119,7 @@ export interface backendInterface {
     }>;
     createBlogPost(title: string, content: string, excerpt: string, authorName: string): Promise<bigint>;
     createBooking(name: string, phone: string, email: string, service: string, preferredDate: string, preferredTime: string, message: string): Promise<bigint>;
+    createInvoice(clientUserId: bigint, serviceType: string, amount: bigint, currency: string, dueDate: string, notes: string): Promise<bigint>;
     createServiceRequest(clientUserId: bigint, clientName: string, serviceType: string, description: string): Promise<bigint>;
     createUser(username: string, passwordHash: string, role: Role): Promise<bigint>;
     deleteBlogPost(id: bigint): Promise<boolean>;
@@ -127,9 +144,11 @@ export interface backendInterface {
     initAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     listAllBlogPosts(): Promise<Array<BlogPost>>;
+    listAllInvoices(): Promise<Array<Invoice>>;
     listAllServiceRequests(): Promise<Array<ServiceRequest>>;
     listBlogPosts(): Promise<Array<BlogPost>>;
     listBookings(): Promise<Array<Booking>>;
+    listClientInvoices(clientUserId: bigint): Promise<Array<Invoice>>;
     listUsers(): Promise<Array<User>>;
     login(username: string, passwordHash: string): Promise<{
         __kind__: "ok";
@@ -146,6 +165,7 @@ export interface backendInterface {
     toggleUserActive(userId: bigint): Promise<boolean>;
     updateBlogPost(id: bigint, title: string, content: string, excerpt: string, isPublished: boolean): Promise<boolean>;
     updateBookingStatus(id: bigint, status: BookingStatus): Promise<boolean>;
+    updateInvoiceStatus(id: bigint, status: InvoiceStatus): Promise<boolean>;
     updateLeadStatus(id: bigint, status: LeadStatus): Promise<boolean>;
     updateServiceRequestStatus(id: bigint, status: ServiceRequestStatus): Promise<boolean>;
 }

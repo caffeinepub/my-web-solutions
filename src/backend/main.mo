@@ -8,10 +8,10 @@ import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 import Order "mo:core/Order";
 
-
-
+(with migration = Migration.run)
 actor {
   // Authorization
   let accessControlState = AccessControl.initState();
@@ -139,6 +139,23 @@ actor {
     createdAt : Int;
   };
 
+  type InvoiceStatus = {
+    #unpaid;
+    #paid;
+  };
+
+  type Invoice = {
+    id : Nat;
+    clientUserId : Nat;
+    serviceType : Text;
+    amount : Nat;
+    currency : Text;
+    status : InvoiceStatus;
+    dueDate : Text;
+    notes : Text;
+    createdAt : Int;
+  };
+
   // Storage
   let leads = Map.empty<Nat, Lead>();
   var nextLeadId = 1;
@@ -156,6 +173,9 @@ actor {
 
   let bookings = Map.empty<Nat, Booking>();
   var nextBookingId = 1;
+
+  let invoices = Map.empty<Nat, Invoice>();
+  var nextInvoiceId = 1;
 
   // Helper function to check if caller is admin or staff
   func isAdminOrStaff(caller : Principal) : Bool {
@@ -782,6 +802,110 @@ actor {
       case (null) { false };
       case (?_booking) {
         bookings.remove(id);
+        true;
+      };
+    };
+  };
+
+  // INVOICE SYSTEM
+  public shared ({ caller }) func createInvoice(clientUserId : Nat, serviceType : Text, amount : Nat, currency : Text, dueDate : Text, notes : Text) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can create invoices");
+    };
+
+    let invoice : Invoice = {
+      id = nextInvoiceId;
+      clientUserId;
+      serviceType;
+      amount;
+      currency;
+      status = #unpaid;
+      dueDate;
+      notes;
+      createdAt = Time.now();
+    };
+
+    invoices.add(nextInvoiceId, invoice);
+    nextInvoiceId += 1;
+    invoice.id;
+  };
+
+  public query ({ caller }) func listClientInvoices(clientUserId : Nat) : async [Invoice] {
+    // Must be authenticated user
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view invoices");
+    };
+
+    // Check if caller is admin or the client themselves (by userId in profile)
+    let callerProfile = userProfiles.get(caller);
+    let isAuthorized = switch (callerProfile) {
+      case (null) { false };
+      case (?profile) {
+        AccessControl.isAdmin(accessControlState, caller) or profile.userId == clientUserId;
+      };
+    };
+
+    if (not isAuthorized) {
+      Runtime.trap("Unauthorized: Can only access your own invoices");
+    };
+
+    let clientInvoices = invoices.values().toArray().filter(
+      func(invoice) { invoice.clientUserId == clientUserId }
+    );
+    clientInvoices;
+  };
+
+  public shared ({ caller }) func updateInvoiceStatus(id : Nat, status : InvoiceStatus) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update invoice status");
+    };
+
+    switch (invoices.get(id)) {
+      case (null) { false };
+      case (?invoice) {
+        let updatedInvoice = { invoice with status };
+        invoices.add(id, updatedInvoice);
+        true;
+      };
+    };
+  };
+
+  public query ({ caller }) func listAllInvoices() : async [Invoice] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can list all invoices");
+    };
+    invoices.values().toArray();
+  };
+
+  // CANCEL SERVICE REQUEST
+  public shared ({ caller }) func cancelServiceRequest(id : Nat) : async Bool {
+    // Must be authenticated user
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can cancel service requests");
+    };
+
+    switch (serviceRequests.get(id)) {
+      case (null) { false };
+      case (?serviceRequest) {
+        // Only pending requests can be cancelled
+        if (serviceRequest.status != #pending) {
+          Runtime.trap("Cannot cancel: Only pending requests can be cancelled");
+        };
+
+        // Check if caller is admin or the client who owns the request
+        let callerProfile = userProfiles.get(caller);
+        let isAuthorized = switch (callerProfile) {
+          case (null) { false };
+          case (?profile) {
+            AccessControl.isAdmin(accessControlState, caller) or profile.userId == serviceRequest.clientUserId;
+          };
+        };
+
+        if (not isAuthorized) {
+          Runtime.trap("Unauthorized: Can only cancel your own service requests");
+        };
+
+        serviceRequests.remove(id);
         true;
       };
     };

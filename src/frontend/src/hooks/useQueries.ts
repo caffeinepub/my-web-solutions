@@ -529,3 +529,102 @@ export function useDeleteBooking() {
     },
   });
 }
+
+// ─── Invoices ─────────────────────────────────────────────────────────────────
+
+import type { Invoice, InvoiceStatus } from "../backend.d";
+
+export function useListClientInvoices(clientUserId: bigint | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<Invoice[]>({
+    queryKey: ["client-invoices", clientUserId?.toString()],
+    queryFn: async () => {
+      if (!actor || clientUserId === null) return [];
+      return actor.listClientInvoices(clientUserId);
+    },
+    enabled: !!actor && !isFetching && clientUserId !== null,
+  });
+}
+
+export function useListAllInvoices() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Invoice[]>({
+    queryKey: ["invoices-all"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listAllInvoices();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateInvoice() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      clientUserId,
+      serviceType,
+      amount,
+      currency,
+      dueDate,
+      notes,
+    }: {
+      clientUserId: bigint;
+      serviceType: string;
+      amount: bigint;
+      currency: string;
+      dueDate: string;
+      notes: string;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.createInvoice(
+        clientUserId,
+        serviceType,
+        amount,
+        currency,
+        dueDate,
+        notes,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices-all"] });
+      queryClient.invalidateQueries({ queryKey: ["client-invoices"] });
+    },
+  });
+}
+
+export function useUpdateInvoiceStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: { id: bigint; status: InvoiceStatus }) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.updateInvoiceStatus(id, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices-all"] });
+      queryClient.invalidateQueries({ queryKey: ["client-invoices"] });
+    },
+  });
+}
+
+// ─── Cancel Service Request ────────────────────────────────────────────────────
+
+export function useCancelServiceRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.cancelServiceRequest(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-requests-client"] });
+      queryClient.invalidateQueries({ queryKey: ["service-requests-all"] });
+    },
+  });
+}

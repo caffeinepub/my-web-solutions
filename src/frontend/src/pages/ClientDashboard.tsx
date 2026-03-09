@@ -1,4 +1,14 @@
-import { ServiceRequestStatus } from "@/backend.d";
+import { InvoiceStatus, ServiceRequestStatus } from "@/backend.d";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,13 +31,17 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  useCancelServiceRequest,
   useChangePassword,
   useCreateServiceRequest,
   useGetClientServiceRequests,
+  useListClientInvoices,
+  useListUsers,
 } from "@/hooks/useQueries";
 import { clearSession, getSession, hashPassword } from "@/utils/auth";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  Bell,
   CheckCircle2,
   ClipboardList,
   Clock,
@@ -39,9 +53,10 @@ import {
   MessageCircle,
   Plus,
   UserCircle2,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const WA_LINK = "https://wa.me/919901563799";
@@ -101,7 +116,29 @@ function formatDate(ts: bigint) {
   });
 }
 
-type SideTab = "overview" | "requests" | "invoices" | "profile";
+function formatDateTime(ts: bigint) {
+  return new Date(Number(ts) / 1_000_000).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatAmount(amount: bigint, currency: string) {
+  const num = Number(amount);
+  const formatted = new Intl.NumberFormat("en-IN").format(num);
+  if (currency === "INR") return `₹${formatted}`;
+  return `${currency} ${formatted}`;
+}
+
+type SideTab =
+  | "overview"
+  | "requests"
+  | "invoices"
+  | "profile"
+  | "notifications";
 
 export function ClientDashboard() {
   const navigate = useNavigate();
@@ -121,6 +158,10 @@ export function ClientDashboard() {
     description: "",
   });
 
+  // Cancel request state
+  const [cancelRequestId, setCancelRequestId] = useState<bigint | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
   // Change password form
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const { mutateAsync: changePassword, isPending: changingPw } =
@@ -133,6 +174,39 @@ export function ClientDashboard() {
     useGetClientServiceRequests(clientUserId);
   const { mutateAsync: createRequest, isPending: creating } =
     useCreateServiceRequest();
+  const { mutateAsync: cancelRequest, isPending: cancelling } =
+    useCancelServiceRequest();
+
+  const { data: invoices = [], isLoading: invoicesLoading } =
+    useListClientInvoices(clientUserId);
+
+  const { data: users = [] } = useListUsers();
+
+  // ── Notification Center ────────────────────────────────────────────────────
+  const notifKey = `mws_notifications_seen_${session?.userId ?? "0"}`;
+  const [lastSeenTs, setLastSeenTs] = useState<number>(() => {
+    const stored = localStorage.getItem(notifKey);
+    return stored ? Number(stored) : 0;
+  });
+
+  // Notifications: requests that have changed to inProgress or completed after lastSeenTs
+  const notifications = useMemo(() => {
+    return requests
+      .filter((req) => {
+        if (req.status === ServiceRequestStatus.pending) return false;
+        return Number(req.updatedAt) / 1_000_000 > lastSeenTs;
+      })
+      .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt));
+  }, [requests, lastSeenTs]);
+
+  const unreadCount = notifications.length;
+
+  const handleMarkAllRead = () => {
+    const now = Date.now();
+    localStorage.setItem(notifKey, String(now));
+    setLastSeenTs(now);
+    toast.success("All notifications marked as read");
+  };
 
   const handleLogout = () => {
     clearSession();
@@ -162,6 +236,18 @@ export function ClientDashboard() {
       setRequestForm({ serviceType: "", description: "" });
     } catch {
       toast.error("Failed to submit request. Please try again.");
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!cancelRequestId) return;
+    try {
+      await cancelRequest(cancelRequestId);
+      toast.success("Request cancelled successfully");
+      setCancelDialogOpen(false);
+      setCancelRequestId(null);
+    } catch {
+      toast.error("Failed to cancel request. Please try again.");
     }
   };
 
@@ -213,6 +299,13 @@ export function ClientDashboard() {
   const completed = requests.filter(
     (r) => r.status === ServiceRequestStatus.completed,
   ).length;
+
+  // Staff name lookup helper
+  const getStaffName = (staffId: bigint | undefined) => {
+    if (!staffId) return null;
+    const staff = users.find((u) => u.id === staffId);
+    return staff?.username ?? null;
+  };
 
   const navItems = [
     {
@@ -278,6 +371,33 @@ export function ClientDashboard() {
               {item.label}
             </button>
           ))}
+
+          {/* Notification Bell */}
+          <button
+            type="button"
+            data-ocid="client_dashboard.notifications.tab"
+            onClick={() => setActiveTab("notifications")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
+              activeTab === "notifications"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            <div className="relative">
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
+            Notifications
+            {unreadCount > 0 && (
+              <span className="ml-auto text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-semibold">
+                {unreadCount}
+              </span>
+            )}
+          </button>
         </nav>
 
         {/* WhatsApp Support Button */}
@@ -425,22 +545,31 @@ export function ClientDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {sortedRequests.slice(0, 3).map((req) => (
-                      <div
-                        key={req.id.toString()}
-                        className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
-                      >
-                        <div>
-                          <p className="font-medium text-sm text-foreground">
-                            {req.serviceType}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDate(req.createdAt)}
-                          </p>
+                    {sortedRequests.slice(0, 3).map((req) => {
+                      const staffName = getStaffName(req.assignedStaffId);
+                      return (
+                        <div
+                          key={req.id.toString()}
+                          className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
+                        >
+                          <div className="flex-1 min-w-0 mr-3">
+                            <p className="font-medium text-sm text-foreground">
+                              {req.serviceType}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatDate(req.createdAt)}
+                            </p>
+                            {staffName && (
+                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                <UserCircle2 className="w-3 h-3" />
+                                Assigned: {staffName}
+                              </p>
+                            )}
+                          </div>
+                          <StatusBadge status={req.status} />
                         </div>
-                        <StatusBadge status={req.status} />
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -558,42 +687,69 @@ export function ClientDashboard() {
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {sortedRequests.map((req, index) => (
-                      <div
-                        key={req.id.toString()}
-                        data-ocid={`client_dashboard.requests.item.${index + 1}`}
-                        className={`p-5 flex items-start gap-4 border-l-4 ${timelineColor(req.status)}`}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm text-foreground mb-1">
-                                {req.serviceType}
-                              </p>
-                              <p className="text-sm text-muted-foreground line-clamp-2">
-                                {req.description}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1.5">
-                                Submitted on {formatDate(req.createdAt)}
-                              </p>
+                    {sortedRequests.map((req, index) => {
+                      const staffName = getStaffName(req.assignedStaffId);
+                      const isPending =
+                        req.status === ServiceRequestStatus.pending;
+
+                      return (
+                        <div
+                          key={req.id.toString()}
+                          data-ocid={`client_dashboard.requests.item.${index + 1}`}
+                          className={`p-5 flex items-start gap-4 border-l-4 ${timelineColor(req.status)}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm text-foreground mb-1">
+                                  {req.serviceType}
+                                </p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {req.description}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1.5">
+                                  Submitted on {formatDate(req.createdAt)}
+                                </p>
+                                {staffName && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                    <UserCircle2 className="w-3 h-3" />
+                                    Assigned: {staffName}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="shrink-0 flex flex-col items-end gap-2">
+                                <StatusBadge status={req.status} />
+                                {isPending && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                                    data-ocid={`client_dashboard.requests.cancel_button.${index + 1}`}
+                                    onClick={() => {
+                                      setCancelRequestId(req.id);
+                                      setCancelDialogOpen(true);
+                                    }}
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            <div className="shrink-0">
-                              <StatusBadge status={req.status} />
-                            </div>
+                            {req.staffNote && (
+                              <div className="mt-2 bg-muted/50 rounded-md p-2.5">
+                                <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                                  Staff Note
+                                </p>
+                                <p className="text-sm text-foreground">
+                                  {req.staffNote}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                          {req.staffNote && (
-                            <div className="mt-2 bg-muted/50 rounded-md p-2.5">
-                              <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                                Staff Note
-                              </p>
-                              <p className="text-sm text-foreground">
-                                {req.staffNote}
-                              </p>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -618,36 +774,194 @@ export function ClientDashboard() {
               </p>
             </div>
 
-            <Card>
-              <CardContent className="p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-7 h-7 text-primary" />
-                </div>
-                <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                  No Invoices Yet
-                </h2>
-                <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
-                  Your invoices will appear here once your services are
-                  completed. For billing queries, contact us directly on
-                  WhatsApp.
-                </p>
-                <Button
-                  asChild
-                  size="sm"
-                  className="font-semibold"
-                  data-ocid="client_dashboard.invoices.whatsapp_button"
-                >
-                  <a
-                    href={`${WA_LINK}?text=Hi, I have a billing query regarding my invoice.`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+            {invoicesLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
+              </div>
+            ) : invoices.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                    No Invoices Yet
+                  </h2>
+                  <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
+                    Your invoices will appear here once your services are
+                    completed. For billing queries, contact us directly on
+                    WhatsApp.
+                  </p>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="font-semibold"
+                    data-ocid="client_dashboard.invoices.whatsapp_button"
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Contact on WhatsApp
-                  </a>
+                    <a
+                      href={`${WA_LINK}?text=Hi, I have a billing query regarding my invoice.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Contact on WhatsApp
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {invoices.map((invoice, index) => {
+                  const isPaid = invoice.status === InvoiceStatus.paid;
+                  return (
+                    <Card
+                      key={invoice.id.toString()}
+                      data-ocid={`client_dashboard.invoices.item.${index + 1}`}
+                      className={`border-l-4 ${isPaid ? "border-l-green-500" : "border-l-orange-400"}`}
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-foreground mb-1">
+                              {invoice.serviceType}
+                            </p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+                              <span>
+                                Due:{" "}
+                                <span className="font-medium text-foreground">
+                                  {invoice.dueDate}
+                                </span>
+                              </span>
+                              <span>
+                                Issued: {formatDate(invoice.createdAt)}
+                              </span>
+                            </div>
+                            {invoice.notes && (
+                              <p className="text-xs text-muted-foreground mt-1.5">
+                                {invoice.notes}
+                              </p>
+                            )}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="font-display text-lg font-bold text-foreground">
+                              {formatAmount(invoice.amount, invoice.currency)}
+                            </p>
+                            <Badge
+                              className={`mt-1 ${
+                                isPaid
+                                  ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                  : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
+                              }`}
+                            >
+                              {isPaid ? "Paid" : "Unpaid"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── Notifications ── */}
+        {activeTab === "notifications" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Notifications
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Status updates on your service requests
+                </p>
+              </div>
+              {notifications.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  data-ocid="client_dashboard.notifications.mark_read_button"
+                  onClick={handleMarkAllRead}
+                >
+                  Mark all as read
                 </Button>
-              </CardContent>
-            </Card>
+              )}
+            </div>
+
+            {requestsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : notifications.length === 0 ? (
+              <Card>
+                <CardContent
+                  data-ocid="client_dashboard.notifications.empty_state"
+                  className="p-10 text-center"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Bell className="w-6 h-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="font-medium text-sm text-foreground mb-1">
+                    All caught up!
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    No new notifications. You'll be notified when your request
+                    status changes.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {notifications.map((req, index) => {
+                  const isCompleted =
+                    req.status === ServiceRequestStatus.completed;
+                  return (
+                    <Card
+                      key={req.id.toString()}
+                      data-ocid={`client_dashboard.notifications.item.${index + 1}`}
+                      className={`border-l-4 ${isCompleted ? "border-l-green-500" : "border-l-blue-500"}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-foreground">
+                              <span className="font-semibold">
+                                {req.serviceType}
+                              </span>{" "}
+                              moved to{" "}
+                              <span
+                                className={
+                                  isCompleted
+                                    ? "text-green-600 font-semibold"
+                                    : "text-blue-600 font-semibold"
+                                }
+                              >
+                                {isCompleted ? "Completed" : "In Progress"}
+                              </span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatDateTime(req.updatedAt)}
+                            </p>
+                          </div>
+                          <StatusBadge status={req.status} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -844,6 +1158,45 @@ export function ClientDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Request Confirm Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent data-ocid="client_dashboard.cancel_request.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The request will be removed from
+              your active requests.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              data-ocid="client_dashboard.cancel_request.cancel_button"
+              onClick={() => {
+                setCancelDialogOpen(false);
+                setCancelRequestId(null);
+              }}
+            >
+              Keep Request
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-ocid="client_dashboard.cancel_request.confirm_button"
+              onClick={handleCancelRequest}
+              disabled={cancelling}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                "Yes, Cancel Request"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
