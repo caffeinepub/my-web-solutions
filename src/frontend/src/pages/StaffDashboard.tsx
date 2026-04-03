@@ -355,6 +355,29 @@ const REQUEST_FILTERS: {
   },
 ];
 
+type Priority = "high" | "medium" | "low";
+
+function PriorityBadge({ priority }: { priority: Priority }) {
+  const styles: Record<Priority, string> = {
+    high: "bg-red-100 text-red-800 border-red-200",
+    medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    low: "bg-gray-100 text-gray-700 border-gray-200",
+  };
+  const dots: Record<Priority, string> = {
+    high: "bg-red-500",
+    medium: "bg-yellow-500",
+    low: "bg-gray-400",
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${styles[priority]}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${dots[priority]}`} />
+      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+    </span>
+  );
+}
+
 export function StaffDashboard() {
   const navigate = useNavigate();
   const session = getSession();
@@ -374,6 +397,18 @@ export function StaffDashboard() {
   const [noteCurrentValue, setNoteCurrentValue] = useState("");
   const [requestFilter, setRequestFilter] =
     useState<RequestFilterStatus>("all");
+  const [priorityFilter, setPriorityFilter] = useState<
+    "all" | "high" | "medium" | "low"
+  >("all");
+  const [priorities, setPriorities] = useState<
+    Record<string, "high" | "medium" | "low">
+  >(() => {
+    try {
+      return JSON.parse(localStorage.getItem("mws_staff_priorities") || "{}");
+    } catch {
+      return {};
+    }
+  });
 
   const staffUserId = session?.userId ? BigInt(session.userId) : null;
 
@@ -417,7 +452,11 @@ export function StaffDashboard() {
         : "bg-yellow-500";
 
   // Filtered service requests
-  const filteredRequests =
+  useEffect(() => {
+    localStorage.setItem("mws_staff_priorities", JSON.stringify(priorities));
+  }, [priorities]);
+
+  const baseFilteredRequests =
     requestFilter === "all"
       ? serviceRequests
       : serviceRequests.filter((r) => {
@@ -429,6 +468,13 @@ export function StaffDashboard() {
             return r.status === ServiceRequestStatus.completed;
           return true;
         });
+
+  const filteredRequests =
+    priorityFilter === "all"
+      ? baseFilteredRequests
+      : baseFilteredRequests.filter(
+          (r) => (priorities[r.id.toString()] ?? "medium") === priorityFilter,
+        );
 
   // Upcoming bookings: pending + confirmed only
   const upcomingBookings = allBookings.filter(
@@ -801,6 +847,40 @@ export function StaffDashboard() {
                 ))}
               </div>
 
+              {/* Priority Filter Pills */}
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    { label: "All Priorities", value: "all" },
+                    { label: "High", value: "high" },
+                    { label: "Medium", value: "medium" },
+                    { label: "Low", value: "low" },
+                  ] as {
+                    label: string;
+                    value: "all" | "high" | "medium" | "low";
+                  }[]
+                ).map((p) => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setPriorityFilter(p.value)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      priorityFilter === p.value
+                        ? p.value === "high"
+                          ? "bg-red-100 text-red-800 border-red-300"
+                          : p.value === "medium"
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                            : p.value === "low"
+                              ? "bg-gray-100 text-gray-700 border-gray-300"
+                              : "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
               <Card>
                 <CardContent className="p-0">
                   {srLoading ? (
@@ -849,6 +929,38 @@ export function StaffDashboard() {
                               </TableCell>
                               <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
                                 {req.description}
+                              </TableCell>
+                              {/* Priority Column */}
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <PriorityBadge
+                                    priority={
+                                      priorities[req.id.toString()] ?? "medium"
+                                    }
+                                  />
+                                  <Select
+                                    value={
+                                      priorities[req.id.toString()] ?? "medium"
+                                    }
+                                    onValueChange={(v) =>
+                                      setPriorities((p) => ({
+                                        ...p,
+                                        [req.id.toString()]: v as Priority,
+                                      }))
+                                    }
+                                  >
+                                    <SelectTrigger className="h-7 text-xs w-24">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="high">High</SelectItem>
+                                      <SelectItem value="medium">
+                                        Medium
+                                      </SelectItem>
+                                      <SelectItem value="low">Low</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </TableCell>
                               {/* Note Column */}
                               <TableCell className="max-w-[120px]">

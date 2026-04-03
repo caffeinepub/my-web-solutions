@@ -141,6 +141,45 @@ type SideTab =
   | "profile"
   | "notifications";
 
+function ProjectProgressStepper({ status }: { status: ServiceRequestStatus }) {
+  const steps = ["Submitted", "Under Review", "In Progress", "Completed"];
+  const activeIndex =
+    status === ServiceRequestStatus.pending
+      ? 1
+      : status === ServiceRequestStatus.inProgress
+        ? 2
+        : 3;
+  return (
+    <div className="flex items-center gap-0 mt-3">
+      {steps.map((step, i) => {
+        const isDone = i < activeIndex;
+        const isCurrent = i === activeIndex;
+        return (
+          <div key={step} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 ${isDone ? "bg-primary border-primary text-white" : isCurrent ? "bg-white border-primary text-primary" : "bg-white border-muted-foreground/30 text-muted-foreground/50"}`}
+              >
+                {isDone ? "✓" : i + 1}
+              </div>
+              <span
+                className={`text-[10px] mt-1 whitespace-nowrap ${isDone ? "text-primary font-medium" : isCurrent ? "text-primary font-semibold" : "text-muted-foreground/50"}`}
+              >
+                {step}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={`h-0.5 flex-1 mx-1 mb-4 ${i < activeIndex ? "bg-primary" : "bg-muted-foreground/20"}`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ClientDashboard() {
   const navigate = useNavigate();
   const session = getSession();
@@ -596,23 +635,26 @@ export function ClientDashboard() {
                         return (
                           <div
                             key={req.id.toString()}
-                            className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
+                            className={`py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
                           >
-                            <div className="flex-1 min-w-0 mr-3">
-                              <p className="font-medium text-sm text-foreground">
-                                {req.serviceType}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {formatDate(req.createdAt)}
-                              </p>
-                              {staffName && (
-                                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                  <UserCircle2 className="w-3 h-3" />
-                                  Assigned: {staffName}
+                            <div className="flex items-center justify-between mr-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-foreground">
+                                  {req.serviceType}
                                 </p>
-                              )}
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {formatDate(req.createdAt)}
+                                </p>
+                                {staffName && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                    <UserCircle2 className="w-3 h-3" />
+                                    Assigned: {staffName}
+                                  </p>
+                                )}
+                              </div>
+                              <StatusBadge status={req.status} />
                             </div>
-                            <StatusBadge status={req.status} />
+                            <ProjectProgressStepper status={req.status} />
                           </div>
                         );
                       })}
@@ -792,6 +834,7 @@ export function ClientDashboard() {
                                   </p>
                                 </div>
                               )}
+                              <ProjectProgressStepper status={req.status} />
                             </div>
                           </div>
                         );

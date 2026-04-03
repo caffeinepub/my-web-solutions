@@ -108,6 +108,9 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -1154,6 +1157,166 @@ export function AdminDashboard() {
                                   }
                                 />
                               ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* ── Insight Summary Bar ── */}
+                  {statsLoading ? (
+                    <div className="flex gap-3">
+                      <Skeleton className="h-9 w-44 rounded-full" />
+                      <Skeleton className="h-9 w-48 rounded-full" />
+                    </div>
+                  ) : (
+                    revenueStats && (
+                      <div className="flex flex-wrap gap-3">
+                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-green-50 text-green-700 border border-green-200">
+                          {Number(revenueStats.totalLeads) > 0
+                            ? Math.round(
+                                (Number(revenueStats.resolvedLeads) /
+                                  Number(revenueStats.totalLeads)) *
+                                  100,
+                              )
+                            : 0}
+                          % Leads Resolved
+                        </span>
+                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                          {Number(revenueStats.totalRequests) > 0
+                            ? Math.round(
+                                (Number(revenueStats.completedRequests) /
+                                  Number(revenueStats.totalRequests)) *
+                                  100,
+                              )
+                            : 0}
+                          % Requests Completed
+                        </span>
+                      </div>
+                    )
+                  )}
+
+                  {/* ── Service Requests by Status (Pie/Donut) ── */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Service Requests by Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div style={{ height: 260 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: "Pending", value: pendingSR },
+                                { name: "In Progress", value: inProgressSR },
+                                { name: "Completed", value: completedSR },
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={90}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              <Cell fill="#f59e0b" />
+                              <Cell fill="#3b82f6" />
+                              <Cell fill="#22c55e" />
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                background: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                                fontSize: "12px",
+                              }}
+                            />
+                            <Legend
+                              iconType="circle"
+                              iconSize={8}
+                              formatter={(value) => (
+                                <span className="text-xs text-muted-foreground">
+                                  {value}
+                                </span>
+                              )}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* ── Bookings by Status (Horizontal Bar) ── */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Bookings by Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div style={{ height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            layout="vertical"
+                            data={[
+                              {
+                                name: "Pending",
+                                count: bookings.filter(
+                                  (b) => b.status === BookingStatus.pending,
+                                ).length,
+                                fill: "#f59e0b",
+                              },
+                              {
+                                name: "Confirmed",
+                                count: bookings.filter(
+                                  (b) => b.status === BookingStatus.confirmed,
+                                ).length,
+                                fill: "#3b82f6",
+                              },
+                              {
+                                name: "Completed",
+                                count: bookings.filter(
+                                  (b) => b.status === BookingStatus.completed,
+                                ).length,
+                                fill: "#22c55e",
+                              },
+                              {
+                                name: "Rejected",
+                                count: bookings.filter(
+                                  (b) => b.status === BookingStatus.rejected,
+                                ).length,
+                                fill: "#ef4444",
+                              },
+                            ]}
+                            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="hsl(var(--border))"
+                              horizontal={false}
+                            />
+                            <XAxis type="number" tick={{ fontSize: 11 }} />
+                            <YAxis
+                              dataKey="name"
+                              type="category"
+                              tick={{ fontSize: 11 }}
+                              width={70}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                background: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                                fontSize: "12px",
+                              }}
+                            />
+                            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                              <Cell fill="#f59e0b" />
+                              <Cell fill="#3b82f6" />
+                              <Cell fill="#22c55e" />
+                              <Cell fill="#ef4444" />
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
