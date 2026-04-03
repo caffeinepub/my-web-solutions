@@ -1,24 +1,24 @@
-# My Web Solutions — Batch 5: Business Features
+# My Web Solutions
 
 ## Current State
-- Client Dashboard has an Invoices tab showing invoice cards (service type, amount, due date, paid/unpaid status). No PDF download option exists.
-- Admin Dashboard Leads tab displays a table of all leads with name, phone, service, message, status, date, and a status-update select. No WhatsApp quick-message button exists on leads.
-- Admin Dashboard Bookings tab already has a WhatsApp Notify button when a booking is confirmed (pre-built pattern to follow).
+The Footer component uses `bg-navy-deep` (dark navy, OKLCH lightness ~0.18) as background, but the text color is `text-sidebar-foreground` which maps to `--sidebar-foreground: 0.18 0.03 255` -- also very dark (lightness 0.18). This makes all footer text nearly invisible (dark on dark). Social icons, navigation links, contact details, and newsletter section are all affected.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Invoice PDF Download** (Client Dashboard → Invoices tab): A "Download PDF" button on each invoice card that generates a styled PDF (using browser-native print-to-PDF via a hidden iframe / window.print approach, or jsPDF canvas approach) containing invoice details: My Web Solutions header, invoice ID, client name, service type, amount, due date, status, issue date, notes.
-- **WhatsApp Templates for Leads** (Admin Dashboard → Leads tab): A WhatsApp icon button per lead row that opens a pre-filled WhatsApp message in a new tab. The template should read: "Hi [name], thank you for reaching out about [service]. We've received your inquiry and will get back to you shortly. - My Web Solutions" directed to +91[phone].
+- Nothing new
 
 ### Modify
-- Client Dashboard invoice card: add a "Download PDF" button (outline, small) in the bottom-right of each invoice card.
-- Admin Dashboard leads table: add a "WhatsApp" action column or append a WhatsApp button to the existing Update column next to the status select.
+- Footer.tsx: Replace all `text-sidebar-foreground/*` and `bg-sidebar-foreground/*` and `border-sidebar-foreground/*` classes with proper light equivalents that are readable on dark navy background
+- Specifically: text should be white/light variants (`text-white`, `text-white/70`, `text-white/50`, etc.)
+- Social icon containers: use `bg-white/10`, `border-white/15`, hover states using teal color
+- Footer bottom strip: use `border-white/15` and `text-white/50`
+- Newsletter input: use `bg-white/10`, `border-white/20`, `text-white`, `placeholder:text-white/50`
 
 ### Remove
-- Nothing removed.
+- All dark `sidebar-foreground` color references in Footer.tsx
 
 ## Implementation Plan
-1. **Invoice PDF**: Use `jsPDF` (or a canvas-based approach with `html2canvas` + `jsPDF`) to generate a PDF from invoice data. Add a `downloadInvoicePDF` helper function that constructs a styled PDF document and triggers download. Add a Download button to each invoice card in `ClientDashboard.tsx`. If jsPDF is not available, use a pure CSS print approach via a hidden div and `window.print()`.
-2. **WhatsApp Lead Templates**: In `AdminDashboard.tsx`, add a green WhatsApp button per lead row. Construct the URL: `https://wa.me/91${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(template)}`. Place button in the leads table next to the status select (new "WhatsApp" column or inline).
-3. Validate, build, and deploy.
+1. Update Footer.tsx -- replace all dark sidebar-foreground color tokens with white/light variants suitable for a dark navy background
+2. Ensure social icons, nav links, contact info, newsletter, and bottom bar are all clearly visible
+3. Verify all hover states still work correctly

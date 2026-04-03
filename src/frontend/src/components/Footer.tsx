@@ -63,7 +63,7 @@ function FooterNewsletter() {
       <h4 className="font-display font-semibold text-white mb-4 text-sm uppercase tracking-wider">
         Newsletter
       </h4>
-      <p className="text-xs text-sidebar-foreground/60 mb-3 leading-relaxed">
+      <p className="text-xs text-white/60 mb-3 leading-relaxed">
         Tips on web, security &amp; government services.
       </p>
       {subscribed ? (
@@ -81,7 +81,7 @@ function FooterNewsletter() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             data-ocid="footer.newsletter.input"
-            className="h-9 text-sm bg-sidebar-foreground/10 border-sidebar-foreground/20 text-white placeholder:text-sidebar-foreground/50 focus-visible:ring-primary"
+            className="h-9 text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/50"
           />
           <Button
             type="submit"
@@ -104,7 +104,7 @@ export function Footer() {
     typeof window !== "undefined" ? window.location.hostname : "";
 
   return (
-    <footer className="bg-navy-deep text-sidebar-foreground">
+    <footer className="bg-navy-deep text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
@@ -117,34 +117,34 @@ export function Footer() {
                 My Web Solutions
               </span>
             </div>
-            <p className="text-sm text-sidebar-foreground/70 leading-relaxed max-w-xs">
+            <p className="text-sm text-white/70 leading-relaxed max-w-xs">
               Professional web development, SaaS solutions, and IT certification
               services tailored for businesses across India.
             </p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-sidebar-foreground/70">
+            <div className="mt-4 flex flex-col gap-2 text-sm text-white/70">
               <a
                 href="tel:+919901563799"
-                className="flex items-center gap-2 hover:text-teal transition-colors"
+                className="flex items-center gap-2 hover:text-blue-300 transition-colors"
               >
-                <Phone className="w-4 h-4 text-teal" />
+                <Phone className="w-4 h-4 text-blue-300" />
                 +91 99015 63799
               </a>
               <a
                 href="mailto:mywebsoloutions97@gmail.com"
-                className="flex items-center gap-2 hover:text-teal transition-colors"
+                className="flex items-center gap-2 hover:text-blue-300 transition-colors"
               >
-                <Mail className="w-4 h-4 text-teal" />
+                <Mail className="w-4 h-4 text-blue-300" />
                 mywebsoloutions97@gmail.com
               </a>
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-teal flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-blue-300 flex-shrink-0" />
                 Bengaluru, Karnataka, India
               </div>
             </div>
 
             {/* Social Icons */}
             <div className="mt-5">
-              <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mb-3 font-medium">
+              <p className="text-xs text-white/50 uppercase tracking-wider mb-3 font-medium">
                 Follow Us
               </p>
               <div className="flex items-center gap-2 flex-wrap">
@@ -157,7 +157,7 @@ export function Footer() {
                     title={social.title}
                     aria-label={social.title}
                     data-ocid="footer.social.link"
-                    className="w-9 h-9 rounded-lg bg-sidebar-foreground/10 border border-sidebar-foreground/15 flex items-center justify-center text-sidebar-foreground/60 hover:text-teal hover:bg-sidebar-foreground/20 hover:border-teal/40 transition-all duration-200"
+                    className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-white/60 hover:text-blue-300 hover:bg-white/20 hover:border-blue-300/40 transition-all duration-200"
                   >
                     <social.icon className="w-4 h-4" />
                   </a>
@@ -186,7 +186,7 @@ export function Footer() {
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="text-sidebar-foreground/70 hover:text-teal transition-colors"
+                    className="text-white/70 hover:text-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -212,7 +212,7 @@ export function Footer() {
                 <li key={s}>
                   <Link
                     to="/services"
-                    className="text-sidebar-foreground/70 hover:text-teal transition-colors"
+                    className="text-white/70 hover:text-white transition-colors"
                   >
                     {s}
                   </Link>
@@ -227,7 +227,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-sidebar-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-sidebar-foreground/50">
+        <div className="mt-10 pt-6 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <p>© {year} My Web Solutions. All rights reserved.</p>
           <p>
             Built with love using{" "}
@@ -235,7 +235,7 @@ export function Footer() {
               href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(hostname)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-teal hover:underline"
+              className="text-blue-300 hover:underline"
             >
               caffeine.ai
             </a>
