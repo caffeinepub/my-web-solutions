@@ -45,6 +45,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Download,
   FileText,
   Globe,
   LayoutDashboard,
@@ -328,6 +329,84 @@ export function ClientDashboard() {
     } catch {
       toast.error("Failed to change password");
     }
+  };
+
+  // ── Invoice PDF Download ──────────────────────────────────────────────────
+  const handleDownloadInvoice = (invoice: (typeof invoices)[number]) => {
+    const isPaid = invoice.status === InvoiceStatus.paid;
+    const issueDate = new Date(
+      Number(invoice.createdAt) / 1_000_000,
+    ).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const amount = formatAmount(invoice.amount, invoice.currency);
+    const invoiceId = invoice.id.toString();
+
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Invoice #${invoiceId} - My Web Solutions</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #fff; color: #1a1a1a; padding: 40px; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #2563eb; }
+  .company-name { font-size: 28px; font-weight: 900; color: #2563eb; letter-spacing: -0.5px; }
+  .company-subtitle { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .contact-info { font-size: 12px; color: #64748b; margin-top: 8px; }
+  .invoice-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; margin-top: 30px; }
+  .invoice-id { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th { background: #2563eb; color: white; text-align: left; padding: 10px 14px; font-size: 13px; font-weight: 600; }
+  td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+  .badge-paid { background: #dcfce7; color: #16a34a; }
+  .badge-unpaid { background: #ffedd5; color: #ea580c; }
+  .footer { margin-top: 40px; text-align: center; font-size: 13px; color: #64748b; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="company-name">My Web Solutions</div>
+    <div class="company-subtitle">Professional Web &amp; SaaS Services</div>
+    <div class="contact-info">mywebsolutions97@gmail.com &nbsp;|&nbsp; WhatsApp: +91 9901563799</div>
+  </div>
+  <div class="invoice-title">INVOICE</div>
+  <div class="invoice-id">Invoice ID: #${invoiceId}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Service</strong></td><td>${invoice.serviceType}</td></tr>
+      <tr><td><strong>Amount</strong></td><td>${amount}</td></tr>
+      <tr><td><strong>Status</strong></td><td><span class="badge ${isPaid ? "badge-paid" : "badge-unpaid"}">${isPaid ? "Paid" : "Unpaid"}</span></td></tr>
+      <tr><td><strong>Issue Date</strong></td><td>${issueDate}</td></tr>
+      <tr><td><strong>Due Date</strong></td><td>${invoice.dueDate}</td></tr>
+      ${invoice.notes ? `<tr><td><strong>Notes</strong></td><td>${invoice.notes}</td></tr>` : ""}
+    </tbody>
+  </table>
+  <div class="footer">Thank you for your business! — My Web Solutions</div>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 300);
   };
 
   // Sort requests by createdAt descending (most recent first)
@@ -947,6 +1026,18 @@ export function ClientDashboard() {
                                 {isPaid ? "Paid" : "Unpaid"}
                               </Badge>
                             </div>
+                          </div>
+                          <div className="flex justify-end mt-3 pt-3 border-t border-border">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-3 text-xs gap-1.5"
+                              data-ocid={`client_dashboard.invoices.download_button.${index + 1}`}
+                              onClick={() => handleDownloadInvoice(invoice)}
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Download PDF
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>

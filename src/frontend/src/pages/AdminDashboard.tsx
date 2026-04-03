@@ -1429,33 +1429,45 @@ export function AdminDashboard() {
                                 {formatDate(lead.createdAt)}
                               </TableCell>
                               <TableCell>
-                                <Select
-                                  value={lead.status}
-                                  onValueChange={(v) =>
-                                    updateStatus({
-                                      id: lead.id,
-                                      status: v as LeadStatus,
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger
-                                    className="w-32 h-8 text-xs"
-                                    data-ocid={`leads.status_select.${index + 1}`}
+                                <div className="flex gap-2 items-center">
+                                  <a
+                                    href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, thank you for reaching out about ${lead.service}. We've received your inquiry and our team will get back to you shortly. - My Web Solutions`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-ocid={`leads.whatsapp_button.${index + 1}`}
+                                    className="inline-flex items-center gap-1 h-8 px-2 text-xs rounded-md bg-[#25D366] text-white font-medium hover:bg-[#1ebe5d] transition-colors"
                                   >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={LeadStatus.new_}>
-                                      New
-                                    </SelectItem>
-                                    <SelectItem value={LeadStatus.inProgress}>
-                                      In Progress
-                                    </SelectItem>
-                                    <SelectItem value={LeadStatus.resolved}>
-                                      Resolved
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                    <MessageCircle className="w-3 h-3" />
+                                    WhatsApp
+                                  </a>
+                                  <Select
+                                    value={lead.status}
+                                    onValueChange={(v) =>
+                                      updateStatus({
+                                        id: lead.id,
+                                        status: v as LeadStatus,
+                                      })
+                                    }
+                                  >
+                                    <SelectTrigger
+                                      className="w-32 h-8 text-xs"
+                                      data-ocid={`leads.status_select.${index + 1}`}
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={LeadStatus.new_}>
+                                        New
+                                      </SelectItem>
+                                      <SelectItem value={LeadStatus.inProgress}>
+                                        In Progress
+                                      </SelectItem>
+                                      <SelectItem value={LeadStatus.resolved}>
+                                        Resolved
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
