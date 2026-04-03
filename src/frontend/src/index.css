@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================
+   My Web Solutions — Design Tokens
+   Palette: White + Deep Royal Blue (light SaaS professional)
+   Typography: Cabinet Grotesk (display) + General Sans (body)
+   ========================================= */
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/assets/fonts/CabinetGrotesk-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "General Sans";
+  src: url("/assets/fonts/GeneralSans-Variable.woff2") format("woff2");
+  font-weight: 200 700;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Core palette — soft off-white + deep royal blue SaaS */
+    --background: 0.975 0.005 255;
+    --foreground: 0.13 0.025 255;
+
+    --card: 0.99 0.002 255;
+    --card-foreground: 0.13 0.025 255;
+
+    --popover: 0.99 0.002 255;
+    --popover-foreground: 0.13 0.025 255;
+
+    /* Primary: Deep Royal Blue */
+    --primary: 0.42 0.2 255;
+    --primary-foreground: 1 0 0;
+
+    /* Secondary: light blue-gray */
+    --secondary: 0.95 0.01 255;
+    --secondary-foreground: 0.22 0.04 255;
+
+    --muted: 0.95 0.008 255;
+    --muted-foreground: 0.48 0.02 255;
+
+    --accent: 0.93 0.04 255;
+    --accent-foreground: 0.25 0.08 255;
+
+    --destructive: 0.55 0.22 27;
+    --destructive-foreground: 1 0 0;
+
+    --border: 0.9 0.01 255;
+    --input: 0.9 0.01 255;
+    --ring: 0.42 0.2 255;
+
+    --chart-1: 0.42 0.2 255;
+    --chart-2: 0.58 0.16 240;
+    --chart-3: 0.65 0.12 220;
+    --chart-4: 0.72 0.1 200;
+    --chart-5: 0.5 0.22 27;
+
+    /* Sidebar tokens — light professional theme */
+    --sidebar: 0.98 0.003 255;
+    --sidebar-foreground: 0.18 0.03 255;
+    --sidebar-primary: 0.42 0.2 255;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.93 0.015 255;
+    --sidebar-accent-foreground: 0.22 0.04 255;
+    --sidebar-border: 0.88 0.015 255;
+    --sidebar-ring: 0.42 0.2 255;
+
+    /* Brand-specific extras */
+    --navy: 0.22 0.08 255;
+    --navy-deep: 0.18 0.08 255;
+    --teal: 0.42 0.2 255;
+    --teal-light: 0.65 0.15 255;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "General Sans", system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      oklch(0.42 0.2 255),
+      oklch(0.58 0.16 240)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-grid {
+    background-image: linear-gradient(
+        rgba(66, 120, 255, 0.04) 1px,
+        transparent 1px
+      ), linear-gradient(90deg, rgba(66, 120, 255, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .glass-card {
+    background: oklch(1 0 0 / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid oklch(0.9 0.01 255);
+  }
+
+  .nav-blur {
+    backdrop-filter: blur(16px);
+    background: oklch(0.99 0.002 255 / 0.96);
+  }
+}

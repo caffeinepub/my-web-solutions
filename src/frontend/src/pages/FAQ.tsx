@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import {
   Accordion,
@@ -149,6 +150,12 @@ export function FAQ() {
       className="min-h-screen flex flex-col bg-background"
       data-ocid="faq.page"
     >
+      <SEOHead
+        title="FAQ - My Web Solutions"
+        description="Frequently asked questions about My Web Solutions services, pricing, and support."
+        keywords="FAQ My Web Solutions, web development FAQ, SaaS questions"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero */}

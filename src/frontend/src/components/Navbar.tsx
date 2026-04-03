@@ -36,6 +36,7 @@ export function Navbar() {
             src="/assets/generated/logo-mws.dim_200x200.jpg"
             alt="My Web Solutions Logo"
             className="w-10 h-10 rounded-xl object-cover shadow-sm border border-border"
+            loading="lazy"
           />
         </Link>
 

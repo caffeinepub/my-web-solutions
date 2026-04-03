@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -292,6 +293,12 @@ export function CaseStudies() {
       className="min-h-screen flex flex-col bg-background"
       data-ocid="casestudies.page"
     >
+      <SEOHead
+        title="Case Studies - My Web Solutions"
+        description="Explore our portfolio of successful projects and case studies. See how My Web Solutions has helped businesses grow digitally."
+        keywords="case studies, portfolio, web development projects, digital transformation"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero */}
@@ -512,6 +519,7 @@ export function CaseStudies() {
                   alt={selectedProject.title}
                   className="w-full object-cover"
                   style={{ maxHeight: "340px" }}
+                  loading="lazy"
                 />
               </div>
 
@@ -659,6 +667,7 @@ export function CaseStudies() {
                 src={lightboxProject.image}
                 alt={lightboxProject.title}
                 className="w-full rounded-xl shadow-2xl object-contain max-h-[85vh]"
+                loading="lazy"
               />
               <p className="text-white/80 text-center text-sm mt-3 font-medium">
                 {lightboxProject.title}

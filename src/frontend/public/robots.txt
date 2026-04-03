@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin-login
+Disallow: /staff-login
+Disallow: /client-login
+Disallow: /admin-dashboard
+Disallow: /staff-dashboard
+Disallow: /client-dashboard
+
+Sitemap: https://mywebsolutions.icp.page/sitemap.xml

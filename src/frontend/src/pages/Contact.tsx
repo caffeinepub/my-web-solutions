@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -123,6 +124,12 @@ export function Contact() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead
+        title="Contact Us - My Web Solutions"
+        description="Get in touch with My Web Solutions. Contact us for website development, SaaS, WhatsApp integration, and other digital services."
+        keywords="contact My Web Solutions, web development consultation, digital services India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Header */}

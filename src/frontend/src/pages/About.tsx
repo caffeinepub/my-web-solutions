@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,6 +111,12 @@ export function About() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="About Us - My Web Solutions"
+        description="Learn about My Web Solutions, founded by Mounith H C. We are dedicated to delivering professional digital solutions and business services."
+        keywords="about My Web Solutions, Mounith H C, digital solutions, professional services"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Header */}
@@ -159,6 +166,7 @@ export function About() {
                       src="/assets/generated/founder-real.dim_400x400.jpg"
                       alt="Mounith H C — Founder & CEO, My Web Solutions"
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                 </div>

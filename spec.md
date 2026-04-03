@@ -1,38 +1,35 @@
-# My Web Solutions
+# My Web Solutions - Batch 1: Performance & SEO
 
 ## Current State
-- Full multi-page website with public pages (Home, Services, SaaS, Contact, About, Pricing, Blog, FAQ, Certifications, Case Studies)
-- 3 separate login portals: /admin-login, /staff-login, /client-login
-- Admin Dashboard with Leads, Users, Service Requests, Blog, Bookings, Analytics tabs
-- Staff Dashboard with Overview, My Requests (filter pills), My Clients (WhatsApp per client), Upcoming Bookings
-- Client Dashboard with Overview, My Requests (timeline), Invoices (placeholder), Profile (change password)
-- Backend has: leads, users, serviceRequests, bookings, blogPosts; all CRUD operations working
+The project is a multi-page React/TypeScript SaaS website with the following pages:
+- Home, Services, SaaS, About, Contact, Blog, BlogPost, FAQ, Booking, Certification, CaseStudies, Pricing
+- Admin/Staff/Client Login and Dashboard pages
+- Existing images in /public/assets/generated/ directory
+- No SEO meta tags, Open Graph tags, or structured data
+- No sitemap.xml or robots.txt
+- Images loaded without lazy loading
 
 ## Requested Changes (Diff)
 
 ### Add
-- Invoice creation system: Admin can create invoices for clients (linked to a service request or standalone)
-- Invoice backend storage: invoiceId, clientUserId, serviceType, amount, currency, status (unpaid/paid), createdAt, dueDate, notes
-- Invoice tab in Client Dashboard: client can view invoices sent by admin, with amount, status, service, date
-- Request cancel feature: client can cancel a pending service request (only if status = pending)
-- Assigned staff name display: on each request card in client dashboard, show the assigned staff member's username if assignedStaffId is set
-- Notification center in Client Dashboard: a sidebar bell icon showing status change activity (new items when requests transition to inProgress or completed)
+- A reusable `SEOHead` component using React Helmet (or document.title + meta manipulation) that accepts title, description, keywords, and OG tags props
+- Unique meta title + description for every page: Home, Services, SaaS, About, Contact, Blog, FAQ, Booking, Certification, CaseStudies, Pricing
+- Open Graph tags: og:title, og:description, og:type, og:url, og:image on all pages
+- Twitter Card meta tags on all pages
+- `public/sitemap.xml` listing all public page URLs
+- `public/robots.txt` with sitemap reference and allow all crawlers
+- `loading="lazy"` attribute on all `<img>` tags across all page components
 
 ### Modify
-- ClientDashboard.tsx: upgrade Invoices tab from placeholder to real invoice list; add cancel button on pending requests; show assigned staff name on request cards; add notification bell in sidebar
-- Backend main.mo: add Invoice type, storage, createInvoice (admin only), listClientInvoices (client or admin), updateInvoiceStatus (admin only)
-- useQueries.ts: add hooks for useCreateInvoice, useListClientInvoices, useUpdateInvoiceStatus, useCancelServiceRequest
-- backend.d.ts: will be updated automatically after backend generation
+- All page components to include the SEOHead component at the top
+- All `<img>` tags to include `loading="lazy"` prop
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Update backend (main.mo) to add Invoice system and cancelServiceRequest function
-2. Update frontend ClientDashboard.tsx:
-   - Invoices tab: fetch and display real invoices from backend
-   - My Requests: add Cancel button on pending items, show assigned staff name
-   - Sidebar: add notification bell with unread count badge
-   - Notifications panel: list recent status changes (derived from request updatedAt vs last-seen timestamp in localStorage)
-3. Update useQueries.ts with new hooks
-4. Validate and deploy
+1. Create a `SEOHead` component in `src/frontend/src/components/SEOHead.tsx` using `useEffect` + `document.title` + injecting meta tags dynamically (no external dependency needed)
+2. Add SEOHead to each page with unique title, description, keywords, and OG image
+3. Scan all page and component files and add `loading="lazy"` to all `<img>` tags
+4. Create `src/frontend/public/sitemap.xml` with all public routes
+5. Create `src/frontend/public/robots.txt`

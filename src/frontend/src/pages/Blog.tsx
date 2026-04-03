@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,12 @@ export function Blog() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="Blog - My Web Solutions"
+        description="Read the latest articles, tips, and insights on web development, SaaS, digital marketing, and business growth from My Web Solutions."
+        keywords="web development blog, SaaS tips, digital marketing, business growth India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Header */}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mywebsolutions.icp.page/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/services</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/saas</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/contact</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/faq</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/booking</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/certification</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/case-studies</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mywebsolutions.icp.page/pricing</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>

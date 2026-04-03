@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -202,6 +203,12 @@ export function Booking() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead
+        title="Book an Appointment - My Web Solutions"
+        description="Schedule a consultation or appointment with My Web Solutions. Book your slot for web development, SaaS, and digital services."
+        keywords="book appointment, web development consultation, SaaS services booking"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero */}

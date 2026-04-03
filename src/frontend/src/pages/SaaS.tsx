@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +69,12 @@ export function SaaS() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead
+        title="SaaS Solutions - My Web Solutions"
+        description="Professional SaaS management and web application development services. We build scalable, reliable software solutions for your business."
+        keywords="SaaS solutions, software development, web applications, scalable software"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero */}

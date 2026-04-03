@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -454,6 +455,12 @@ export function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="My Web Solutions - Professional SaaS & Web Development Services"
+        description="My Web Solutions offers professional website development, SaaS management, WhatsApp integration, and digital business services for small businesses in India."
+        keywords="web development, SaaS, WhatsApp integration, digital services, India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero — Full-Width Banner */}

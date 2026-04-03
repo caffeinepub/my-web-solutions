@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,12 @@ export function Pricing() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="Pricing - My Web Solutions"
+        description="Transparent pricing for web development, SaaS, WhatsApp integration, and other digital services from My Web Solutions."
+        keywords="pricing, web development cost, SaaS pricing, digital services India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Header */}

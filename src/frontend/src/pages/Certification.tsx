@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,6 +174,12 @@ export function Certification() {
       className="min-h-screen flex flex-col bg-background"
       data-ocid="certification.page"
     >
+      <SEOHead
+        title="Certifications - My Web Solutions"
+        description="My Web Solutions holds professional certifications including CSA, CSS, CSI, and more. Learn about our credentials and expertise."
+        keywords="security certifications, CSA, CSS, CSI, professional certifications India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Hero */}

@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -245,6 +246,12 @@ export function Services() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEOHead
+        title="Our Services - My Web Solutions"
+        description="Explore our full range of services including web development, SaaS management, WhatsApp Business integration, security certifications, and government documentation."
+        keywords="web development services, SaaS management, WhatsApp Business, security certifications, India"
+        ogImage="/assets/image.png"
+      />
       <Navbar />
 
       {/* Header — light */}
@@ -287,6 +294,7 @@ export function Services() {
                     src={cat.bannerImage}
                     alt={cat.label}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                   {/* Overlay with category info */}
                   <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex flex-col justify-end p-6">
@@ -334,6 +342,7 @@ export function Services() {
                           src={service.image}
                           alt={service.title}
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/20" />
                         <div className="absolute top-3 left-3">
