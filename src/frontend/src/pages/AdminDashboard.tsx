@@ -91,6 +91,7 @@ import {
   Loader2,
   LogOut,
   Mail,
+  Menu,
   MessageCircle,
   MessageSquare,
   Pencil,
@@ -392,6 +393,7 @@ function StaffNoteDialog({
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [newUser, setNewUser] = useState({
     username: "",
@@ -782,19 +784,44 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+          role="button"
+          tabIndex={-1}
+          aria-label="Close sidebar"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      >
         <div className="p-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Globe className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <Globe className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="font-display font-bold text-sm text-sidebar-foreground">
+                  My Web Solutions
+                </p>
+                <p className="text-xs text-sidebar-foreground/50">
+                  Admin Panel
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-display font-bold text-sm text-sidebar-foreground">
-                My Web Solutions
-              </p>
-              <p className="text-xs text-sidebar-foreground/50">Admin Panel</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1 rounded text-sidebar-foreground/50 hover:text-sidebar-foreground"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -853,1430 +880,1458 @@ export function AdminDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-6 overflow-auto">
-        {/* ── Overview ── */}
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Overview
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Welcome back, Administrator
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Leads
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {leadsLoading ? (
-                    <Skeleton className="h-8 w-16" />
-                  ) : (
-                    <p className="font-display text-3xl font-bold text-foreground">
-                      {leads.length}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Service Requests
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {srLoading ? (
-                    <Skeleton className="h-8 w-16" />
-                  ) : (
-                    <p className="font-display text-3xl font-bold text-foreground">
-                      {serviceRequests.length}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Users
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {usersLoading ? (
-                    <Skeleton className="h-8 w-16" />
-                  ) : (
-                    <p className="font-display text-3xl font-bold text-foreground">
-                      {users.length}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Active Users
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {usersLoading ? (
-                    <Skeleton className="h-8 w-16" />
-                  ) : (
-                    <p className="font-display text-3xl font-bold text-foreground">
-                      {activeUsers}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Recent Leads</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {leadsLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : leads.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-4">
-                    No leads yet
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {leads.slice(0, 5).map((lead) => (
-                      <div
-                        key={lead.id.toString()}
-                        className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                      >
-                        <div>
-                          <p className="font-medium text-sm text-foreground">
-                            {lead.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {lead.service}
-                          </p>
-                        </div>
-                        <LeadStatusBadge status={lead.status} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* ── Analytics ── */}
-        {activeTab === "analytics" && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Analytics
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Business performance overview
-              </p>
-            </div>
-
-            {/* Stat Cards */}
-            {statsLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            ) : !revenueStats ? (
-              <div
-                data-ocid="analytics.error_state"
-                className="py-12 text-center"
-              >
-                <p className="text-muted-foreground text-sm">
-                  Unable to load stats.
+      <main className="flex-1 min-w-0 overflow-auto">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-30">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+            aria-label="Open sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="font-display font-bold text-sm text-foreground">
+            Admin Panel
+          </span>
+        </div>
+        <div className="p-4 md:p-6">
+          {/* ── Overview ── */}
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Overview
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Welcome back, Administrator
                 </p>
               </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    {
-                      label: "Total Leads",
-                      value: Number(revenueStats.totalLeads),
-                      color: "text-foreground",
-                    },
-                    {
-                      label: "New Leads",
-                      value: Number(revenueStats.newLeads),
-                      color: "text-blue-600",
-                    },
-                    {
-                      label: "Resolved Leads",
-                      value: Number(revenueStats.resolvedLeads),
-                      color: "text-green-600",
-                    },
-                    {
-                      label: "Total Requests",
-                      value: Number(revenueStats.totalRequests),
-                      color: "text-foreground",
-                    },
-                    {
-                      label: "Pending",
-                      value: Number(revenueStats.pendingRequests),
-                      color: "text-yellow-600",
-                    },
-                    {
-                      label: "In Progress",
-                      value: Number(revenueStats.inProgressRequests),
-                      color: "text-blue-600",
-                    },
-                    {
-                      label: "Completed",
-                      value: Number(revenueStats.completedRequests),
-                      color: "text-green-600",
-                    },
-                  ].map((stat) => (
-                    <Card key={stat.label}>
-                      <CardContent className="pt-4 pb-4 text-center">
-                        <p
-                          className={`font-display text-3xl font-bold ${stat.color}`}
-                        >
-                          {stat.value}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {stat.label}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
 
-                {/* Bar Chart */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      Leads & Requests Breakdown
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Leads
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={chartData}
-                          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="hsl(var(--border))"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            tick={{
-                              fontSize: 11,
-                              fill: "hsl(var(--muted-foreground))",
-                            }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{
-                              fontSize: 11,
-                              fill: "hsl(var(--muted-foreground))",
-                            }}
-                            axisLine={false}
-                            tickLine={false}
-                            allowDecimals={false}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(var(--card))",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px",
-                              fontSize: "12px",
-                            }}
-                          />
-                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                            {chartData.map((entry, index) => (
-                              <Cell
-                                key={entry.name}
-                                fill={CHART_COLORS[index % CHART_COLORS.length]}
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {leadsLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="font-display text-3xl font-bold text-foreground">
+                        {leads.length}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              </>
-            )}
-          </div>
-        )}
 
-        {/* ── Leads ── */}
-        {activeTab === "leads" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Service Requests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {srLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="font-display text-3xl font-bold text-foreground">
+                        {serviceRequests.length}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {usersLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="font-display text-3xl font-bold text-foreground">
+                        {users.length}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Active Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {usersLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <p className="font-display text-3xl font-bold text-foreground">
+                        {activeUsers}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Recent Leads</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {leadsLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : leads.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">
+                      No leads yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {leads.slice(0, 5).map((lead) => (
+                        <div
+                          key={lead.id.toString()}
+                          className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                        >
+                          <div>
+                            <p className="font-medium text-sm text-foreground">
+                              {lead.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {lead.service}
+                            </p>
+                          </div>
+                          <LeadStatusBadge status={lead.status} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ── Analytics ── */}
+          {activeTab === "analytics" && (
+            <div className="space-y-6">
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">
-                  Leads
+                  Analytics
                 </h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                  All contact form submissions
+                  Business performance overview
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                data-ocid="leads.export_button"
-                onClick={handleExportLeads}
-                disabled={leadsLoading || leads.length === 0}
-                className="font-medium"
-              >
-                <Download className="w-4 h-4 mr-1.5" />
-                Export CSV
-              </Button>
-            </div>
 
-            <Card>
-              <CardContent className="p-0">
-                {leadsLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : leads.length === 0 ? (
-                  <div
-                    data-ocid="leads.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <MessageSquare className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No leads yet. They'll appear here once clients submit the
-                      contact form.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="leads.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Message</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Update</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {leads.map((lead, index) => (
-                          <TableRow
-                            key={lead.id.toString()}
-                            data-ocid={`leads.row.${index + 1}`}
+              {/* Stat Cards */}
+              {statsLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : !revenueStats ? (
+                <div
+                  data-ocid="analytics.error_state"
+                  className="py-12 text-center"
+                >
+                  <p className="text-muted-foreground text-sm">
+                    Unable to load stats.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      {
+                        label: "Total Leads",
+                        value: Number(revenueStats.totalLeads),
+                        color: "text-foreground",
+                      },
+                      {
+                        label: "New Leads",
+                        value: Number(revenueStats.newLeads),
+                        color: "text-blue-600",
+                      },
+                      {
+                        label: "Resolved Leads",
+                        value: Number(revenueStats.resolvedLeads),
+                        color: "text-green-600",
+                      },
+                      {
+                        label: "Total Requests",
+                        value: Number(revenueStats.totalRequests),
+                        color: "text-foreground",
+                      },
+                      {
+                        label: "Pending",
+                        value: Number(revenueStats.pendingRequests),
+                        color: "text-yellow-600",
+                      },
+                      {
+                        label: "In Progress",
+                        value: Number(revenueStats.inProgressRequests),
+                        color: "text-blue-600",
+                      },
+                      {
+                        label: "Completed",
+                        value: Number(revenueStats.completedRequests),
+                        color: "text-green-600",
+                      },
+                    ].map((stat) => (
+                      <Card key={stat.label}>
+                        <CardContent className="pt-4 pb-4 text-center">
+                          <p
+                            className={`font-display text-3xl font-bold ${stat.color}`}
                           >
-                            <TableCell className="font-medium text-sm">
-                              {lead.name}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {lead.phone}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {lead.service}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px]">
-                              <div className="flex items-center gap-1">
-                                <span className="truncate block max-w-[160px]">
-                                  {lead.message}
-                                </span>
-                                {lead.message && lead.message.length > 40 && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 shrink-0"
-                                    data-ocid={`leads.view_message_button.${index + 1}`}
-                                    onClick={() => {
-                                      setViewMessageText(lead.message);
-                                      setViewMessageOpen(true);
-                                    }}
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <LeadStatusBadge status={lead.status} />
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(lead.createdAt)}
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={lead.status}
-                                onValueChange={(v) =>
-                                  updateStatus({
-                                    id: lead.id,
-                                    status: v as LeadStatus,
-                                  })
-                                }
-                              >
-                                <SelectTrigger
-                                  className="w-32 h-8 text-xs"
-                                  data-ocid={`leads.status_select.${index + 1}`}
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={LeadStatus.new_}>
-                                    New
-                                  </SelectItem>
-                                  <SelectItem value={LeadStatus.inProgress}>
-                                    In Progress
-                                  </SelectItem>
-                                  <SelectItem value={LeadStatus.resolved}>
-                                    Resolved
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            {stat.value}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {stat.label}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* ── Bookings ── */}
-        {activeTab === "bookings" && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Bookings
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                All appointment booking requests
-              </p>
+                  {/* Bar Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Leads & Requests Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={chartData}
+                            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="hsl(var(--border))"
+                            />
+                            <XAxis
+                              dataKey="name"
+                              tick={{
+                                fontSize: 11,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <YAxis
+                              tick={{
+                                fontSize: 11,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                              axisLine={false}
+                              tickLine={false}
+                              allowDecimals={false}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                                fontSize: "12px",
+                              }}
+                            />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                              {chartData.map((entry, index) => (
+                                <Cell
+                                  key={entry.name}
+                                  fill={
+                                    CHART_COLORS[index % CHART_COLORS.length]
+                                  }
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
+          )}
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                {
-                  label: "Total",
-                  count: bookings.length,
-                  color: "text-foreground",
-                },
-                {
-                  label: "Pending",
-                  count: bookings.filter(
-                    (b) => b.status === BookingStatus.pending,
-                  ).length,
-                  color: "text-yellow-600",
-                },
-                {
-                  label: "Confirmed",
-                  count: bookings.filter(
-                    (b) => b.status === BookingStatus.confirmed,
-                  ).length,
-                  color: "text-green-600",
-                },
-                {
-                  label: "Completed",
-                  count: bookings.filter(
-                    (b) => b.status === BookingStatus.completed,
-                  ).length,
-                  color: "text-blue-600",
-                },
-              ].map((stat) => (
-                <Card key={stat.label}>
-                  <CardContent className="pt-4 pb-4 text-center">
-                    <p
-                      className={`font-display text-3xl font-bold ${stat.color}`}
+          {/* ── Leads ── */}
+          {activeTab === "leads" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    Leads
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    All contact form submissions
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  data-ocid="leads.export_button"
+                  onClick={handleExportLeads}
+                  disabled={leadsLoading || leads.length === 0}
+                  className="font-medium"
+                >
+                  <Download className="w-4 h-4 mr-1.5" />
+                  Export CSV
+                </Button>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  {leadsLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : leads.length === 0 ? (
+                    <div
+                      data-ocid="leads.empty_state"
+                      className="py-16 text-center"
                     >
-                      {stat.count}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stat.label}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Feature 4: Bookings filter controls */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <div className="flex flex-wrap gap-1.5">
-                {(
-                  [
-                    "all",
-                    BookingStatus.pending,
-                    BookingStatus.confirmed,
-                    BookingStatus.completed,
-                    BookingStatus.rejected,
-                  ] as const
-                ).map((status) => (
-                  <button
-                    key={status}
-                    type="button"
-                    data-ocid={`bookings.filter_${status}.tab`}
-                    onClick={() => setBookingStatusFilter(status)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                      bookingStatusFilter === status
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background text-muted-foreground border-border hover:bg-accent"
-                    }`}
-                  >
-                    {status === "all"
-                      ? "All"
-                      : status.charAt(0).toUpperCase() + status.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <Input
-                  placeholder="Search by date e.g. 2026-03-15"
-                  value={bookingDateSearch}
-                  onChange={(e) => setBookingDateSearch(e.target.value)}
-                  data-ocid="bookings.date_search_input"
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                {bookingsLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : filteredBookings.length === 0 ? (
-                  <div
-                    data-ocid="bookings.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <CalendarCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      {bookings.length === 0
-                        ? "No bookings yet. They'll appear here once clients submit an appointment request."
-                        : "No bookings match the current filters."}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="bookings.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredBookings.map((booking, index) => {
-                          const waNotifyUrl = `https://wa.me/91${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${booking.name}, your appointment for ${booking.service} on ${booking.preferredDate} has been confirmed! - My Web Solutions`)}`;
-
-                          return (
+                      <MessageSquare className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No leads yet. They'll appear here once clients submit
+                        the contact form.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="leads.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Message</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Update</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {leads.map((lead, index) => (
                             <TableRow
-                              key={booking.id.toString()}
-                              data-ocid={`bookings.row.${index + 1}`}
-                            >
-                              <TableCell className="font-medium text-sm whitespace-nowrap">
-                                {booking.name}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {booking.phone}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
-                                {booking.email}
-                              </TableCell>
-                              <TableCell className="text-sm max-w-[160px] truncate">
-                                {booking.service}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {booking.preferredDate}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {booking.preferredTime}
-                              </TableCell>
-                              <TableCell>
-                                {booking.status === BookingStatus.pending && (
-                                  <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 whitespace-nowrap">
-                                    Pending
-                                  </Badge>
-                                )}
-                                {booking.status === BookingStatus.confirmed && (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 whitespace-nowrap">
-                                    Confirmed
-                                  </Badge>
-                                )}
-                                {booking.status === BookingStatus.completed && (
-                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 whitespace-nowrap">
-                                    Completed
-                                  </Badge>
-                                )}
-                                {booking.status === BookingStatus.rejected && (
-                                  <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100 whitespace-nowrap">
-                                    Rejected
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1.5 flex-wrap min-w-[200px]">
-                                  {/* Confirm */}
-                                  {booking.status !==
-                                    BookingStatus.confirmed && (
-                                    <Button
-                                      size="sm"
-                                      className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
-                                      data-ocid={`bookings.confirm_button.${index + 1}`}
-                                      onClick={() =>
-                                        updateBookingStatusMutate({
-                                          id: booking.id,
-                                          status: BookingStatus.confirmed,
-                                        })
-                                      }
-                                    >
-                                      Confirm
-                                    </Button>
-                                  )}
-                                  {/* WhatsApp Notify (shown when confirmed) */}
-                                  {booking.status ===
-                                    BookingStatus.confirmed && (
-                                    <a
-                                      href={waNotifyUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      data-ocid={`bookings.whatsapp_notify_button.${index + 1}`}
-                                      className="inline-flex items-center gap-1 h-7 px-2 text-xs rounded-md bg-[#25D366] text-white font-medium hover:bg-[#1ebe5d] transition-colors"
-                                    >
-                                      <MessageCircle className="w-3 h-3" />
-                                      Notify
-                                    </a>
-                                  )}
-                                  {/* Reject */}
-                                  {booking.status !==
-                                    BookingStatus.rejected && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                                      data-ocid={`bookings.reject_button.${index + 1}`}
-                                      onClick={() =>
-                                        updateBookingStatusMutate({
-                                          id: booking.id,
-                                          status: BookingStatus.rejected,
-                                        })
-                                      }
-                                    >
-                                      Reject
-                                    </Button>
-                                  )}
-                                  {/* Complete */}
-                                  {booking.status !==
-                                    BookingStatus.completed && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 px-2 text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
-                                      data-ocid={`bookings.complete_button.${index + 1}`}
-                                      onClick={() =>
-                                        updateBookingStatusMutate({
-                                          id: booking.id,
-                                          status: BookingStatus.completed,
-                                        })
-                                      }
-                                    >
-                                      Complete
-                                    </Button>
-                                  )}
-                                  {/* Delete */}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 px-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
-                                    data-ocid={`bookings.delete_button.${index + 1}`}
-                                    onClick={() =>
-                                      confirmDeleteBooking(booking.id)
-                                    }
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* ── Service Requests ── */}
-        {activeTab === "service-requests" && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Service Requests
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                All client service requests
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-2xl font-bold text-yellow-600">
-                    {pendingSR}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Pending</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-2xl font-bold text-blue-600">
-                    {inProgressSR}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    In Progress
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-2xl font-bold text-green-600">
-                    {completedSR}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Completed
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                {srLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : serviceRequests.length === 0 ? (
-                  <div
-                    data-ocid="service_requests.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No service requests yet.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="service_requests.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Service Type</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Assigned Staff</TableHead>
-                          <TableHead>Note</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Update</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {serviceRequests.map((req, index) => {
-                          const assignedStaff = req.assignedStaffId
-                            ? users.find((u) => u.id === req.assignedStaffId)
-                            : null;
-
-                          return (
-                            <TableRow
-                              key={req.id.toString()}
-                              data-ocid={`service_requests.row.${index + 1}`}
+                              key={lead.id.toString()}
+                              data-ocid={`leads.row.${index + 1}`}
                             >
                               <TableCell className="font-medium text-sm">
-                                {req.clientName}
+                                {lead.name}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {lead.phone}
                               </TableCell>
                               <TableCell className="text-sm">
-                                {req.serviceType}
+                                {lead.service}
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
-                                {req.description}
-                              </TableCell>
-                              {/* Assign Staff Column */}
-                              <TableCell>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 text-xs max-w-[120px] truncate"
-                                      data-ocid={`service_requests.assign_staff.${index + 1}`}
-                                    >
-                                      {assignedStaff
-                                        ? assignedStaff.username
-                                        : "Unassigned"}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-48 p-2"
-                                    data-ocid={`service_requests.assign_staff_popover.${index + 1}`}
-                                  >
-                                    <p className="text-xs text-muted-foreground mb-2 px-1">
-                                      Assign to staff
-                                    </p>
-                                    {staffUsers.length === 0 ? (
-                                      <p className="text-xs text-muted-foreground px-1">
-                                        No staff accounts yet.
-                                      </p>
-                                    ) : (
-                                      <div className="space-y-1">
-                                        {staffUsers.map((staff) => (
-                                          <button
-                                            key={staff.id.toString()}
-                                            type="button"
-                                            onClick={() =>
-                                              handleAssignStaff(
-                                                req.id,
-                                                staff.id,
-                                              )
-                                            }
-                                            className={`w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent transition-colors ${
-                                              req.assignedStaffId === staff.id
-                                                ? "bg-accent font-medium"
-                                                : ""
-                                            }`}
-                                          >
-                                            {staff.username}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </PopoverContent>
-                                </Popover>
-                              </TableCell>
-                              {/* Note Column */}
-                              <TableCell className="max-w-[120px]">
+                              <TableCell className="text-sm text-muted-foreground max-w-[200px]">
                                 <div className="flex items-center gap-1">
-                                  <span className="text-xs text-muted-foreground truncate">
-                                    {req.staffNote
-                                      ? req.staffNote.slice(0, 20) +
-                                        (req.staffNote.length > 20 ? "…" : "")
-                                      : "—"}
+                                  <span className="truncate block max-w-[160px]">
+                                    {lead.message}
                                   </span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 shrink-0"
-                                    data-ocid={`service_requests.note_edit.${index + 1}`}
-                                    onClick={() =>
-                                      openNoteDialog(req.id, req.staffNote)
-                                    }
-                                  >
-                                    <Pencil className="w-3 h-3" />
-                                  </Button>
+                                  {lead.message && lead.message.length > 40 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 shrink-0"
+                                      data-ocid={`leads.view_message_button.${index + 1}`}
+                                      onClick={() => {
+                                        setViewMessageText(lead.message);
+                                        setViewMessageOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </Button>
+                                  )}
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <ServiceRequestStatusBadge
-                                  status={req.status}
-                                />
+                                <LeadStatusBadge status={lead.status} />
                               </TableCell>
                               <TableCell className="text-sm text-muted-foreground">
-                                {formatDate(req.createdAt)}
+                                {formatDate(lead.createdAt)}
                               </TableCell>
                               <TableCell>
                                 <Select
-                                  value={req.status}
+                                  value={lead.status}
                                   onValueChange={(v) =>
-                                    updateSRStatus({
-                                      id: req.id,
-                                      status: v as ServiceRequestStatus,
+                                    updateStatus({
+                                      id: lead.id,
+                                      status: v as LeadStatus,
                                     })
                                   }
                                 >
                                   <SelectTrigger
-                                    className="w-36 h-8 text-xs"
-                                    data-ocid={`service_requests.status_select.${index + 1}`}
+                                    className="w-32 h-8 text-xs"
+                                    data-ocid={`leads.status_select.${index + 1}`}
                                   >
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem
-                                      value={ServiceRequestStatus.pending}
-                                    >
-                                      Pending
+                                    <SelectItem value={LeadStatus.new_}>
+                                      New
                                     </SelectItem>
-                                    <SelectItem
-                                      value={ServiceRequestStatus.inProgress}
-                                    >
+                                    <SelectItem value={LeadStatus.inProgress}>
                                       In Progress
                                     </SelectItem>
-                                    <SelectItem
-                                      value={ServiceRequestStatus.completed}
-                                    >
-                                      Completed
+                                    <SelectItem value={LeadStatus.resolved}>
+                                      Resolved
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </TableCell>
                             </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-        {/* ── Blog ── */}
-        {activeTab === "blog" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+          {/* ── Bookings ── */}
+          {activeTab === "bookings" && (
+            <div className="space-y-6">
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">
-                  Blog Posts
+                  Bookings
                 </h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                  Manage all blog content
+                  All appointment booking requests
                 </p>
               </div>
-              <Button
-                size="sm"
-                onClick={openAddBlogModal}
-                data-ocid="blog.add_post_button"
-                className="font-medium"
-              >
-                <Plus className="w-4 h-4 mr-1.5" />
-                Add Post
-              </Button>
-            </div>
 
-            <Card>
-              <CardContent className="p-0">
-                {blogLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : blogPosts.length === 0 ? (
-                  <div
-                    data-ocid="blog.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <BookOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No blog posts yet. Create your first post!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="blog.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Author</TableHead>
-                          <TableHead>Published</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {blogPosts.map((post, index) => (
-                          <TableRow
-                            key={post.id.toString()}
-                            data-ocid={`blog.row.${index + 1}`}
-                          >
-                            <TableCell className="font-medium text-sm max-w-[240px] truncate">
-                              {post.title}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {post.authorName}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  post.isPublished
-                                    ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
-                                    : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100"
-                                }
-                              >
-                                {post.isPublished ? "Published" : "Draft"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(post.createdAt)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  data-ocid={`blog.edit_button.${index + 1}`}
-                                  onClick={() => openEditBlogModal(post)}
-                                  className="h-7 px-2"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  data-ocid={`blog.delete_button.${index + 1}`}
-                                  onClick={() => confirmDeletePost(post.id)}
-                                  className="h-7 px-2 text-destructive border-destructive/20 hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  {
+                    label: "Total",
+                    count: bookings.length,
+                    color: "text-foreground",
+                  },
+                  {
+                    label: "Pending",
+                    count: bookings.filter(
+                      (b) => b.status === BookingStatus.pending,
+                    ).length,
+                    color: "text-yellow-600",
+                  },
+                  {
+                    label: "Confirmed",
+                    count: bookings.filter(
+                      (b) => b.status === BookingStatus.confirmed,
+                    ).length,
+                    color: "text-green-600",
+                  },
+                  {
+                    label: "Completed",
+                    count: bookings.filter(
+                      (b) => b.status === BookingStatus.completed,
+                    ).length,
+                    color: "text-blue-600",
+                  },
+                ].map((stat) => (
+                  <Card key={stat.label}>
+                    <CardContent className="pt-4 pb-4 text-center">
+                      <p
+                        className={`font-display text-3xl font-bold ${stat.color}`}
+                      >
+                        {stat.count}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {stat.label}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Feature 4: Bookings filter controls */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                <div className="flex flex-wrap gap-1.5">
+                  {(
+                    [
+                      "all",
+                      BookingStatus.pending,
+                      BookingStatus.confirmed,
+                      BookingStatus.completed,
+                      BookingStatus.rejected,
+                    ] as const
+                  ).map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      data-ocid={`bookings.filter_${status}.tab`}
+                      onClick={() => setBookingStatusFilter(status)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        bookingStatusFilter === status
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-accent"
+                      }`}
+                    >
+                      {status === "all"
+                        ? "All"
+                        : status.charAt(0).toUpperCase() + status.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <Input
+                    placeholder="Search by date e.g. 2026-03-15"
+                    value={bookingDateSearch}
+                    onChange={(e) => setBookingDateSearch(e.target.value)}
+                    data-ocid="bookings.date_search_input"
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  {bookingsLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : filteredBookings.length === 0 ? (
+                    <div
+                      data-ocid="bookings.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <CalendarCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        {bookings.length === 0
+                          ? "No bookings yet. They'll appear here once clients submit an appointment request."
+                          : "No bookings match the current filters."}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="bookings.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                        </TableHeader>
+                        <TableBody>
+                          {filteredBookings.map((booking, index) => {
+                            const waNotifyUrl = `https://wa.me/91${booking.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${booking.name}, your appointment for ${booking.service} on ${booking.preferredDate} has been confirmed! - My Web Solutions`)}`;
 
-        {/* ── Users ── */}
-        {activeTab === "users" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+                            return (
+                              <TableRow
+                                key={booking.id.toString()}
+                                data-ocid={`bookings.row.${index + 1}`}
+                              >
+                                <TableCell className="font-medium text-sm whitespace-nowrap">
+                                  {booking.name}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {booking.phone}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                                  {booking.email}
+                                </TableCell>
+                                <TableCell className="text-sm max-w-[160px] truncate">
+                                  {booking.service}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {booking.preferredDate}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {booking.preferredTime}
+                                </TableCell>
+                                <TableCell>
+                                  {booking.status === BookingStatus.pending && (
+                                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 whitespace-nowrap">
+                                      Pending
+                                    </Badge>
+                                  )}
+                                  {booking.status ===
+                                    BookingStatus.confirmed && (
+                                    <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 whitespace-nowrap">
+                                      Confirmed
+                                    </Badge>
+                                  )}
+                                  {booking.status ===
+                                    BookingStatus.completed && (
+                                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 whitespace-nowrap">
+                                      Completed
+                                    </Badge>
+                                  )}
+                                  {booking.status ===
+                                    BookingStatus.rejected && (
+                                    <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100 whitespace-nowrap">
+                                      Rejected
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5 flex-wrap min-w-[200px]">
+                                    {/* Confirm */}
+                                    {booking.status !==
+                                      BookingStatus.confirmed && (
+                                      <Button
+                                        size="sm"
+                                        className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                                        data-ocid={`bookings.confirm_button.${index + 1}`}
+                                        onClick={() =>
+                                          updateBookingStatusMutate({
+                                            id: booking.id,
+                                            status: BookingStatus.confirmed,
+                                          })
+                                        }
+                                      >
+                                        Confirm
+                                      </Button>
+                                    )}
+                                    {/* WhatsApp Notify (shown when confirmed) */}
+                                    {booking.status ===
+                                      BookingStatus.confirmed && (
+                                      <a
+                                        href={waNotifyUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        data-ocid={`bookings.whatsapp_notify_button.${index + 1}`}
+                                        className="inline-flex items-center gap-1 h-7 px-2 text-xs rounded-md bg-[#25D366] text-white font-medium hover:bg-[#1ebe5d] transition-colors"
+                                      >
+                                        <MessageCircle className="w-3 h-3" />
+                                        Notify
+                                      </a>
+                                    )}
+                                    {/* Reject */}
+                                    {booking.status !==
+                                      BookingStatus.rejected && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                                        data-ocid={`bookings.reject_button.${index + 1}`}
+                                        onClick={() =>
+                                          updateBookingStatusMutate({
+                                            id: booking.id,
+                                            status: BookingStatus.rejected,
+                                          })
+                                        }
+                                      >
+                                        Reject
+                                      </Button>
+                                    )}
+                                    {/* Complete */}
+                                    {booking.status !==
+                                      BookingStatus.completed && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 px-2 text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                                        data-ocid={`bookings.complete_button.${index + 1}`}
+                                        onClick={() =>
+                                          updateBookingStatusMutate({
+                                            id: booking.id,
+                                            status: BookingStatus.completed,
+                                          })
+                                        }
+                                      >
+                                        Complete
+                                      </Button>
+                                    )}
+                                    {/* Delete */}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 px-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10"
+                                      data-ocid={`bookings.delete_button.${index + 1}`}
+                                      onClick={() =>
+                                        confirmDeleteBooking(booking.id)
+                                      }
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ── Service Requests ── */}
+          {activeTab === "service-requests" && (
+            <div className="space-y-6">
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">
-                  Users
+                  Service Requests
                 </h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                  Manage staff and client accounts
+                  All client service requests
                 </p>
               </div>
 
-              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    data-ocid="users.create_user_button"
-                    className="font-medium"
-                  >
-                    <Plus className="w-4 h-4 mr-1.5" />
-                    Create User
-                  </Button>
-                </DialogTrigger>
-                <DialogContent data-ocid="users.create_user.dialog">
-                  <DialogHeader>
-                    <DialogTitle>Create New User</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateUser} className="space-y-4 pt-2">
-                    <div>
-                      <Label className="text-sm font-medium mb-1.5 block">
-                        Username
-                      </Label>
-                      <Input
-                        placeholder="username"
-                        data-ocid="users.create_user.input"
-                        value={newUser.username}
-                        onChange={(e) =>
-                          setNewUser((p) => ({
-                            ...p,
-                            username: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium mb-1.5 block">
-                        Password
-                      </Label>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        value={newUser.password}
-                        onChange={(e) =>
-                          setNewUser((p) => ({
-                            ...p,
-                            password: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium mb-1.5 block">
-                        Role
-                      </Label>
-                      <Select
-                        value={newUser.role}
-                        onValueChange={(v) =>
-                          setNewUser((p) => ({ ...p, role: v as Role }))
-                        }
-                      >
-                        <SelectTrigger data-ocid="users.create_user.select">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={Role.admin}>Admin</SelectItem>
-                          <SelectItem value={Role.staff}>Staff</SelectItem>
-                          <SelectItem value={Role.client}>Client</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        data-ocid="users.create_user.cancel_button"
-                        onClick={() => setCreateOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        data-ocid="users.create_user.confirm_button"
-                        disabled={creatingUser}
-                      >
-                        {creatingUser ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Creating...
-                          </>
-                        ) : (
-                          "Create User"
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                {usersLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : users.length === 0 ? (
-                  <div
-                    data-ocid="users.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No users created yet.
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-2xl font-bold text-yellow-600">
+                      {pendingSR}
                     </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="users.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Username</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user, index) => (
-                          <TableRow
-                            key={user.id.toString()}
-                            data-ocid={`users.row.${index + 1}`}
-                          >
-                            <TableCell className="font-medium text-sm">
-                              <div className="flex items-center gap-2">
-                                {user.role === Role.admin ? (
-                                  <ShieldCheck className="w-4 h-4 text-primary" />
-                                ) : user.role === Role.staff ? (
-                                  <UserCheck className="w-4 h-4 text-muted-foreground" />
-                                ) : (
-                                  <UserCircle2 className="w-4 h-4 text-muted-foreground" />
-                                )}
-                                {user.username}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="capitalize text-sm text-muted-foreground">
-                                {user.role}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  user.isActive
-                                    ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
-                                    : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100"
-                                }
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pending
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-2xl font-bold text-blue-600">
+                      {inProgressSR}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      In Progress
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-2xl font-bold text-green-600">
+                      {completedSR}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Completed
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  {srLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : serviceRequests.length === 0 ? (
+                    <div
+                      data-ocid="service_requests.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No service requests yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="service_requests.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Service Type</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Assigned Staff</TableHead>
+                            <TableHead>Note</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Update</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {serviceRequests.map((req, index) => {
+                            const assignedStaff = req.assignedStaffId
+                              ? users.find((u) => u.id === req.assignedStaffId)
+                              : null;
+
+                            return (
+                              <TableRow
+                                key={req.id.toString()}
+                                data-ocid={`service_requests.row.${index + 1}`}
                               >
-                                {user.isActive ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  data-ocid={`users.toggle_button.${index + 1}`}
-                                  onClick={() => toggleActive(user.id)}
-                                  className="text-xs h-7"
-                                >
-                                  {user.isActive ? "Deactivate" : "Activate"}
-                                </Button>
-                                {user.role !== Role.admin && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    data-ocid={`users.delete_button.${index + 1}`}
-                                    onClick={() =>
-                                      confirmDeactivateUser(user.id)
+                                <TableCell className="font-medium text-sm">
+                                  {req.clientName}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {req.serviceType}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                                  {req.description}
+                                </TableCell>
+                                {/* Assign Staff Column */}
+                                <TableCell>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs max-w-[120px] truncate"
+                                        data-ocid={`service_requests.assign_staff.${index + 1}`}
+                                      >
+                                        {assignedStaff
+                                          ? assignedStaff.username
+                                          : "Unassigned"}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-48 p-2"
+                                      data-ocid={`service_requests.assign_staff_popover.${index + 1}`}
+                                    >
+                                      <p className="text-xs text-muted-foreground mb-2 px-1">
+                                        Assign to staff
+                                      </p>
+                                      {staffUsers.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground px-1">
+                                          No staff accounts yet.
+                                        </p>
+                                      ) : (
+                                        <div className="space-y-1">
+                                          {staffUsers.map((staff) => (
+                                            <button
+                                              key={staff.id.toString()}
+                                              type="button"
+                                              onClick={() =>
+                                                handleAssignStaff(
+                                                  req.id,
+                                                  staff.id,
+                                                )
+                                              }
+                                              className={`w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent transition-colors ${
+                                                req.assignedStaffId === staff.id
+                                                  ? "bg-accent font-medium"
+                                                  : ""
+                                              }`}
+                                            >
+                                              {staff.username}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </PopoverContent>
+                                  </Popover>
+                                </TableCell>
+                                {/* Note Column */}
+                                <TableCell className="max-w-[120px]">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {req.staffNote
+                                        ? req.staffNote.slice(0, 20) +
+                                          (req.staffNote.length > 20 ? "…" : "")
+                                        : "—"}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 shrink-0"
+                                      data-ocid={`service_requests.note_edit.${index + 1}`}
+                                      onClick={() =>
+                                        openNoteDialog(req.id, req.staffNote)
+                                      }
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <ServiceRequestStatusBadge
+                                    status={req.status}
+                                  />
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {formatDate(req.createdAt)}
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={req.status}
+                                    onValueChange={(v) =>
+                                      updateSRStatus({
+                                        id: req.id,
+                                        status: v as ServiceRequestStatus,
+                                      })
                                     }
-                                    className="h-7 w-7 p-0 text-destructive border-destructive/20 hover:bg-destructive/10"
-                                    title="Deactivate user"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* ── Newsletter ── */}
-        {activeTab === "newsletter" && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Newsletter Subscribers
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Email addresses collected from the website newsletter signup
-                form.
-              </p>
+                                    <SelectTrigger
+                                      className="w-36 h-8 text-xs"
+                                      data-ocid={`service_requests.status_select.${index + 1}`}
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem
+                                        value={ServiceRequestStatus.pending}
+                                      >
+                                        Pending
+                                      </SelectItem>
+                                      <SelectItem
+                                        value={ServiceRequestStatus.inProgress}
+                                      >
+                                        In Progress
+                                      </SelectItem>
+                                      <SelectItem
+                                        value={ServiceRequestStatus.completed}
+                                      >
+                                        Completed
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
+          )}
 
-            <Card data-ocid="newsletter.card">
-              <CardContent className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  <Mail className="w-7 h-7 text-blue-400" />
-                </div>
+          {/* ── Blog ── */}
+          {activeTab === "blog" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-foreground text-sm">
-                    No subscribers yet
-                  </p>
-                  <p className="text-muted-foreground text-sm mt-1 max-w-sm">
-                    Email addresses collected from the website newsletter signup
-                    form will appear here in a future update.
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    Blog Posts
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Manage all blog content
                   </p>
                 </div>
-                <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 mt-1">
-                  Coming Soon
-                </Badge>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* ── Invoices ── */}
-        {activeTab === "invoices" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
-                  Invoices
-                </h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Manage client invoices and billing
-                </p>
+                <Button
+                  size="sm"
+                  onClick={openAddBlogModal}
+                  data-ocid="blog.add_post_button"
+                  className="font-medium"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Add Post
+                </Button>
               </div>
-              <Button
-                size="sm"
-                data-ocid="invoices.create_invoice_button"
-                onClick={() => setCreateInvoiceOpen(true)}
-                className="font-medium"
-              >
-                <Plus className="w-4 h-4 mr-1.5" />
-                Create Invoice
-              </Button>
-            </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-foreground">
-                    {invoices.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Total</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-green-600">
-                    {
-                      invoices.filter((i) => i.status === InvoiceStatus.paid)
-                        .length
-                    }
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Paid</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-orange-600">
-                    {
-                      invoices.filter((i) => i.status === InvoiceStatus.unpaid)
-                        .length
-                    }
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Unpaid</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                {invoicesLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : invoices.length === 0 ? (
-                  <div
-                    data-ocid="invoices.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No invoices yet. Create your first invoice above.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="invoices.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Client ID</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Currency</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {invoices.map((invoice, index) => {
-                          const isPaid = invoice.status === InvoiceStatus.paid;
-                          return (
+                <CardContent className="p-0">
+                  {blogLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : blogPosts.length === 0 ? (
+                    <div
+                      data-ocid="blog.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <BookOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No blog posts yet. Create your first post!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="blog.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Author</TableHead>
+                            <TableHead>Published</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {blogPosts.map((post, index) => (
                             <TableRow
-                              key={invoice.id.toString()}
-                              data-ocid={`invoices.row.${index + 1}`}
+                              key={post.id.toString()}
+                              data-ocid={`blog.row.${index + 1}`}
                             >
-                              <TableCell className="text-sm text-muted-foreground font-mono">
-                                {invoice.clientUserId.toString()}
-                              </TableCell>
-                              <TableCell className="text-sm font-medium max-w-[180px] truncate">
-                                {invoice.serviceType}
-                              </TableCell>
-                              <TableCell className="text-sm font-semibold">
-                                {invoice.currency === "INR"
-                                  ? `₹${Number(invoice.amount).toLocaleString("en-IN")}`
-                                  : `${invoice.currency} ${Number(invoice.amount).toLocaleString()}`}
+                              <TableCell className="font-medium text-sm max-w-[240px] truncate">
+                                {post.title}
                               </TableCell>
                               <TableCell className="text-sm text-muted-foreground">
-                                {invoice.currency}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {invoice.dueDate}
+                                {post.authorName}
                               </TableCell>
                               <TableCell>
                                 <Badge
                                   className={
-                                    isPaid
+                                    post.isPublished
                                       ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
-                                      : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
+                                      : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100"
                                   }
                                 >
-                                  {isPaid ? "Paid" : "Unpaid"}
+                                  {post.isPublished ? "Published" : "Draft"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {formatDate(post.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    data-ocid={`blog.edit_button.${index + 1}`}
+                                    onClick={() => openEditBlogModal(post)}
+                                    className="h-7 px-2"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    data-ocid={`blog.delete_button.${index + 1}`}
+                                    onClick={() => confirmDeletePost(post.id)}
+                                    className="h-7 px-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ── Users ── */}
+          {activeTab === "users" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    Users
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Manage staff and client accounts
+                  </p>
+                </div>
+
+                <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      data-ocid="users.create_user_button"
+                      className="font-medium"
+                    >
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      Create User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent data-ocid="users.create_user.dialog">
+                    <DialogHeader>
+                      <DialogTitle>Create New User</DialogTitle>
+                    </DialogHeader>
+                    <form
+                      onSubmit={handleCreateUser}
+                      className="space-y-4 pt-2"
+                    >
+                      <div>
+                        <Label className="text-sm font-medium mb-1.5 block">
+                          Username
+                        </Label>
+                        <Input
+                          placeholder="username"
+                          data-ocid="users.create_user.input"
+                          value={newUser.username}
+                          onChange={(e) =>
+                            setNewUser((p) => ({
+                              ...p,
+                              username: e.target.value,
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium mb-1.5 block">
+                          Password
+                        </Label>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          value={newUser.password}
+                          onChange={(e) =>
+                            setNewUser((p) => ({
+                              ...p,
+                              password: e.target.value,
+                            }))
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium mb-1.5 block">
+                          Role
+                        </Label>
+                        <Select
+                          value={newUser.role}
+                          onValueChange={(v) =>
+                            setNewUser((p) => ({ ...p, role: v as Role }))
+                          }
+                        >
+                          <SelectTrigger data-ocid="users.create_user.select">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={Role.admin}>Admin</SelectItem>
+                            <SelectItem value={Role.staff}>Staff</SelectItem>
+                            <SelectItem value={Role.client}>Client</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          data-ocid="users.create_user.cancel_button"
+                          onClick={() => setCreateOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          data-ocid="users.create_user.confirm_button"
+                          disabled={creatingUser}
+                        >
+                          {creatingUser ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Creating...
+                            </>
+                          ) : (
+                            "Create User"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  {usersLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div
+                      data-ocid="users.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No users created yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="users.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Username</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((user, index) => (
+                            <TableRow
+                              key={user.id.toString()}
+                              data-ocid={`users.row.${index + 1}`}
+                            >
+                              <TableCell className="font-medium text-sm">
+                                <div className="flex items-center gap-2">
+                                  {user.role === Role.admin ? (
+                                    <ShieldCheck className="w-4 h-4 text-primary" />
+                                  ) : user.role === Role.staff ? (
+                                    <UserCheck className="w-4 h-4 text-muted-foreground" />
+                                  ) : (
+                                    <UserCircle2 className="w-4 h-4 text-muted-foreground" />
+                                  )}
+                                  {user.username}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className="capitalize text-sm text-muted-foreground">
+                                  {user.role}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={
+                                    user.isActive
+                                      ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                      : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                  }
+                                >
+                                  {user.isActive ? "Active" : "Inactive"}
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  data-ocid={`invoices.toggle_status_button.${index + 1}`}
-                                  className={`h-7 text-xs ${isPaid ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-green-600 border-green-200 hover:bg-green-50"}`}
-                                  onClick={() =>
-                                    updateInvoiceStatusMutate({
-                                      id: invoice.id,
-                                      status: isPaid
-                                        ? InvoiceStatus.unpaid
-                                        : InvoiceStatus.paid,
-                                    })
-                                  }
-                                >
-                                  Mark {isPaid ? "Unpaid" : "Paid"}
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    data-ocid={`users.toggle_button.${index + 1}`}
+                                    onClick={() => toggleActive(user.id)}
+                                    className="text-xs h-7"
+                                  >
+                                    {user.isActive ? "Deactivate" : "Activate"}
+                                  </Button>
+                                  {user.role !== Role.admin && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      data-ocid={`users.delete_button.${index + 1}`}
+                                      onClick={() =>
+                                        confirmDeactivateUser(user.id)
+                                      }
+                                      className="h-7 w-7 p-0 text-destructive border-destructive/20 hover:bg-destructive/10"
+                                      title="Deactivate user"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  )}
+                                </div>
                               </TableCell>
                             </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ── Newsletter ── */}
+          {activeTab === "newsletter" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Newsletter Subscribers
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Email addresses collected from the website newsletter signup
+                  form.
+                </p>
+              </div>
+
+              <Card data-ocid="newsletter.card">
+                <CardContent className="py-16 flex flex-col items-center justify-center text-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <Mail className="w-7 h-7 text-blue-400" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  <div>
+                    <p className="font-medium text-foreground text-sm">
+                      No subscribers yet
+                    </p>
+                    <p className="text-muted-foreground text-sm mt-1 max-w-sm">
+                      Email addresses collected from the website newsletter
+                      signup form will appear here in a future update.
+                    </p>
+                  </div>
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 mt-1">
+                    Coming Soon
+                  </Badge>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ── Invoices ── */}
+          {activeTab === "invoices" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    Invoices
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Manage client invoices and billing
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  data-ocid="invoices.create_invoice_button"
+                  onClick={() => setCreateInvoiceOpen(true)}
+                  className="font-medium"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Create Invoice
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      {invoices.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Total</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-green-600">
+                      {
+                        invoices.filter((i) => i.status === InvoiceStatus.paid)
+                          .length
+                      }
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Paid</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-orange-600">
+                      {
+                        invoices.filter(
+                          (i) => i.status === InvoiceStatus.unpaid,
+                        ).length
+                      }
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Unpaid</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardContent className="p-0">
+                  {invoicesLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : invoices.length === 0 ? (
+                    <div
+                      data-ocid="invoices.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No invoices yet. Create your first invoice above.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="invoices.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Client ID</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Currency</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invoices.map((invoice, index) => {
+                            const isPaid =
+                              invoice.status === InvoiceStatus.paid;
+                            return (
+                              <TableRow
+                                key={invoice.id.toString()}
+                                data-ocid={`invoices.row.${index + 1}`}
+                              >
+                                <TableCell className="text-sm text-muted-foreground font-mono">
+                                  {invoice.clientUserId.toString()}
+                                </TableCell>
+                                <TableCell className="text-sm font-medium max-w-[180px] truncate">
+                                  {invoice.serviceType}
+                                </TableCell>
+                                <TableCell className="text-sm font-semibold">
+                                  {invoice.currency === "INR"
+                                    ? `₹${Number(invoice.amount).toLocaleString("en-IN")}`
+                                    : `${invoice.currency} ${Number(invoice.amount).toLocaleString()}`}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {invoice.currency}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {invoice.dueDate}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    className={
+                                      isPaid
+                                        ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                        : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
+                                    }
+                                  >
+                                    {isPaid ? "Paid" : "Unpaid"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    data-ocid={`invoices.toggle_status_button.${index + 1}`}
+                                    className={`h-7 text-xs ${isPaid ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-green-600 border-green-200 hover:bg-green-50"}`}
+                                    onClick={() =>
+                                      updateInvoiceStatusMutate({
+                                        id: invoice.id,
+                                        status: isPaid
+                                          ? InvoiceStatus.unpaid
+                                          : InvoiceStatus.paid,
+                                      })
+                                    }
+                                  >
+                                    Mark {isPaid ? "Unpaid" : "Paid"}
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Blog Add/Edit Modal */}

@@ -49,6 +49,7 @@ import {
   Loader2,
   LogOut,
   Mail,
+  Menu,
   MessageCircle,
   Pencil,
   Phone,
@@ -366,6 +367,7 @@ export function StaffDashboard() {
   }, [navigate]);
 
   const [activeTab, setActiveTab] = useState<SideTab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [noteRequestId, setNoteRequestId] = useState<bigint | null>(null);
@@ -482,19 +484,44 @@ export function StaffDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+          role="button"
+          tabIndex={-1}
+          aria-label="Close sidebar"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      >
         <div className="p-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Globe className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <Globe className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="font-display font-bold text-sm text-sidebar-foreground">
+                  My Web Solutions
+                </p>
+                <p className="text-xs text-sidebar-foreground/50">
+                  Staff Portal
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-display font-bold text-sm text-sidebar-foreground">
-                My Web Solutions
-              </p>
-              <p className="text-xs text-sidebar-foreground/50">Staff Portal</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1 rounded text-sidebar-foreground/50 hover:text-sidebar-foreground"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -553,559 +580,583 @@ export function StaffDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-6 overflow-auto">
-        {/* ── Overview ── */}
-        {activeTab === "overview" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
+      <main className="flex-1 min-w-0 overflow-auto">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-30">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+            aria-label="Open sidebar"
           >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Overview
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Staff Dashboard
-              </p>
-            </div>
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="font-display font-bold text-sm text-foreground">
+            Staff Panel
+          </span>
+        </div>
+        <div className="p-4 md:p-6">
+          {/* ── Overview ── */}
+          {activeTab === "overview" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Overview
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Staff Dashboard
+                </p>
+              </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-5 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-foreground">
-                    {srLoading ? "—" : total}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Total Requests
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-5 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-yellow-600">
-                    {srLoading ? "—" : pendingCount}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Pending</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-5 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-blue-600">
-                    {srLoading ? "—" : inProgressCount}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    In Progress
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-5 pb-4 text-center">
-                  <p className="font-display text-3xl font-bold text-green-600">
-                    {srLoading ? "—" : completedCount}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Completed
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-5 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      {srLoading ? "—" : total}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Total Requests
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-yellow-600">
+                      {srLoading ? "—" : pendingCount}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pending
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-blue-600">
+                      {srLoading ? "—" : inProgressCount}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      In Progress
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 pb-4 text-center">
+                    <p className="font-display text-3xl font-bold text-green-600">
+                      {srLoading ? "—" : completedCount}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Completed
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* ── Task Completion Progress Bar ── */}
-            <Card data-ocid="staff_dashboard.overview.progress_bar">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Task Completion</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {srLoading ? (
-                  <Skeleton className="h-4 w-full" />
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {completedCount} of {total} completed ({completionPct}%)
-                      </span>
-                      <span
-                        className={`font-semibold text-xs px-2 py-0.5 rounded-full ${
-                          completionPct >= 75
-                            ? "bg-green-100 text-green-700"
+              {/* ── Task Completion Progress Bar ── */}
+              <Card data-ocid="staff_dashboard.overview.progress_bar">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Task Completion</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {srLoading ? (
+                    <Skeleton className="h-4 w-full" />
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          {completedCount} of {total} completed ({completionPct}
+                          %)
+                        </span>
+                        <span
+                          className={`font-semibold text-xs px-2 py-0.5 rounded-full ${
+                            completionPct >= 75
+                              ? "bg-green-100 text-green-700"
+                              : completionPct >= 50
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {completionPct >= 75
+                            ? "On Track"
                             : completionPct >= 50
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {completionPct >= 75
-                          ? "On Track"
-                          : completionPct >= 50
-                            ? "In Progress"
-                            : "Needs Attention"}
-                      </span>
-                    </div>
-                    <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${progressColor}`}
-                        style={{ width: `${completionPct}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Recent Requests */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Recent Requests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {srLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-14 w-full" />
-                    ))}
-                  </div>
-                ) : serviceRequests.length === 0 ? (
-                  <div
-                    data-ocid="staff_dashboard.requests.empty_state"
-                    className="text-center py-8"
-                  >
-                    <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      No service requests assigned yet.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {serviceRequests.slice(0, 5).map((req) => (
-                      <div
-                        key={req.id.toString()}
-                        className="flex items-start justify-between py-2.5 border-b border-border last:border-0"
-                      >
-                        <div>
-                          <p className="font-medium text-sm text-foreground">
-                            {req.serviceType}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {req.clientName} · {formatDate(req.createdAt)}
-                          </p>
-                        </div>
-                        <StatusBadge status={req.status} />
+                              ? "In Progress"
+                              : "Needs Attention"}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                      <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${progressColor}`}
+                          style={{ width: `${completionPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-        {/* ── Service Requests ── */}
-        {activeTab === "requests" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Service Requests
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Manage and update assigned request statuses
-              </p>
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex flex-wrap gap-2">
-              {REQUEST_FILTERS.map((f) => (
-                <button
-                  key={f.value}
-                  type="button"
-                  data-ocid={f.ocid}
-                  onClick={() => setRequestFilter(f.value)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                    requestFilter === f.value
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  {f.label}
-                  {f.value === "all" && total > 0 && (
-                    <span className="ml-1.5 text-xs opacity-70">({total})</span>
-                  )}
-                  {f.value === "pending" && pendingCount > 0 && (
-                    <span className="ml-1.5 text-xs opacity-70">
-                      ({pendingCount})
-                    </span>
-                  )}
-                  {f.value === "inProgress" && inProgressCount > 0 && (
-                    <span className="ml-1.5 text-xs opacity-70">
-                      ({inProgressCount})
-                    </span>
-                  )}
-                  {f.value === "completed" && completedCount > 0 && (
-                    <span className="ml-1.5 text-xs opacity-70">
-                      ({completedCount})
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <Card>
-              <CardContent className="p-0">
-                {srLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-14 w-full" />
-                    ))}
-                  </div>
-                ) : filteredRequests.length === 0 ? (
-                  <div
-                    data-ocid="staff_dashboard.requests.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      {serviceRequests.length === 0
-                        ? "No service requests assigned to you yet."
-                        : `No ${requestFilter === "all" ? "" : requestFilter} requests found.`}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table data-ocid="staff_dashboard.requests.table">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Note</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Update</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRequests.map((req, index) => (
-                          <TableRow
-                            key={req.id.toString()}
-                            data-ocid={`staff_dashboard.requests.row.${index + 1}`}
-                          >
-                            <TableCell className="font-medium text-sm">
-                              {req.clientName}
-                            </TableCell>
-                            <TableCell className="text-sm">
+              {/* Recent Requests */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Recent Requests</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {srLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-14 w-full" />
+                      ))}
+                    </div>
+                  ) : serviceRequests.length === 0 ? (
+                    <div
+                      data-ocid="staff_dashboard.requests.empty_state"
+                      className="text-center py-8"
+                    >
+                      <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No service requests assigned yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {serviceRequests.slice(0, 5).map((req) => (
+                        <div
+                          key={req.id.toString()}
+                          className="flex items-start justify-between py-2.5 border-b border-border last:border-0"
+                        >
+                          <div>
+                            <p className="font-medium text-sm text-foreground">
                               {req.serviceType}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
-                              {req.description}
-                            </TableCell>
-                            {/* Note Column */}
-                            <TableCell className="max-w-[120px]">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-muted-foreground truncate">
-                                  {req.staffNote
-                                    ? req.staffNote.slice(0, 20) +
-                                      (req.staffNote.length > 20 ? "…" : "")
-                                    : "—"}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 shrink-0"
-                                  data-ocid={`staff_dashboard.requests.note_edit.${index + 1}`}
-                                  onClick={() =>
-                                    openNoteDialog(req.id, req.staffNote)
-                                  }
-                                >
-                                  <Pencil className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge status={req.status} />
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(req.createdAt)}
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={req.status}
-                                onValueChange={(v) =>
-                                  updateStatus({
-                                    id: req.id,
-                                    status: v as ServiceRequestStatus,
-                                  })
-                                }
-                              >
-                                <SelectTrigger
-                                  className="w-36 h-8 text-xs"
-                                  data-ocid={`staff_dashboard.requests.status_select.${index + 1}`}
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.pending}
-                                  >
-                                    <span className="flex items-center gap-1.5">
-                                      <Clock className="w-3 h-3" />
-                                      Pending
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.inProgress}
-                                  >
-                                    <span className="flex items-center gap-1.5">
-                                      <Loader2 className="w-3 h-3" />
-                                      In Progress
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem
-                                    value={ServiceRequestStatus.completed}
-                                  >
-                                    <span className="flex items-center gap-1.5">
-                                      <CheckCircle2 className="w-3 h-3" />
-                                      Completed
-                                    </span>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {req.clientName} · {formatDate(req.createdAt)}
+                            </p>
+                          </div>
+                          <StatusBadge status={req.status} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-        {/* ── My Clients ── */}
-        {activeTab === "clients" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                My Clients
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Clients with requests assigned to you
-              </p>
-            </div>
+          {/* ── Service Requests ── */}
+          {activeTab === "requests" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Service Requests
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Manage and update assigned request statuses
+                </p>
+              </div>
 
-            {srLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-36 w-full" />
+              {/* Filter Pills */}
+              <div className="flex flex-wrap gap-2">
+                {REQUEST_FILTERS.map((f) => (
+                  <button
+                    key={f.value}
+                    type="button"
+                    data-ocid={f.ocid}
+                    onClick={() => setRequestFilter(f.value)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      requestFilter === f.value
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                    {f.value === "all" && total > 0 && (
+                      <span className="ml-1.5 text-xs opacity-70">
+                        ({total})
+                      </span>
+                    )}
+                    {f.value === "pending" && pendingCount > 0 && (
+                      <span className="ml-1.5 text-xs opacity-70">
+                        ({pendingCount})
+                      </span>
+                    )}
+                    {f.value === "inProgress" && inProgressCount > 0 && (
+                      <span className="ml-1.5 text-xs opacity-70">
+                        ({inProgressCount})
+                      </span>
+                    )}
+                    {f.value === "completed" && completedCount > 0 && (
+                      <span className="ml-1.5 text-xs opacity-70">
+                        ({completedCount})
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
-            ) : uniqueClients.length === 0 ? (
+
               <Card>
-                <CardContent
-                  className="py-16 text-center"
-                  data-ocid="staff_dashboard.clients.empty_state"
-                >
-                  <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    No clients assigned yet.
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Clients appear here when the admin assigns requests to you.
-                  </p>
+                <CardContent className="p-0">
+                  {srLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-14 w-full" />
+                      ))}
+                    </div>
+                  ) : filteredRequests.length === 0 ? (
+                    <div
+                      data-ocid="staff_dashboard.requests.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        {serviceRequests.length === 0
+                          ? "No service requests assigned to you yet."
+                          : `No ${requestFilter === "all" ? "" : requestFilter} requests found.`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table data-ocid="staff_dashboard.requests.table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Note</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Update</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredRequests.map((req, index) => (
+                            <TableRow
+                              key={req.id.toString()}
+                              data-ocid={`staff_dashboard.requests.row.${index + 1}`}
+                            >
+                              <TableCell className="font-medium text-sm">
+                                {req.clientName}
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {req.serviceType}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
+                                {req.description}
+                              </TableCell>
+                              {/* Note Column */}
+                              <TableCell className="max-w-[120px]">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    {req.staffNote
+                                      ? req.staffNote.slice(0, 20) +
+                                        (req.staffNote.length > 20 ? "…" : "")
+                                      : "—"}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 shrink-0"
+                                    data-ocid={`staff_dashboard.requests.note_edit.${index + 1}`}
+                                    onClick={() =>
+                                      openNoteDialog(req.id, req.staffNote)
+                                    }
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <StatusBadge status={req.status} />
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {formatDate(req.createdAt)}
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={req.status}
+                                  onValueChange={(v) =>
+                                    updateStatus({
+                                      id: req.id,
+                                      status: v as ServiceRequestStatus,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger
+                                    className="w-36 h-8 text-xs"
+                                    data-ocid={`staff_dashboard.requests.status_select.${index + 1}`}
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.pending}
+                                    >
+                                      <span className="flex items-center gap-1.5">
+                                        <Clock className="w-3 h-3" />
+                                        Pending
+                                      </span>
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.inProgress}
+                                    >
+                                      <span className="flex items-center gap-1.5">
+                                        <Loader2 className="w-3 h-3" />
+                                        In Progress
+                                      </span>
+                                    </SelectItem>
+                                    <SelectItem
+                                      value={ServiceRequestStatus.completed}
+                                    >
+                                      <span className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Completed
+                                      </span>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {uniqueClients.map((client, index) => {
-                  const uniqueServices = [
-                    ...new Set(client.requests.map((r) => r.serviceType)),
-                  ];
-                  const waText = encodeURIComponent(
-                    `Hi, I'm following up on behalf of client ${client.clientName}`,
-                  );
-                  return (
+            </motion.div>
+          )}
+
+          {/* ── My Clients ── */}
+          {activeTab === "clients" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  My Clients
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Clients with requests assigned to you
+                </p>
+              </div>
+
+              {srLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-36 w-full" />
+                  ))}
+                </div>
+              ) : uniqueClients.length === 0 ? (
+                <Card>
+                  <CardContent
+                    className="py-16 text-center"
+                    data-ocid="staff_dashboard.clients.empty_state"
+                  >
+                    <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      No clients assigned yet.
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Clients appear here when the admin assigns requests to
+                      you.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {uniqueClients.map((client, index) => {
+                    const uniqueServices = [
+                      ...new Set(client.requests.map((r) => r.serviceType)),
+                    ];
+                    const waText = encodeURIComponent(
+                      `Hi, I'm following up on behalf of client ${client.clientName}`,
+                    );
+                    return (
+                      <Card
+                        key={client.clientName}
+                        data-ocid={`staff_dashboard.clients.item.${index + 1}`}
+                        className="hover:shadow-md transition-shadow"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">
+                              {client.clientName}
+                            </CardTitle>
+                            <Badge variant="outline" className="text-xs">
+                              {client.requests.length} request
+                              {client.requests.length !== 1 ? "s" : ""}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1.5">
+                                Services
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {uniqueServices.map((svc) => (
+                                  <span
+                                    key={svc}
+                                    className="inline-block text-xs bg-accent text-accent-foreground rounded-md px-2 py-0.5"
+                                  >
+                                    {svc}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              {[
+                                ServiceRequestStatus.pending,
+                                ServiceRequestStatus.inProgress,
+                                ServiceRequestStatus.completed,
+                              ].map((status) => {
+                                const count = client.requests.filter(
+                                  (r) => r.status === status,
+                                ).length;
+                                if (count === 0) return null;
+                                return (
+                                  <div
+                                    key={status}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <StatusBadge status={status} />
+                                    <span className="text-xs text-muted-foreground">
+                                      {count}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            {/* WhatsApp Button */}
+                            <a
+                              href={`https://wa.me/919901563799?text=${waText}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              data-ocid={`staff_dashboard.clients.whatsapp_button.${index + 1}`}
+                            >
+                              <Button
+                                size="sm"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white mt-1"
+                              >
+                                <MessageCircle className="w-4 h-4 mr-2" />
+                                WhatsApp
+                              </Button>
+                            </a>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── Upcoming Bookings ── */}
+          {activeTab === "bookings" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Upcoming Bookings
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Pending and confirmed appointments
+                </p>
+              </div>
+
+              {bookingsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-44 w-full" />
+                  ))}
+                </div>
+              ) : upcomingBookings.length === 0 ? (
+                <Card>
+                  <CardContent
+                    className="py-16 text-center"
+                    data-ocid="staff_dashboard.bookings.empty_state"
+                  >
+                    <CalendarDays className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm font-medium">
+                      No upcoming bookings
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Pending and confirmed appointments will appear here.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {upcomingBookings.map((booking, index) => (
                     <Card
-                      key={client.clientName}
-                      data-ocid={`staff_dashboard.clients.item.${index + 1}`}
+                      key={booking.id.toString()}
+                      data-ocid={`staff_dashboard.bookings.card.${index + 1}`}
                       className="hover:shadow-md transition-shadow"
                     >
                       <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base font-semibold">
-                            {client.clientName}
-                          </CardTitle>
-                          <Badge variant="outline" className="text-xs">
-                            {client.requests.length} request
-                            {client.requests.length !== 1 ? "s" : ""}
-                          </Badge>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <CardTitle className="text-base font-semibold truncate">
+                              {booking.name}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                              {booking.service}
+                            </p>
+                          </div>
+                          <BookingStatusBadge status={booking.status} />
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1.5">
-                              Services
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {uniqueServices.map((svc) => (
-                                <span
-                                  key={svc}
-                                  className="inline-block text-xs bg-accent text-accent-foreground rounded-md px-2 py-0.5"
-                                >
-                                  {svc}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 flex-wrap">
-                            {[
-                              ServiceRequestStatus.pending,
-                              ServiceRequestStatus.inProgress,
-                              ServiceRequestStatus.completed,
-                            ].map((status) => {
-                              const count = client.requests.filter(
-                                (r) => r.status === status,
-                              ).length;
-                              if (count === 0) return null;
-                              return (
-                                <div
-                                  key={status}
-                                  className="flex items-center gap-1"
-                                >
-                                  <StatusBadge status={status} />
-                                  <span className="text-xs text-muted-foreground">
-                                    {count}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          {/* WhatsApp Button */}
-                          <a
-                            href={`https://wa.me/919901563799?text=${waText}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            data-ocid={`staff_dashboard.clients.whatsapp_button.${index + 1}`}
-                          >
-                            <Button
-                              size="sm"
-                              className="w-full bg-green-600 hover:bg-green-700 text-white mt-1"
-                            >
-                              <MessageCircle className="w-4 h-4 mr-2" />
-                              WhatsApp
-                            </Button>
-                          </a>
+                      <CardContent className="space-y-2.5 pt-0">
+                        <div className="flex items-center gap-2 text-sm">
+                          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="text-foreground">
+                            {booking.preferredDate}
+                            {booking.preferredTime
+                              ? ` at ${booking.preferredTime}`
+                              : ""}
+                          </span>
                         </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="text-foreground">
+                            {booking.phone}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="text-foreground truncate">
+                            {booking.email}
+                          </span>
+                        </div>
+                        {booking.message && (
+                          <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 line-clamp-2">
+                            {booking.message}
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ── Upcoming Bookings ── */}
-        {activeTab === "bookings" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Upcoming Bookings
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Pending and confirmed appointments
-              </p>
-            </div>
-
-            {bookingsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-44 w-full" />
-                ))}
-              </div>
-            ) : upcomingBookings.length === 0 ? (
-              <Card>
-                <CardContent
-                  className="py-16 text-center"
-                  data-ocid="staff_dashboard.bookings.empty_state"
-                >
-                  <CalendarDays className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm font-medium">
-                    No upcoming bookings
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Pending and confirmed appointments will appear here.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {upcomingBookings.map((booking, index) => (
-                  <Card
-                    key={booking.id.toString()}
-                    data-ocid={`staff_dashboard.bookings.card.${index + 1}`}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <CardTitle className="text-base font-semibold truncate">
-                            {booking.name}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                            {booking.service}
-                          </p>
-                        </div>
-                        <BookingStatusBadge status={booking.status} />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2.5 pt-0">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="text-foreground">
-                          {booking.preferredDate}
-                          {booking.preferredTime
-                            ? ` at ${booking.preferredTime}`
-                            : ""}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="text-foreground">{booking.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="text-foreground truncate">
-                          {booking.email}
-                        </span>
-                      </div>
-                      {booking.message && (
-                        <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 line-clamp-2">
-                          {booking.message}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </div>
       </main>
 
       {/* Change Password Dialog */}

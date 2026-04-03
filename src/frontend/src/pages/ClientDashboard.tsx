@@ -50,6 +50,7 @@ import {
   LayoutDashboard,
   Loader2,
   LogOut,
+  Menu,
   MessageCircle,
   Plus,
   UserCircle2,
@@ -152,6 +153,7 @@ export function ClientDashboard() {
   }, [navigate]);
 
   const [activeTab, setActiveTab] = useState<SideTab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newRequestOpen, setNewRequestOpen] = useState(false);
   const [requestForm, setRequestForm] = useState({
     serviceType: "",
@@ -340,21 +342,44 @@ export function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+          role="button"
+          tabIndex={-1}
+          aria-label="Close sidebar"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm">
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col min-h-screen border-r border-sidebar-border shadow-sm transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      >
         <div className="p-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Globe className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <Globe className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="font-display font-bold text-sm text-sidebar-foreground">
+                  My Web Solutions
+                </p>
+                <p className="text-xs text-sidebar-foreground/50">
+                  Client Portal
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-display font-bold text-sm text-sidebar-foreground">
-                My Web Solutions
-              </p>
-              <p className="text-xs text-sidebar-foreground/50">
-                Client Portal
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1 rounded text-sidebar-foreground/50 hover:text-sidebar-foreground"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -445,646 +470,666 @@ export function ClientDashboard() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-6 overflow-auto">
-        {/* ── Overview ── */}
-        {activeTab === "overview" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
+      <main className="flex-1 min-w-0 overflow-auto">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-30">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+            aria-label="Open sidebar"
           >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Welcome, {clientName}
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Here's an overview of your services
-              </p>
-            </div>
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="font-display font-bold text-sm text-foreground">
+            Client Portal
+          </span>
+        </div>
+        <div className="p-4 md:p-6">
+          {/* ── Overview ── */}
+          {activeTab === "overview" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Welcome, {clientName}
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Here's an overview of your services
+                </p>
+              </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-bold text-foreground">
-                        {requestsLoading ? "—" : pending}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-bold text-foreground">
-                        {requestsLoading ? "—" : inProgress}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        In Progress
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-bold text-foreground">
-                        {requestsLoading ? "—" : completed}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Completed</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Requests */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Recent Requests</CardTitle>
-                  <Button
-                    size="sm"
-                    onClick={() => setNewRequestOpen(true)}
-                    data-ocid="client_dashboard.new_request_button"
-                    className="font-medium"
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    New Request
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {requestsLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2].map((i) => (
-                      <Skeleton key={i} className="h-14 w-full" />
-                    ))}
-                  </div>
-                ) : requests.length === 0 ? (
-                  <div
-                    data-ocid="client_dashboard.requests.empty_state"
-                    className="text-center py-8"
-                  >
-                    <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      No requests yet. Submit your first service request.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {sortedRequests.slice(0, 3).map((req) => {
-                      const staffName = getStaffName(req.assignedStaffId);
-                      return (
-                        <div
-                          key={req.id.toString()}
-                          className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
-                        >
-                          <div className="flex-1 min-w-0 mr-3">
-                            <p className="font-medium text-sm text-foreground">
-                              {req.serviceType}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {formatDate(req.createdAt)}
-                            </p>
-                            {staffName && (
-                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                <UserCircle2 className="w-3 h-3" />
-                                Assigned: {staffName}
-                              </p>
-                            )}
-                          </div>
-                          <StatusBadge status={req.status} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card
-                className="cursor-pointer hover:shadow-card transition-all"
-                onClick={() => setNewRequestOpen(true)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Plus className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">
-                        New Service Request
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Submit a new request
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <a
-                href={`${WA_LINK}?text=Hi, I need support with my service.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-ocid="client_dashboard.whatsapp_support_link"
-              >
-                <Card className="cursor-pointer hover:shadow-card transition-all h-full">
-                  <CardContent className="p-5">
+              {/* Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-5 pb-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: "#dcfce7" }}
-                      >
-                        <MessageCircle
-                          className="w-5 h-5"
-                          style={{ color: "#16a34a" }}
-                        />
+                      <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-yellow-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-foreground">
-                          WhatsApp Support
+                        <p className="font-display text-2xl font-bold text-foreground">
+                          {requestsLoading ? "—" : pending}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-bold text-foreground">
+                          {requestsLoading ? "—" : inProgress}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Chat with us directly
+                          In Progress
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </a>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── My Requests ── */}
-        {activeTab === "requests" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
-                  My Service Requests
-                </h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Track all your submitted requests
-                </p>
+                <Card>
+                  <CardContent className="pt-5 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-bold text-foreground">
+                          {requestsLoading ? "—" : completed}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Completed
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <Button
-                size="sm"
-                onClick={() => setNewRequestOpen(true)}
-                data-ocid="client_dashboard.requests.new_button"
-                className="font-medium"
-              >
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
-                New Request
-              </Button>
-            </div>
 
-            <Card>
-              <CardContent className="p-0">
-                {requestsLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : sortedRequests.length === 0 ? (
-                  <div
-                    data-ocid="client_dashboard.requests.empty_state"
-                    className="py-16 text-center"
-                  >
-                    <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">
-                      No service requests yet.
-                    </p>
+              {/* Recent Requests */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Recent Requests</CardTitle>
                     <Button
                       size="sm"
-                      className="mt-4"
                       onClick={() => setNewRequestOpen(true)}
-                      data-ocid="client_dashboard.requests.empty_new_button"
+                      data-ocid="client_dashboard.new_request_button"
+                      className="font-medium"
                     >
-                      Submit Your First Request
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />
+                      New Request
                     </Button>
                   </div>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {sortedRequests.map((req, index) => {
-                      const staffName = getStaffName(req.assignedStaffId);
-                      const isPending =
-                        req.status === ServiceRequestStatus.pending;
-
-                      return (
-                        <div
-                          key={req.id.toString()}
-                          data-ocid={`client_dashboard.requests.item.${index + 1}`}
-                          className={`p-5 flex items-start gap-4 border-l-4 ${timelineColor(req.status)}`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm text-foreground mb-1">
-                                  {req.serviceType}
-                                </p>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {req.description}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1.5">
-                                  Submitted on {formatDate(req.createdAt)}
-                                </p>
-                                {staffName && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <UserCircle2 className="w-3 h-3" />
-                                    Assigned: {staffName}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="shrink-0 flex flex-col items-end gap-2">
-                                <StatusBadge status={req.status} />
-                                {isPending && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                                    data-ocid={`client_dashboard.requests.cancel_button.${index + 1}`}
-                                    onClick={() => {
-                                      setCancelRequestId(req.id);
-                                      setCancelDialogOpen(true);
-                                    }}
-                                  >
-                                    <X className="w-3 h-3 mr-1" />
-                                    Cancel
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                            {req.staffNote && (
-                              <div className="mt-2 bg-muted/50 rounded-md p-2.5">
-                                <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                                  Staff Note
-                                </p>
-                                <p className="text-sm text-foreground">
-                                  {req.staffNote}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* ── Invoices ── */}
-        {activeTab === "invoices" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Invoices
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                View your billing history
-              </p>
-            </div>
-
-            {invoicesLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            ) : invoices.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-7 h-7 text-primary" />
-                  </div>
-                  <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                    No Invoices Yet
-                  </h2>
-                  <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
-                    Your invoices will appear here once your services are
-                    completed. For billing queries, contact us directly on
-                    WhatsApp.
-                  </p>
-                  <Button
-                    asChild
-                    size="sm"
-                    className="font-semibold"
-                    data-ocid="client_dashboard.invoices.whatsapp_button"
-                  >
-                    <a
-                      href={`${WA_LINK}?text=Hi, I have a billing query regarding my invoice.`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                </CardHeader>
+                <CardContent>
+                  {requestsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2].map((i) => (
+                        <Skeleton key={i} className="h-14 w-full" />
+                      ))}
+                    </div>
+                  ) : requests.length === 0 ? (
+                    <div
+                      data-ocid="client_dashboard.requests.empty_state"
+                      className="text-center py-8"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Contact on WhatsApp
-                    </a>
-                  </Button>
+                      <ClipboardList className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No requests yet. Submit your first service request.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sortedRequests.slice(0, 3).map((req) => {
+                        const staffName = getStaffName(req.assignedStaffId);
+                        return (
+                          <div
+                            key={req.id.toString()}
+                            className={`flex items-center justify-between py-2.5 border-l-4 pl-3 ${timelineColor(req.status)} rounded-r-md bg-muted/30`}
+                          >
+                            <div className="flex-1 min-w-0 mr-3">
+                              <p className="font-medium text-sm text-foreground">
+                                {req.serviceType}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDate(req.createdAt)}
+                              </p>
+                              {staffName && (
+                                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                  <UserCircle2 className="w-3 h-3" />
+                                  Assigned: {staffName}
+                                </p>
+                              )}
+                            </div>
+                            <StatusBadge status={req.status} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            ) : (
-              <div className="space-y-3">
-                {invoices.map((invoice, index) => {
-                  const isPaid = invoice.status === InvoiceStatus.paid;
-                  return (
-                    <Card
-                      key={invoice.id.toString()}
-                      data-ocid={`client_dashboard.invoices.item.${index + 1}`}
-                      className={`border-l-4 ${isPaid ? "border-l-green-500" : "border-l-orange-400"}`}
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-foreground mb-1">
-                              {invoice.serviceType}
-                            </p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
-                              <span>
-                                Due:{" "}
-                                <span className="font-medium text-foreground">
-                                  {invoice.dueDate}
-                                </span>
-                              </span>
-                              <span>
-                                Issued: {formatDate(invoice.createdAt)}
-                              </span>
-                            </div>
-                            {invoice.notes && (
-                              <p className="text-xs text-muted-foreground mt-1.5">
-                                {invoice.notes}
-                              </p>
-                            )}
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <p className="font-display text-lg font-bold text-foreground">
-                              {formatAmount(invoice.amount, invoice.currency)}
-                            </p>
-                            <Badge
-                              className={`mt-1 ${
-                                isPaid
-                                  ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
-                                  : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
-                              }`}
-                            >
-                              {isPaid ? "Paid" : "Unpaid"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        )}
 
-        {/* ── Notifications ── */}
-        {activeTab === "notifications" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
-                  Notifications
-                </h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Status updates on your service requests
-                </p>
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card
+                  className="cursor-pointer hover:shadow-card transition-all"
+                  onClick={() => setNewRequestOpen(true)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Plus className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">
+                          New Service Request
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Submit a new request
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <a
+                  href={`${WA_LINK}?text=Hi, I need support with my service.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-ocid="client_dashboard.whatsapp_support_link"
+                >
+                  <Card className="cursor-pointer hover:shadow-card transition-all h-full">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: "#dcfce7" }}
+                        >
+                          <MessageCircle
+                            className="w-5 h-5"
+                            style={{ color: "#16a34a" }}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground">
+                            WhatsApp Support
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Chat with us directly
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
               </div>
-              {notifications.length > 0 && (
+            </motion.div>
+          )}
+
+          {/* ── My Requests ── */}
+          {activeTab === "requests" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    My Service Requests
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Track all your submitted requests
+                  </p>
+                </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  data-ocid="client_dashboard.notifications.mark_read_button"
-                  onClick={handleMarkAllRead}
+                  onClick={() => setNewRequestOpen(true)}
+                  data-ocid="client_dashboard.requests.new_button"
+                  className="font-medium"
                 >
-                  Mark all as read
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />
+                  New Request
                 </Button>
-              )}
-            </div>
-
-            {requestsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
               </div>
-            ) : notifications.length === 0 ? (
+
               <Card>
-                <CardContent
-                  data-ocid="client_dashboard.notifications.empty_state"
-                  className="p-10 text-center"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
-                    <Bell className="w-6 h-6 text-muted-foreground/50" />
-                  </div>
-                  <p className="font-medium text-sm text-foreground mb-1">
-                    All caught up!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    No new notifications. You'll be notified when your request
-                    status changes.
-                  </p>
+                <CardContent className="p-0">
+                  {requestsLoading ? (
+                    <div className="p-6 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : sortedRequests.length === 0 ? (
+                    <div
+                      data-ocid="client_dashboard.requests.empty_state"
+                      className="py-16 text-center"
+                    >
+                      <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">
+                        No service requests yet.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => setNewRequestOpen(true)}
+                        data-ocid="client_dashboard.requests.empty_new_button"
+                      >
+                        Submit Your First Request
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {sortedRequests.map((req, index) => {
+                        const staffName = getStaffName(req.assignedStaffId);
+                        const isPending =
+                          req.status === ServiceRequestStatus.pending;
+
+                        return (
+                          <div
+                            key={req.id.toString()}
+                            data-ocid={`client_dashboard.requests.item.${index + 1}`}
+                            className={`p-5 flex items-start gap-4 border-l-4 ${timelineColor(req.status)}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm text-foreground mb-1">
+                                    {req.serviceType}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {req.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1.5">
+                                    Submitted on {formatDate(req.createdAt)}
+                                  </p>
+                                  {staffName && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                      <UserCircle2 className="w-3 h-3" />
+                                      Assigned: {staffName}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="shrink-0 flex flex-col items-end gap-2">
+                                  <StatusBadge status={req.status} />
+                                  {isPending && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                                      data-ocid={`client_dashboard.requests.cancel_button.${index + 1}`}
+                                      onClick={() => {
+                                        setCancelRequestId(req.id);
+                                        setCancelDialogOpen(true);
+                                      }}
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {req.staffNote && (
+                                <div className="mt-2 bg-muted/50 rounded-md p-2.5">
+                                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                                    Staff Note
+                                  </p>
+                                  <p className="text-sm text-foreground">
+                                    {req.staffNote}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            ) : (
-              <div className="space-y-2">
-                {notifications.map((req, index) => {
-                  const isCompleted =
-                    req.status === ServiceRequestStatus.completed;
-                  return (
-                    <Card
-                      key={req.id.toString()}
-                      data-ocid={`client_dashboard.notifications.item.${index + 1}`}
-                      className={`border-l-4 ${isCompleted ? "border-l-green-500" : "border-l-blue-500"}`}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-foreground">
-                              <span className="font-semibold">
-                                {req.serviceType}
-                              </span>{" "}
-                              moved to{" "}
-                              <span
-                                className={
-                                  isCompleted
-                                    ? "text-green-600 font-semibold"
-                                    : "text-blue-600 font-semibold"
-                                }
-                              >
-                                {isCompleted ? "Completed" : "In Progress"}
-                              </span>
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {formatDateTime(req.updatedAt)}
-                            </p>
-                          </div>
-                          <StatusBadge status={req.status} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            </motion.div>
+          )}
+
+          {/* ── Invoices ── */}
+          {activeTab === "invoices" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Invoices
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  View your billing history
+                </p>
               </div>
-            )}
-          </motion.div>
-        )}
 
-        {/* ── Profile ── */}
-        {activeTab === "profile" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Profile
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Manage your account settings
-              </p>
-            </div>
-
-            {/* Account Info */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Account Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UserCircle2 className="w-8 h-8 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">
-                      {clientName}
-                    </p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {session?.role} Account
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      ID: {session?.userId}
-                    </p>
-                  </div>
+              {invoicesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+              ) : invoices.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-7 h-7 text-primary" />
+                    </div>
+                    <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                      No Invoices Yet
+                    </h2>
+                    <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
+                      Your invoices will appear here once your services are
+                      completed. For billing queries, contact us directly on
+                      WhatsApp.
+                    </p>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="font-semibold"
+                      data-ocid="client_dashboard.invoices.whatsapp_button"
+                    >
+                      <a
+                        href={`${WA_LINK}?text=Hi, I have a billing query regarding my invoice.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Contact on WhatsApp
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {invoices.map((invoice, index) => {
+                    const isPaid = invoice.status === InvoiceStatus.paid;
+                    return (
+                      <Card
+                        key={invoice.id.toString()}
+                        data-ocid={`client_dashboard.invoices.item.${index + 1}`}
+                        className={`border-l-4 ${isPaid ? "border-l-green-500" : "border-l-orange-400"}`}
+                      >
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm text-foreground mb-1">
+                                {invoice.serviceType}
+                              </p>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+                                <span>
+                                  Due:{" "}
+                                  <span className="font-medium text-foreground">
+                                    {invoice.dueDate}
+                                  </span>
+                                </span>
+                                <span>
+                                  Issued: {formatDate(invoice.createdAt)}
+                                </span>
+                              </div>
+                              {invoice.notes && (
+                                <p className="text-xs text-muted-foreground mt-1.5">
+                                  {invoice.notes}
+                                </p>
+                              )}
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="font-display text-lg font-bold text-foreground">
+                                {formatAmount(invoice.amount, invoice.currency)}
+                              </p>
+                              <Badge
+                                className={`mt-1 ${
+                                  isPaid
+                                    ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                                    : "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"
+                                }`}
+                              >
+                                {isPaid ? "Paid" : "Unpaid"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
 
-            {/* Change Password */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Change Password</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form
-                  onSubmit={handleChangePassword}
-                  className="space-y-4 max-w-md"
-                >
-                  <div>
-                    <Label className="text-sm font-medium mb-1.5 block">
-                      Current Password
-                    </Label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      data-ocid="client_dashboard.profile.current_password_input"
-                      value={pwForm.current}
-                      onChange={(e) =>
-                        setPwForm((p) => ({ ...p, current: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium mb-1.5 block">
-                      New Password
-                    </Label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      data-ocid="client_dashboard.profile.new_password_input"
-                      value={pwForm.next}
-                      onChange={(e) =>
-                        setPwForm((p) => ({ ...p, next: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium mb-1.5 block">
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      data-ocid="client_dashboard.profile.confirm_password_input"
-                      value={pwForm.confirm}
-                      onChange={(e) =>
-                        setPwForm((p) => ({ ...p, confirm: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
+          {/* ── Notifications ── */}
+          {activeTab === "notifications" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-foreground">
+                    Notifications
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Status updates on your service requests
+                  </p>
+                </div>
+                {notifications.length > 0 && (
                   <Button
-                    type="submit"
-                    data-ocid="client_dashboard.profile.change_password_button"
-                    disabled={changingPw}
+                    size="sm"
+                    variant="outline"
+                    data-ocid="client_dashboard.notifications.mark_read_button"
+                    onClick={handleMarkAllRead}
                   >
-                    {changingPw ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Change Password"
-                    )}
+                    Mark all as read
                   </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                )}
+              </div>
+
+              {requestsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : notifications.length === 0 ? (
+                <Card>
+                  <CardContent
+                    data-ocid="client_dashboard.notifications.empty_state"
+                    className="p-10 text-center"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+                      <Bell className="w-6 h-6 text-muted-foreground/50" />
+                    </div>
+                    <p className="font-medium text-sm text-foreground mb-1">
+                      All caught up!
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      No new notifications. You'll be notified when your request
+                      status changes.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {notifications.map((req, index) => {
+                    const isCompleted =
+                      req.status === ServiceRequestStatus.completed;
+                    return (
+                      <Card
+                        key={req.id.toString()}
+                        data-ocid={`client_dashboard.notifications.item.${index + 1}`}
+                        className={`border-l-4 ${isCompleted ? "border-l-green-500" : "border-l-blue-500"}`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-foreground">
+                                <span className="font-semibold">
+                                  {req.serviceType}
+                                </span>{" "}
+                                moved to{" "}
+                                <span
+                                  className={
+                                    isCompleted
+                                      ? "text-green-600 font-semibold"
+                                      : "text-blue-600 font-semibold"
+                                  }
+                                >
+                                  {isCompleted ? "Completed" : "In Progress"}
+                                </span>
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDateTime(req.updatedAt)}
+                              </p>
+                            </div>
+                            <StatusBadge status={req.status} />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── Profile ── */}
+          {activeTab === "profile" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="font-display text-2xl font-bold text-foreground">
+                  Profile
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Manage your account settings
+                </p>
+              </div>
+
+              {/* Account Info */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">
+                    Account Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserCircle2 className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {clientName}
+                      </p>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {session?.role} Account
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        ID: {session?.userId}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Change Password */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Change Password</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form
+                    onSubmit={handleChangePassword}
+                    className="space-y-4 max-w-md"
+                  >
+                    <div>
+                      <Label className="text-sm font-medium mb-1.5 block">
+                        Current Password
+                      </Label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        data-ocid="client_dashboard.profile.current_password_input"
+                        value={pwForm.current}
+                        onChange={(e) =>
+                          setPwForm((p) => ({ ...p, current: e.target.value }))
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium mb-1.5 block">
+                        New Password
+                      </Label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        data-ocid="client_dashboard.profile.new_password_input"
+                        value={pwForm.next}
+                        onChange={(e) =>
+                          setPwForm((p) => ({ ...p, next: e.target.value }))
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium mb-1.5 block">
+                        Confirm New Password
+                      </Label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        data-ocid="client_dashboard.profile.confirm_password_input"
+                        value={pwForm.confirm}
+                        onChange={(e) =>
+                          setPwForm((p) => ({ ...p, confirm: e.target.value }))
+                        }
+                        required
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      data-ocid="client_dashboard.profile.change_password_button"
+                      disabled={changingPw}
+                    >
+                      {changingPw ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Change Password"
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
       </main>
 
       {/* New Request Dialog */}

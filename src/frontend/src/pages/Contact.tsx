@@ -82,6 +82,11 @@ const services = [
   "Other",
 ];
 
+function validatePhone(phone: string) {
+  const cleaned = phone.replace(/[\s\-().+]/g, "");
+  return /^\d{7,15}$/.test(cleaned);
+}
+
 export function Contact() {
   useEffect(() => {
     document.title = "Contact Us | My Web Solutions";
@@ -103,15 +108,36 @@ export function Contact() {
     service: "",
     message: "",
   });
+  const [errors, setErrors] = useState<{
+    name?: string;
+    phone?: string;
+    service?: string;
+    message?: string;
+  }>({});
   const [submitted, setSubmitted] = useState(false);
   const { mutateAsync: submitLead, isPending } = useSubmitLead();
 
+  const validate = () => {
+    const newErrors: typeof errors = {};
+    if (!form.name.trim()) newErrors.name = "Full name is required.";
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (!validatePhone(form.phone)) {
+      newErrors.phone = "Please enter a valid phone number.";
+    }
+    if (!form.service) newErrors.service = "Please select a service.";
+    if (!form.message.trim()) newErrors.message = "Message is required.";
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.service || !form.message) {
-      toast.error("Please fill in all fields");
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     try {
       await submitLead(form);
       setSubmitted(true);
@@ -215,13 +241,18 @@ export function Contact() {
                       <div>
                         <p className="font-medium text-sm">Message Sent!</p>
                         <p className="text-xs mt-0.5 text-green-700">
-                          We'll get back to you within 24 hours.
+                          Thank you! We'll get back to you within 24 hours.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-5"
+                    noValidate
+                  >
+                    {/* Name */}
                     <div>
                       <Label
                         htmlFor="name"
@@ -234,13 +265,28 @@ export function Contact() {
                         data-ocid="contact.name_input"
                         placeholder="Rajesh Kumar"
                         value={form.name}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, name: e.target.value }))
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, name: e.target.value }));
+                          if (errors.name)
+                            setErrors((p) => ({ ...p, name: undefined }));
+                        }}
+                        className={
+                          errors.name
+                            ? "border-red-400 focus-visible:ring-red-400"
+                            : ""
                         }
-                        required
                       />
+                      {errors.name && (
+                        <p
+                          data-ocid="contact.name_error"
+                          className="text-red-500 text-sm mt-1"
+                        >
+                          {errors.name}
+                        </p>
+                      )}
                     </div>
 
+                    {/* Phone */}
                     <div>
                       <Label
                         htmlFor="phone"
@@ -253,24 +299,48 @@ export function Contact() {
                         data-ocid="contact.phone_input"
                         placeholder="+91 98765 43210"
                         value={form.phone}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, phone: e.target.value }))
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, phone: e.target.value }));
+                          if (errors.phone)
+                            setErrors((p) => ({ ...p, phone: undefined }));
+                        }}
+                        className={
+                          errors.phone
+                            ? "border-red-400 focus-visible:ring-red-400"
+                            : ""
                         }
-                        required
                       />
+                      {errors.phone && (
+                        <p
+                          data-ocid="contact.phone_error"
+                          className="text-red-500 text-sm mt-1"
+                        >
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
 
+                    {/* Service */}
                     <div>
                       <Label className="text-sm font-medium mb-1.5 block">
                         Service Required *
                       </Label>
                       <Select
                         value={form.service}
-                        onValueChange={(v) =>
-                          setForm((p) => ({ ...p, service: v }))
-                        }
+                        onValueChange={(v) => {
+                          setForm((p) => ({ ...p, service: v }));
+                          if (errors.service)
+                            setErrors((p) => ({ ...p, service: undefined }));
+                        }}
                       >
-                        <SelectTrigger data-ocid="contact.service_select">
+                        <SelectTrigger
+                          data-ocid="contact.service_select"
+                          className={
+                            errors.service
+                              ? "border-red-400 focus-visible:ring-red-400"
+                              : ""
+                          }
+                        >
                           <SelectValue placeholder="Select a service" />
                         </SelectTrigger>
                         <SelectContent>
@@ -281,8 +351,17 @@ export function Contact() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.service && (
+                        <p
+                          data-ocid="contact.service_error"
+                          className="text-red-500 text-sm mt-1"
+                        >
+                          {errors.service}
+                        </p>
+                      )}
                     </div>
 
+                    {/* Message */}
                     <div>
                       <Label
                         htmlFor="message"
@@ -296,12 +375,21 @@ export function Contact() {
                         placeholder="Tell us about your project..."
                         rows={5}
                         value={form.message}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, message: e.target.value }))
-                        }
-                        required
-                        className="resize-none"
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, message: e.target.value }));
+                          if (errors.message)
+                            setErrors((p) => ({ ...p, message: undefined }));
+                        }}
+                        className={`resize-none ${errors.message ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                       />
+                      {errors.message && (
+                        <p
+                          data-ocid="contact.message_error"
+                          className="text-red-500 text-sm mt-1"
+                        >
+                          {errors.message}
+                        </p>
+                      )}
                     </div>
 
                     <Button

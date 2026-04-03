@@ -68,6 +68,15 @@ interface BookingConfirmation {
   phone: string;
 }
 
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone: string) {
+  const cleaned = phone.replace(/[\s\-().+]/g, "");
+  return /^\d{7,15}$/.test(cleaned);
+}
+
 function SuccessCard({ booking }: { booking: BookingConfirmation }) {
   const waText = encodeURIComponent(
     `Hi, I just booked an appointment for ${booking.service} on ${booking.date}. Booking confirmed!`,
@@ -91,7 +100,8 @@ function SuccessCard({ booking }: { booking: BookingConfirmation }) {
             Appointment Booked!
           </h2>
           <p className="text-muted-foreground text-sm mb-6">
-            We've received your booking and will confirm within a few hours.
+            Thank you! We've received your booking and will confirm within a few
+            hours.
           </p>
 
           <div className="bg-white rounded-xl border border-green-200 p-4 text-left space-y-3 mb-6">
@@ -168,22 +178,45 @@ export function Booking() {
     preferredTime: "",
     message: "",
   });
+  const [errors, setErrors] = useState<{
+    name?: string;
+    phone?: string;
+    email?: string;
+    service?: string;
+    preferredDate?: string;
+    preferredTime?: string;
+  }>({});
   const [confirmed, setConfirmed] = useState<BookingConfirmation | null>(null);
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
 
+  const validate = () => {
+    const newErrors: typeof errors = {};
+    if (!form.name.trim()) newErrors.name = "Full name is required.";
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (!validatePhone(form.phone)) {
+      newErrors.phone = "Please enter a valid phone number.";
+    }
+    if (!form.email.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (!validateEmail(form.email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (!form.service) newErrors.service = "Please select a service.";
+    if (!form.preferredDate) newErrors.preferredDate = "Please choose a date.";
+    if (!form.preferredTime)
+      newErrors.preferredTime = "Please select a time slot.";
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.name ||
-      !form.phone ||
-      !form.email ||
-      !form.service ||
-      !form.preferredDate ||
-      !form.preferredTime
-    ) {
-      toast.error("Please fill in all required fields");
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     try {
       await createBooking(form);
       setConfirmed({
@@ -257,6 +290,7 @@ export function Booking() {
                         onSubmit={handleSubmit}
                         className="space-y-5"
                         data-ocid="booking.form"
+                        noValidate
                       >
                         {/* Name */}
                         <div>
@@ -272,12 +306,26 @@ export function Booking() {
                             data-ocid="booking.name_input"
                             placeholder="Rajesh Kumar"
                             value={form.name}
-                            onChange={(e) =>
-                              setForm((p) => ({ ...p, name: e.target.value }))
-                            }
-                            required
+                            onChange={(e) => {
+                              setForm((p) => ({ ...p, name: e.target.value }));
+                              if (errors.name)
+                                setErrors((p) => ({ ...p, name: undefined }));
+                            }}
                             autoComplete="name"
+                            className={
+                              errors.name
+                                ? "border-red-400 focus-visible:ring-red-400"
+                                : ""
+                            }
                           />
+                          {errors.name && (
+                            <p
+                              data-ocid="booking.name_error"
+                              className="text-red-500 text-sm mt-1"
+                            >
+                              {errors.name}
+                            </p>
+                          )}
                         </div>
 
                         {/* Phone + Email */}
@@ -296,15 +344,32 @@ export function Booking() {
                               type="tel"
                               placeholder="+91 98765 43210"
                               value={form.phone}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setForm((p) => ({
                                   ...p,
                                   phone: e.target.value,
-                                }))
-                              }
-                              required
+                                }));
+                                if (errors.phone)
+                                  setErrors((p) => ({
+                                    ...p,
+                                    phone: undefined,
+                                  }));
+                              }}
                               autoComplete="tel"
+                              className={
+                                errors.phone
+                                  ? "border-red-400 focus-visible:ring-red-400"
+                                  : ""
+                              }
                             />
+                            {errors.phone && (
+                              <p
+                                data-ocid="booking.phone_error"
+                                className="text-red-500 text-sm mt-1"
+                              >
+                                {errors.phone}
+                              </p>
+                            )}
                           </div>
                           <div>
                             <Label
@@ -319,15 +384,32 @@ export function Booking() {
                               type="email"
                               placeholder="you@example.com"
                               value={form.email}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setForm((p) => ({
                                   ...p,
                                   email: e.target.value,
-                                }))
-                              }
-                              required
+                                }));
+                                if (errors.email)
+                                  setErrors((p) => ({
+                                    ...p,
+                                    email: undefined,
+                                  }));
+                              }}
                               autoComplete="email"
+                              className={
+                                errors.email
+                                  ? "border-red-400 focus-visible:ring-red-400"
+                                  : ""
+                              }
                             />
+                            {errors.email && (
+                              <p
+                                data-ocid="booking.email_error"
+                                className="text-red-500 text-sm mt-1"
+                              >
+                                {errors.email}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -339,11 +421,23 @@ export function Booking() {
                           </Label>
                           <Select
                             value={form.service}
-                            onValueChange={(v) =>
-                              setForm((p) => ({ ...p, service: v }))
-                            }
+                            onValueChange={(v) => {
+                              setForm((p) => ({ ...p, service: v }));
+                              if (errors.service)
+                                setErrors((p) => ({
+                                  ...p,
+                                  service: undefined,
+                                }));
+                            }}
                           >
-                            <SelectTrigger data-ocid="booking.service_select">
+                            <SelectTrigger
+                              data-ocid="booking.service_select"
+                              className={
+                                errors.service
+                                  ? "border-red-400 focus-visible:ring-red-400"
+                                  : ""
+                              }
+                            >
                               <SelectValue placeholder="Choose a service..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -354,6 +448,14 @@ export function Booking() {
                               ))}
                             </SelectContent>
                           </Select>
+                          {errors.service && (
+                            <p
+                              data-ocid="booking.service_error"
+                              className="text-red-500 text-sm mt-1"
+                            >
+                              {errors.service}
+                            </p>
+                          )}
                         </div>
 
                         {/* Date + Time */}
@@ -372,14 +474,31 @@ export function Booking() {
                               type="date"
                               min={today}
                               value={form.preferredDate}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setForm((p) => ({
                                   ...p,
                                   preferredDate: e.target.value,
-                                }))
+                                }));
+                                if (errors.preferredDate)
+                                  setErrors((p) => ({
+                                    ...p,
+                                    preferredDate: undefined,
+                                  }));
+                              }}
+                              className={
+                                errors.preferredDate
+                                  ? "border-red-400 focus-visible:ring-red-400"
+                                  : ""
                               }
-                              required
                             />
+                            {errors.preferredDate && (
+                              <p
+                                data-ocid="booking.date_error"
+                                className="text-red-500 text-sm mt-1"
+                              >
+                                {errors.preferredDate}
+                              </p>
+                            )}
                           </div>
                           <div>
                             <Label className="text-sm font-medium mb-1.5 block">
@@ -388,11 +507,23 @@ export function Booking() {
                             </Label>
                             <Select
                               value={form.preferredTime}
-                              onValueChange={(v) =>
-                                setForm((p) => ({ ...p, preferredTime: v }))
-                              }
+                              onValueChange={(v) => {
+                                setForm((p) => ({ ...p, preferredTime: v }));
+                                if (errors.preferredTime)
+                                  setErrors((p) => ({
+                                    ...p,
+                                    preferredTime: undefined,
+                                  }));
+                              }}
                             >
-                              <SelectTrigger data-ocid="booking.time_select">
+                              <SelectTrigger
+                                data-ocid="booking.time_select"
+                                className={
+                                  errors.preferredTime
+                                    ? "border-red-400 focus-visible:ring-red-400"
+                                    : ""
+                                }
+                              >
                                 <SelectValue placeholder="Select time slot" />
                               </SelectTrigger>
                               <SelectContent>
@@ -406,6 +537,14 @@ export function Booking() {
                                 ))}
                               </SelectContent>
                             </Select>
+                            {errors.preferredTime && (
+                              <p
+                                data-ocid="booking.time_error"
+                                className="text-red-500 text-sm mt-1"
+                              >
+                                {errors.preferredTime}
+                              </p>
+                            )}
                           </div>
                         </div>
 

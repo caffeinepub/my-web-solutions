@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 const navLinks = [
@@ -31,7 +32,7 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 nav-blur border-b border-border shadow-nav">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
           <img
             src="/assets/generated/logo-mws.dim_200x200.jpg"
             alt="My Web Solutions Logo"
@@ -49,7 +50,7 @@ export function Navbar() {
                 key={link.href}
                 to={link.href}
                 data-ocid={link.ocid}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -62,7 +63,7 @@ export function Navbar() {
         </nav>
 
         {/* CTA */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 shrink-0">
           <Button asChild size="sm" variant="outline" className="font-medium">
             <Link to="/contact" data-ocid="nav.contact_cta_link">
               Get Started
@@ -82,64 +83,73 @@ export function Navbar() {
         {/* Mobile menu toggle */}
         <button
           type="button"
-          className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground"
+          data-ocid="nav.mobile_menu_toggle"
+          className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
+          aria-expanded={isOpen}
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md">
-          <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  data-ocid={link.ocid}
-                  onClick={() => setIsOpen(false)}
-                  className={`px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22 }}
+            className="md:hidden border-t border-border bg-background/98 backdrop-blur-md overflow-hidden"
+          >
+            <nav className="container mx-auto px-4 py-3 flex flex-col gap-0.5">
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    data-ocid={link.ocid}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+              <div className="pt-3 pb-1 flex flex-col gap-2 border-t border-border mt-1">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full font-medium"
                 >
-                  {link.label}
-                </Link>
-              );
-            })}
-            <div className="pt-2 pb-1 space-y-2">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="w-full font-medium"
-              >
-                <Link
-                  to="/contact"
-                  onClick={() => setIsOpen(false)}
-                  data-ocid="nav.mobile_contact_cta_link"
-                >
-                  Get Started
-                </Link>
-              </Button>
-              <Button asChild size="sm" className="w-full font-semibold">
-                <Link
-                  to="/booking"
-                  onClick={() => setIsOpen(false)}
-                  data-ocid="nav.mobile_book_now_button"
-                >
-                  Book Now
-                </Link>
-              </Button>
-            </div>
-          </nav>
-        </div>
-      )}
+                  <Link
+                    to="/contact"
+                    onClick={() => setIsOpen(false)}
+                    data-ocid="nav.mobile_contact_cta_link"
+                  >
+                    Get Started
+                  </Link>
+                </Button>
+                <Button asChild className="w-full font-semibold">
+                  <Link
+                    to="/booking"
+                    onClick={() => setIsOpen(false)}
+                    data-ocid="nav.mobile_book_now_button"
+                  >
+                    Book Now
+                  </Link>
+                </Button>
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

@@ -1,35 +1,37 @@
-# My Web Solutions - Batch 1: Performance & SEO
+# My Web Solutions
 
 ## Current State
-The project is a multi-page React/TypeScript SaaS website with the following pages:
-- Home, Services, SaaS, About, Contact, Blog, BlogPost, FAQ, Booking, Certification, CaseStudies, Pricing
-- Admin/Staff/Client Login and Dashboard pages
-- Existing images in /public/assets/generated/ directory
-- No SEO meta tags, Open Graph tags, or structured data
-- No sitemap.xml or robots.txt
-- Images loaded without lazy loading
+Multi-page professional SaaS website with role-based dashboards (Admin, Staff, Client), leads management, booking system, blog, portfolio, certifications, FAQ, and case studies. Batch 1 (Performance & SEO) is complete -- SEO meta tags, lazy loading, sitemap, robots.txt are live.
+
+Existing pages: Home, Services, SaaS, Contact, About, Pricing, Blog, BlogPost, Booking, FAQ, Certification, CaseStudies, AdminDashboard, StaffDashboard, ClientDashboard, AdminLogin, StaffLogin, ClientLogin.
+
+Existing components: Navbar, Footer, WhatsAppButton, SEOHead.
 
 ## Requested Changes (Diff)
 
 ### Add
-- A reusable `SEOHead` component using React Helmet (or document.title + meta manipulation) that accepts title, description, keywords, and OG tags props
-- Unique meta title + description for every page: Home, Services, SaaS, About, Contact, Blog, FAQ, Booking, Certification, CaseStudies, Pricing
-- Open Graph tags: og:title, og:description, og:type, og:url, og:image on all pages
-- Twitter Card meta tags on all pages
-- `public/sitemap.xml` listing all public page URLs
-- `public/robots.txt` with sitemap reference and allow all crawlers
-- `loading="lazy"` attribute on all `<img>` tags across all page components
+- **Loading skeletons** for all dashboard data tables (Admin: leads, users, bookings, service requests, blog; Staff: requests, clients, bookings; Client: requests, invoices, notifications)
+- **Inline form validation** on all public forms: Contact form, Booking form, Client login, Staff login, Admin login -- show red error text under fields instead of alert() popups
+- **Mobile responsiveness improvements** across all public pages and dashboards -- ensure hamburger menu works, layouts stack properly on small screens, tables become scrollable on mobile, cards go full-width
 
 ### Modify
-- All page components to include the SEOHead component at the top
-- All `<img>` tags to include `loading="lazy"` prop
+- **Contact.tsx** -- Replace alert() with inline validation errors and success message shown in-page
+- **Booking.tsx** -- Replace alert() with inline validation errors and success message shown in-page
+- **AdminLogin.tsx** -- Replace alert() with inline validation error below password field
+- **StaffLogin.tsx** -- Replace alert() with inline validation error below password field
+- **ClientLogin.tsx** -- Replace alert() with inline validation error below password field
+- **AdminDashboard.tsx** -- Add Skeleton loading states for all data-fetching tabs; improve mobile table layout (horizontal scroll)
+- **StaffDashboard.tsx** -- Add Skeleton loading states; improve mobile layout
+- **ClientDashboard.tsx** -- Add Skeleton loading states; improve mobile layout
+- **Navbar.tsx** -- Ensure mobile hamburger menu is fully functional and accessible
+- **Home.tsx, Services.tsx, About.tsx, Pricing.tsx, FAQ.tsx** -- Fix any mobile layout breakage (cards, grids, hero sections stack cleanly)
 
 ### Remove
-- Nothing removed
+- All `alert()` and `window.alert()` calls in forms replaced by inline UI feedback
 
 ## Implementation Plan
-1. Create a `SEOHead` component in `src/frontend/src/components/SEOHead.tsx` using `useEffect` + `document.title` + injecting meta tags dynamically (no external dependency needed)
-2. Add SEOHead to each page with unique title, description, keywords, and OG image
-3. Scan all page and component files and add `loading="lazy"` to all `<img>` tags
-4. Create `src/frontend/public/sitemap.xml` with all public routes
-5. Create `src/frontend/public/robots.txt`
+1. Update all login pages (Admin, Staff, Client) to show inline error messages instead of alerts
+2. Update Contact.tsx and Booking.tsx for inline validation + in-page success state
+3. Add Skeleton components to AdminDashboard, StaffDashboard, ClientDashboard for data loading states
+4. Fix mobile responsiveness: Navbar hamburger, public page grids, dashboard tables with horizontal scroll
+5. Validate and build
