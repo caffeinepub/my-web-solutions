@@ -2,6 +2,12 @@ import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { SEOHead } from "@/components/SEOHead";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
@@ -405,6 +411,164 @@ export function Services() {
                 Contact Us <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-secondary/30 border-t border-border">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-block px-3 py-1 rounded-full bg-accent text-xs font-semibold text-accent-foreground uppercase tracking-widest mb-4">
+              FAQ
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Have questions about our services? We&apos;ve got answers.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Accordion
+              type="single"
+              collapsible
+              className="space-y-3"
+              data-ocid="services.faq.panel"
+            >
+              <AccordionItem
+                value="faq-1"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.1"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  What types of businesses do you work with?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  We work with startups, small businesses, individual
+                  professionals, and government employees across Bangalore and
+                  across India remotely.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-2"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.2"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  How long does it take to build a website or SaaS platform?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  A basic website takes 1–2 weeks. A full SaaS platform or
+                  custom web application typically takes 4–8 weeks depending on
+                  complexity.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-3"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.3"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  Do you provide ongoing support after the project is complete?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  Yes, we offer post-launch support and maintenance. Most
+                  clients stay connected via WhatsApp for quick queries and
+                  updates.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-4"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.4"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  Is my data safe with your background verification service?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  Absolutely. All data handled during background checks and
+                  police verification is treated with strict confidentiality and
+                  complies with applicable privacy guidelines.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-5"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.5"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  Can I book an appointment online?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  Yes! Use our{" "}
+                  <Link
+                    to="/booking"
+                    className="text-primary font-semibold hover:underline"
+                  >
+                    Book an Appointment
+                  </Link>{" "}
+                  page to schedule a consultation at your preferred time.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-6"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.6"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  What is the pricing for your services?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  Pricing varies by service and scope. Visit our{" "}
+                  <Link
+                    to="/pricing"
+                    className="text-primary font-semibold hover:underline"
+                  >
+                    Pricing page
+                  </Link>{" "}
+                  for starting prices. For a custom quote,{" "}
+                  <Link
+                    to="/contact"
+                    className="text-primary font-semibold hover:underline"
+                  >
+                    contact us
+                  </Link>{" "}
+                  or WhatsApp us at +91 9901563799.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="faq-7"
+                className="bg-background rounded-xl border border-border px-6 shadow-sm"
+                data-ocid="services.faq.item.7"
+              >
+                <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5">
+                  Do you provide services outside Bangalore?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                  Yes, most of our services (web development, SaaS, AI content,
+                  documentation) are delivered remotely across India.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </motion.div>
         </div>
       </section>

@@ -22,6 +22,7 @@ const websitePlans = [
   {
     name: "Basic Website",
     price: "₹3,999",
+    pricePrefix: "Starting from",
     description: "Perfect for individuals and small local businesses.",
     features: [
       "1–5 pages",
@@ -33,10 +34,12 @@ const websitePlans = [
     ],
     cta: "Get Started",
     popular: false,
+    bestValue: false,
   },
   {
     name: "Business Website",
     price: "₹7,999",
+    pricePrefix: "Starting from",
     description: "For growing businesses that need a strong digital presence.",
     features: [
       "Up to 10 pages",
@@ -48,10 +51,12 @@ const websitePlans = [
     ],
     cta: "Get Started",
     popular: true,
+    bestValue: false,
   },
   {
     name: "E-commerce Website",
     price: "₹14,999",
+    pricePrefix: "Starting from",
     description: "Full online store with product catalog and payments.",
     features: [
       "Unlimited product catalog",
@@ -63,6 +68,7 @@ const websitePlans = [
     ],
     cta: "Get Started",
     popular: false,
+    bestValue: true,
   },
 ];
 
@@ -158,7 +164,9 @@ export function Pricing() {
                   className={`h-full flex flex-col transition-all duration-300 hover:-translate-y-1 ${
                     plan.popular
                       ? "shadow-card-hover ring-2 ring-primary/40 relative"
-                      : "shadow-card hover:shadow-card-hover"
+                      : plan.bestValue
+                        ? "shadow-card-hover ring-2 ring-emerald-500/40 relative"
+                        : "shadow-card hover:shadow-card-hover"
                   }`}
                   data-ocid={`pricing.${plan.name.toLowerCase().replace(/\s+/g, "_")}.card`}
                 >
@@ -170,15 +178,28 @@ export function Pricing() {
                       </Badge>
                     </div>
                   )}
+                  {plan.bestValue && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-emerald-600 text-white font-semibold px-4 py-1 text-xs shadow-md">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Best Value
+                      </Badge>
+                    </div>
+                  )}
 
                   <CardHeader className="pb-4 pt-7">
                     <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">
                       {plan.name}
                     </p>
                     <div className="flex items-end gap-1 mb-2">
-                      <span className="font-display text-4xl font-black text-foreground">
-                        {plan.price}
-                      </span>
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">
+                          {plan.pricePrefix}
+                        </span>
+                        <span className="font-display text-4xl font-black text-foreground">
+                          {plan.price}
+                        </span>
+                      </div>
                       <span className="text-muted-foreground text-sm mb-1">
                         /one-time
                       </span>

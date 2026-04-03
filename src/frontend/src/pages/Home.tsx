@@ -183,23 +183,29 @@ const credentials = [
 const testimonials = [
   {
     name: "Rajesh Kumar",
-    designation: "Business Owner, Bengaluru",
+    initials: "RK",
+    designation: "Small Business Owner",
+    company: "Bangalore",
     review:
-      "Professional and structured approach. My business automation is running smoothly now. Highly recommend for any business looking to upgrade their systems.",
+      "My Web Solutions transformed our online presence. The SaaS platform they built increased our customer inquiries by 300% in just 2 months. Highly professional team!",
     rating: 5,
   },
   {
-    name: "Anitha Sharma",
-    designation: "HR Manager, Mysuru",
+    name: "Priya Sharma",
+    initials: "PS",
+    designation: "HR Manager",
+    company: "Tech Startup",
     review:
-      "Very helpful in certification and documentation support. The entire process was smooth, transparent, and professionally handled. Made everything easy.",
+      "The background verification service was thorough and fast. Mounith's team handled everything with great attention to detail. Will definitely use again.",
     rating: 5,
   },
   {
-    name: "Suresh Nair",
-    designation: "Startup Founder, Bengaluru",
+    name: "Anand Naik",
+    initials: "AN",
+    designation: "Government Employee",
+    company: "Bengaluru",
     review:
-      "Website delivery was fast and clean. Great support throughout the project. The team understood our requirements and delivered beyond expectations.",
+      "Got help with UMANG app setup and police verification. The process was smooth and they were available on WhatsApp for every question. Very reliable service.",
     rating: 5,
   },
 ];
@@ -940,7 +946,7 @@ export function Home() {
           >
             {testimonials.map((t) => (
               <motion.div key={t.name} variants={itemVariants}>
-                <Card className="h-full shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border-border">
+                <Card className="h-full shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border-border border-l-4 border-l-primary">
                   <CardContent className="p-6 flex flex-col h-full">
                     {/* Quote icon */}
                     <div className="mb-4">
@@ -967,9 +973,9 @@ export function Home() {
 
                     {/* Author */}
                     <div className="flex items-center gap-3 pt-4 border-t border-border">
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-primary font-bold text-sm">
-                          {t.name.charAt(0)}
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <span className="text-primary-foreground font-bold text-sm">
+                          {t.initials}
                         </span>
                       </div>
                       <div>
@@ -977,7 +983,7 @@ export function Home() {
                           {t.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t.designation}
+                          {t.designation} · {t.company}
                         </p>
                       </div>
                     </div>
